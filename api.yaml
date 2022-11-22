@@ -1,0 +1,637 @@
+openapi: 3.0.0  
+info:
+  title: WasaPhoto APIs
+  description: |
+   Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
+   upload your photos directly from your PC, and they will be visible to everyone following you.
+  version: 1.0.0
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Username:
+          type: string
+          description: A string that uniquely identifies the user's profile on WasaPhoto.
+          example: Eren_yeager
+    Comment:
+      type: object
+      title: comment
+      description: a comment under a photo
+      properties:
+        CommentId:
+          type: integer
+          description: The unnique comment identifier
+          example: 158
+        CommentAuthor:
+          type: string
+          description: The username of the author of the comment.
+          example: Erwin_Smith 
+        CommentText:
+          type: string
+          description: the text of the comment under a photo.
+          example: Awesome Photo! You are very cute :) !
+
+    Like:
+      type: object
+      title: like
+      description: a like on a photo
+      properties:
+        LikeId: 
+          type: integer
+          description: The unique like identifier.
+          example: 123
+    Photo:
+      type: object
+      title: photo
+      description: A photo
+      properties:
+        PhotoId: 
+          type: integer
+          description: |
+            The unique Id of the Photo in the User PhotoStream.
+            Is the same PhotoId in photos/{PhotoId}
+          example: 152164
+        Likesnumber:
+          type: integer
+          description: The number of likes of the photo.
+          example: 15
+        Commentsnumber:
+          type: integer
+          description: The number of comments under the photo.
+          example: 3
+        Dateofupload:
+          type: string
+          format: date-time
+          example: 2018-03-20T09:12:28Z
+    PhotoStream:
+          type: array
+          title: PhotoStream
+          description: The personalized photostream for a user.
+          items:
+            schema:
+              $ref: "#/components/schemas/Photo"
+            example: 
+              - likesnumber: 25
+                commentsnumber: 6
+                dateofupload: 2022-03-20T07:12:28Z
+              - likesnumber: 77
+                commentsnumber: 4
+                dateofupload: 2021-11-20T09:42:18Z
+    User:
+      type: object
+      title: user
+      descritpion: The user profile
+      properties:
+        Username:
+          type: string
+          description: A string that uniquely identifies the user's profile on WasaPhoto.
+          example: Eren_yeager
+        Followers:
+          type: integer
+          description: The number of followers of the user.
+          example: 15
+        Following: 
+          type: integer
+          description: The number of following of the user.
+          exapmle: 26
+        Numberofphotos:
+          type: integer
+          description: The number of photos that have been posted by the user
+        UploadedPhotos:
+          type: array
+          title: UploadedPhotos
+          description: The photos posted by the user in reverse chronological order.
+          items:
+            schema:
+              $ref: "#/components/schemas/Photo"
+            example: 
+              - likesnumber: 2
+                commentsnumber: 1
+                dateofupload: 2022-03-20T09:12:28Z
+              - likesnumber: 12
+                commentsnumber: 5
+                dateofupload: 2021-11-20T09:42:18Z
+
+
+  
+  parameters: 
+    Username:
+      name: Username
+      in: path
+      required: true
+      description: The Username is a string that uniquely identifies a user in WasaPhoto.
+      schema:
+        type: integer
+        readonly: true
+        example: 154
+    PhotoId:
+      name: PhotoId
+      in: path
+      required: true
+      description: Photo Id
+      schema:
+        type: integer
+        readOnly: true
+        example: 5557
+
+    LikeId:
+      name: LikeId
+      in: path
+      required: true
+      description: Like Id
+      schema:
+        type: integer
+        readOnly: true
+        example: 515
+    CommentId:
+      name: CommentId
+      in: path
+      required: true
+      description: Comment Id
+      schema:
+        type: integer
+        readOnly: true
+        example: 515
+        
+  
+
+
+
+
+paths:
+  /session:
+    post:
+      tags: ["login"]
+      summary: Logs in the user
+      description: |
+        If the user does not exist, it will be created,
+        and an identifier is returned.
+        If the user exists, the user identifier is returned
+      operationId: doLogin
+      requestBody:
+        description: User details
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Maria
+                  pattern: '^.*?$'
+                  minLength: 3
+                  maxLength: 16
+        required: true
+      responses:
+        '201':
+          description: User log-in action successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identifier:
+                    # change here if you decide to use an integer
+                    # or any other type of identifier
+                    type: string
+                    example: "abcdef012345"
+  /users/:
+    get:
+      security:
+        - bearerAuth: []
+      operationId: getUserProfile
+      summary: Get the profile of the user you are looking for.
+      description: |
+        Return the profile of the user searched via username.
+        If the user exists,the user profile will be returned in the response.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: The username of the user you are looking for.
+          schema:
+            type: string
+
+      responses:
+        200: 
+          description: Request fullfilled.
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400: 
+           description: |
+            The request was not compliant with the documentation
+            (eg. missing fields,missing username, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.   
+    post:
+      security:
+        - bearerAuth: []
+      operationId: addUser
+      summary: Adds a user to WasaPhoto.
+      description: |
+        Adds a user to WasaPhoto,using the unique username specified in the requestBody.
+        The User profile will be returned in the response,more specifically, the new profile will have 
+        no photos,no followers and no following.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+      responses: 
+        201:
+          description: User created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+
+
+
+
+
+  /users/{username}/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    get:
+      security:
+        - bearerAuth : []
+      operationId: getMyStream
+      summary: Get the personalized  photostream for a user.
+      description: |
+        Returns a collection of photos recently uploaded by the other users followed by the user.
+        More specifically,a user's photostream consists of recently uploaded photos (in reverse
+        chronological order) of the users followed.
+      responses:
+        "200": 
+          description: Request fullfilled.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoStream'
+        "400": 
+           description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: |
+            User not found.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.   
+   
+      
+  /users/{username}/username:
+     put:
+      security:
+        - bearerAuth : []
+      operationId: setMyUserName
+      summary: Modify the username of the given user.
+      description: |
+        Modifies an existing user by replacing the old username 
+        with the new username contained in the request body.
+        The new username will be returned in the response.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Username"
+      responses:
+        200:
+          description: Username successfully updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Username"
+        400:
+          description: |
+            The request was not compliant with the documentation
+        404:
+          description: User not found.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+        
+
+  /users/{username}/photos/:
+    post:
+      security:
+        - bearerAuth : []
+      operationId: uploadPhoto
+      summary: Uploads a Photo
+      description: |
+        Uploads a photo using the object in the request body.
+        The server will create a new unique ID, the client can find it
+        in the response.
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Photo"
+      responses: 
+        201:
+          description: Photo uploaded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Photo"
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/photos/{photoid}/:
+    parameters:
+      - $ref: "#/components/parameters/PhotoId"
+    delete:
+      security:
+        - bearerAuth : []
+      operationId: deletePhoto
+      summary: deletes a photo from the user PhotoStream.
+      description: |
+        Deletes the photo with the specified id from the system.
+      responses:
+        204:
+          description: Photo deleted successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: Photo with specified Id not found.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/photos/{photoid}/likes/:
+    post:
+      security:
+        - bearerAuth : []
+      operationId: likePhoto
+      summary: Like a specific photo
+      description: |
+        Adds a like to the list of likes of the specific photo,using the object in the requestBody.
+        The server will create a unique LikeId,the client can find it in the response.
+        The likes counter of the specific photo will also be increased by one.
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Like"
+      responses:
+        201:
+          description: Like posted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Like"
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/photos/{photoid}/likes/{likeid}/:
+    parameters:
+      - $ref: "#/components/parameters/LikeId"
+    delete:
+      security:
+        - bearerAuth : []
+      operationId: unlikePhoto
+      summary: deletes a like on a specific photo.
+      description: |
+        Deletes the like with the specified id from the list of likes of a specific photo.
+      responses:
+        204:
+          description: Like removed successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: Like with specified Id not found in the system.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/photos/{photoid}/comments/:
+     post:
+      security:
+        - bearerAuth : []
+      operationId: commentPhoto
+      summary: comment a specific photo
+      description: |
+        Adds a comment to the list of comments of the specific photo,using the object in the requestBody.
+        The server will create a unique CommentId,the client can find it in the response.
+        The comments counter of the specific photo will also be increased by one.
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Comment"
+      responses:
+        201:
+          description: Comment posted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/photos/{photoid}/comments/{commentid}/:
+    parameters:
+      - $ref: "#/components/parameters/CommentId"
+    delete:
+      security:
+        - bearerAuth : []
+      operationId: uncommentPhoto
+      summary: deletes a comment on a specific photo. 
+      description: |
+        Deletes the comment with the specified id from the list of comments of a specific photo.
+        Only the author of the comment can delete his comment.
+      responses:
+        204:
+          description: Comment removed successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: Comment with specified Id not found in the system.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/followers/:
+    post:
+      security:
+        - bearerAuth : []
+      operationId: followUser
+      summary: Follows a user.
+      description: |
+        Follows a user by adding the username in the request body (who made the request e.g. : Mikasa_Ackermann) to the list of followers(list of usernames) of the user 
+        (e.g.: /users/Eren_Yeager).
+        Furthermore, the following number of the user whose username is specified in the request body (Mikasa_Ackermann) is increased by one.
+        Finally, the number of followers of the user specified in the URI (Eren_Yeager) is increased by one.
+        When a user follows another user he will start seeing their photos in his personal photostream.
+        A user can only specify his own username in the requestBody.(e.g. : If you are logged as Mikasa_Ackermann and you want to follow Eren_Yeager,
+        the username(requestBody) in this request can only be Mikasa_Ackermann).
+
+
+
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Username"
+      responses: 
+        201:
+          description: User followed successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /users/{username}/followers/{followerusername}:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    delete:
+      security:
+        - bearerAuth : []
+      operationId: unfollowUser
+      summary: Unfollows a user.
+      description: |
+        Deletes the user with the specified username (../{followerusername}) from the list of followers of a specific user(../users/{username}).
+        A user can remove HIS name from the followers list of another user.
+      responses:
+        204:
+          description: Follower removed successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: Follower with specified username not found in the system.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /session/users/{username}/bannedusers/:
+    post:
+      security:
+        - bearerAuth : []
+      operationId: banUser
+      summary: Bans a user.
+      description: |
+        Bans a user by adding the username in the request body to the list of banned (list of usernames) of the user in the url.
+        For instance,if user Alice bans user Eve, Eve won’t be able to see any information about Alice. 
+        Alice can decide to remove the ban at any moment.
+
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Username"
+      responses: 
+        201:
+          description: User banned successfully.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+  /session/users/{username}/bannedusers/{banneduser}:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+
+    delete:
+      security:
+        - bearerAuth : []
+      operationId: unbanUser
+      summary: Unban a user.
+      description: |
+        Deletes the user with the specified username from the list of banned users of a specific user.
+        For example, if Alice unbans Eve, Eve will be able to see all of Alice's information again.
+      responses:
+        204:
+          description: Unban successfully performed.
+        400:
+          description: |
+            The request was not compliant with the documentation
+            (eg. missing fields, etc).
+        404:
+          description: User with specified username not found in the system.
+        500:
+          description: |
+            The server encountered an internal error.
+            An unexpected condition has occurred.
+            Further info in server logs.
+
+
+
+    
+
+
+
+
+  
+    
+
+      
+    
+      
+      
+
+
+
+
+
+
+
+
+
