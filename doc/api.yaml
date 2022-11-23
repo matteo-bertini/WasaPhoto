@@ -557,7 +557,7 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /session/users/{username}/bannedusers/:
+  /users/{username}/bannedusers/:
     post:
       security:
         - bearerAuth : []
@@ -585,7 +585,7 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /session/users/{username}/bannedusers/{banneduser}:
+  /users/{username}/bannedusers/{banneduser}:
     parameters:
       - $ref: "#/components/parameters/Username"
 
