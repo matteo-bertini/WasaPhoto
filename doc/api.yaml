@@ -65,24 +65,10 @@ components:
           type: string
           format: date-time
           example: 2018-03-20T09:12:28Z
-    PhotoStream:
-          type: array
-          title: PhotoStream
-          description: The personalized photostream for a user.
-          items:
-            schema:
-              $ref: "#/components/schemas/Photo"
-            example: 
-              - likesnumber: 25
-                commentsnumber: 6
-                dateofupload: 2022-03-20T07:12:28Z
-              - likesnumber: 77
-                commentsnumber: 4
-                dateofupload: 2021-11-20T09:42:18Z
     User:
       type: object
       title: user
-      descritpion: The user profile
+      description: The user profile
       properties:
         Username:
           type: string
@@ -95,7 +81,7 @@ components:
         Following: 
           type: integer
           description: The number of following of the user.
-          exapmle: 26
+          example: 26
         Numberofphotos:
           type: integer
           description: The number of photos that have been posted by the user
@@ -103,16 +89,14 @@ components:
           type: array
           title: UploadedPhotos
           description: The photos posted by the user in reverse chronological order.
-          items:
-            schema:
-              $ref: "#/components/schemas/Photo"
-            example: 
-              - likesnumber: 2
-                commentsnumber: 1
-                dateofupload: 2022-03-20T09:12:28Z
-              - likesnumber: 12
-                commentsnumber: 5
-                dateofupload: 2021-11-20T09:42:18Z
+          items: { $ref: "#/components/schemas/Photo"}
+          example: 
+            - likesnumber: 2
+              commentsnumber: 1
+              dateofupload: 2022-03-20T09:12:28Z
+            - likesnumber: 12
+              commentsnumber: 5
+              dateofupload: 2021-11-20T09:42:18Z
 
 
   
@@ -124,7 +108,6 @@ components:
       description: The Username is a string that uniquely identifies a user in WasaPhoto.
       schema:
         type: integer
-        readonly: true
         example: 154
     PhotoId:
       name: PhotoId
@@ -199,6 +182,7 @@ paths:
                     example: "abcdef012345"
   /users/:
     get:
+      tags: ["getting user profile"]
       security:
         - bearerAuth: []
       operationId: getUserProfile
@@ -231,6 +215,7 @@ paths:
             An unexpected condition has occurred.
             Further info in server logs.   
     post:
+      tags: ["adding a user"]
       security:
         - bearerAuth: []
       operationId: addUser
@@ -265,10 +250,11 @@ paths:
 
 
 
-  /users/{username}/:
+  /users/{Username}/:
     parameters:
       - $ref: "#/components/parameters/Username"
     get:
+      tags: ["getting user stream"]
       security:
         - bearerAuth : []
       operationId: getMyStream
@@ -283,7 +269,8 @@ paths:
           content: 
             application/json:
               schema:
-                $ref: '#/components/schemas/PhotoStream'
+                type: array
+                items: { $ref: "#/components/schemas/Photo" }
         "400": 
            description: |
             The request was not compliant with the documentation
@@ -298,8 +285,11 @@ paths:
             Further info in server logs.   
    
       
-  /users/{username}/username:
-     put:
+  /users/{Username}/username:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    put:
+      tags: ["username setting"]
       security:
         - bearerAuth : []
       operationId: setMyUserName
@@ -332,8 +322,11 @@ paths:
             Further info in server logs.
         
 
-  /users/{username}/photos/:
+  /users/{Username}/photos/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
     post:
+      tags: ["uploading a photo"]
       security:
         - bearerAuth : []
       operationId: uploadPhoto
@@ -363,10 +356,12 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/photos/{photoid}/:
+  /users/{Username}/photos/{PhotoId}/:
     parameters:
+      - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
     delete:
+      tags: ["deleting a photo"]
       security:
         - bearerAuth : []
       operationId: deletePhoto
@@ -387,8 +382,12 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/photos/{photoid}/likes/:
+  /users/{Username}/photos/{PhotoId}/likes/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/PhotoId"
     post:
+      tags: ["like a photo"]
       security:
         - bearerAuth : []
       operationId: likePhoto
@@ -418,10 +417,13 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/photos/{photoid}/likes/{likeid}/:
+  /users/{Username}/photos/{PhotoId}/likes/{LikeId}/:
     parameters:
+      - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/PhotoId"
       - $ref: "#/components/parameters/LikeId"
     delete:
+      tags: ["unlike a photo"]
       security:
         - bearerAuth : []
       operationId: unlikePhoto
@@ -442,8 +444,13 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/photos/{photoid}/comments/:
-     post:
+  /users/{Username}/photos/{PhotoId}/comments/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/PhotoId"
+      - $ref: "#/components/parameters/LikeId"
+    post:
+      tags: ["comment photo"]
       security:
         - bearerAuth : []
       operationId: commentPhoto
@@ -473,10 +480,14 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/photos/{photoid}/comments/{commentid}/:
+  /users/{Username}/photos/{PhotoId}/comments/{CommentId}/:
     parameters:
+      - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/PhotoId"
+      - $ref: "#/components/parameters/LikeId"
       - $ref: "#/components/parameters/CommentId"
     delete:
+      tags: ["deleting comment"]
       security:
         - bearerAuth : []
       operationId: uncommentPhoto
@@ -498,8 +509,11 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/followers/:
+  /users/{Username}/followers/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
     post:
+      tags: ["follow user"]
       security:
         - bearerAuth : []
       operationId: followUser
@@ -512,9 +526,6 @@ paths:
         When a user follows another user he will start seeing their photos in his personal photostream.
         A user can only specify his own username in the requestBody.(e.g. : If you are logged as Mikasa_Ackermann and you want to follow Eren_Yeager,
         the username(requestBody) in this request can only be Mikasa_Ackermann).
-
-
-
       requestBody: 
         content:
           application/json:
@@ -532,10 +543,11 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/followers/{followerusername}:
+  /users/{Username}/followers/{Username}:
     parameters:
       - $ref: "#/components/parameters/Username"
     delete:
+      tags: ["unfollow user"]
       security:
         - bearerAuth : []
       operationId: unfollowUser
@@ -557,8 +569,11 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/bannedusers/:
+  /session/users/{Username}/bannedusers/:
+    parameters:
+      - $ref: "#/components/parameters/Username"
     post:
+      tags: ["ban user"]
       security:
         - bearerAuth : []
       operationId: banUser
@@ -585,11 +600,12 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{username}/bannedusers/{banneduser}:
+  /session/users/{Username}/bannedusers/{Username}:
     parameters:
       - $ref: "#/components/parameters/Username"
 
     delete:
+      tags: ["unban user"]
       security:
         - bearerAuth : []
       operationId: unbanUser
