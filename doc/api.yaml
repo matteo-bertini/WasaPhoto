@@ -15,6 +15,14 @@ components:
           type: string
           description: A string that uniquely identifies the user's profile on WasaPhoto.
           example: Eren_yeager
+    FollowerId:
+          type: string
+          description: A string that uniquely identifies a follower in the followers list.
+          example: Eren_yeager
+    BannedId:
+          type: string
+          description: A string that uniquely identifies a banned user in the banned users list.
+          example: Eren_yeager
     Comment:
       type: object
       title: comment
@@ -107,8 +115,8 @@ components:
       required: true
       description: The Username is a string that uniquely identifies a user in WasaPhoto.
       schema:
-        type: integer
-        example: 154
+        type: string
+        example: Eren_Yeager
     PhotoId:
       name: PhotoId
       in: path
@@ -137,6 +145,22 @@ components:
         type: integer
         readOnly: true
         example: 515
+    FollowerId:
+      name: FollowerId
+      in: path
+      required: true
+      description: The FollowerId is a string (the username) that uniquely identifies a user in WasaPhoto.
+      schema:
+        type: string
+        example: Founder_Titan_Official
+    BannedId:
+      name: BannedId
+      in: path
+      required: true
+      description: The BannedId is a string (the username) that uniquely identifies a user in WasaPhoto.
+      schema:
+        type: string
+        example: Founder_Titan_Official
         
   
 
@@ -448,7 +472,6 @@ paths:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
-      - $ref: "#/components/parameters/LikeId"
     post:
       tags: ["comment photo"]
       security:
@@ -484,7 +507,6 @@ paths:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
-      - $ref: "#/components/parameters/LikeId"
       - $ref: "#/components/parameters/CommentId"
     delete:
       tags: ["deleting comment"]
@@ -526,14 +548,19 @@ paths:
         When a user follows another user he will start seeing their photos in his personal photostream.
         A user can only specify his own username in the requestBody.(e.g. : If you are logged as Mikasa_Ackermann and you want to follow Eren_Yeager,
         the username(requestBody) in this request can only be Mikasa_Ackermann).
+        The username added in the follower list is returned in the response.
       requestBody: 
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Username"
+              $ref: "#/components/schemas/FollowerId"
       responses: 
         201:
           description: User followed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowerId"
         400:
           description: |
             The request was not compliant with the documentation
@@ -543,9 +570,11 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{Username}/followers/{Username}:
+  /users/{Username}/followers/{FollowerId}:
     parameters:
       - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/FollowerId"
+      
     delete:
       tags: ["unfollow user"]
       security:
@@ -553,7 +582,8 @@ paths:
       operationId: unfollowUser
       summary: Unfollows a user.
       description: |
-        Deletes the user with the specified username (../{followerusername}) from the list of followers of a specific user(../users/{username}).
+        Deletes the user with the specified username (../{followerId}) from the list of
+        followers of a specific user(../users/{username}).
         A user can remove HIS name from the followers list of another user.
       responses:
         204:
@@ -581,16 +611,21 @@ paths:
       description: |
         Bans a user by adding the username in the request body to the list of banned (list of usernames) of the user in the url.
         For instance,if user Alice bans user Eve, Eve won’t be able to see any information about Alice. 
-        Alice can decide to remove the ban at any moment.
+        Alice can decide to remove the ban at any moment. 
+        The bannedId added to the list is returned in the response.
 
       requestBody: 
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Username"
+              $ref: "#/components/schemas/BannedId"
       responses: 
         201:
           description: User banned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BannedId"
         400:
           description: |
             The request was not compliant with the documentation
@@ -600,9 +635,10 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /users/{Username}/bannedusers/{Username}:
+  /users/{Username}/bannedusers/{BannedId}:
     parameters:
       - $ref: "#/components/parameters/Username"
+      - $ref: "#/components/parameters/BannedId"
 
     delete:
       tags: ["unban user"]
