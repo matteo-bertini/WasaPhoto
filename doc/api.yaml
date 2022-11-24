@@ -569,7 +569,7 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /session/users/{Username}/bannedusers/:
+  /users/{Username}/bannedusers/:
     parameters:
       - $ref: "#/components/parameters/Username"
     post:
@@ -600,7 +600,7 @@ paths:
             The server encountered an internal error.
             An unexpected condition has occurred.
             Further info in server logs.
-  /session/users/{Username}/bannedusers/{Username}:
+  /users/{Username}/bannedusers/{Username}:
     parameters:
       - $ref: "#/components/parameters/Username"
 
