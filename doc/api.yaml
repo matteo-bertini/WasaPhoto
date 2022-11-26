@@ -5,6 +5,13 @@ info:
    Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
    upload your photos directly from your PC, and they will be visible to everyone following you.
   version: 1.0.0
+tags:
+  - name: login
+    description: Operations about login
+  - name: user
+    description: Operations about user
+  - name: photos
+    description: Operations about photos
 components:
   securitySchemes:
     bearerAuth:
@@ -55,7 +62,6 @@ components:
           maxLength: 2200
           pattern: '^.*?$'
           example: Awesome Photo! You are very cute :) !
-
     Like:
       type: object
       title: like
@@ -128,9 +134,6 @@ components:
             - likesnumber: 12
               commentsnumber: 5
               dateofupload: 2021-11-20T09:42:18Z
-
-
-  
   parameters: 
     Username:
       name: Username
@@ -139,7 +142,7 @@ components:
       description: The Username is a string that uniquely identifies a user in WasaPhoto.
       schema:
         type: string
-        description: a string
+        description: A string of minimum 3 and maximum 16 characters representing the username.
         minLength: 3
         maxLength: 16
         pattern: '^.*?$'
@@ -151,7 +154,7 @@ components:
       description: Photo Id
       schema:
         type: integer
-        description: an integer
+        description: An integer that represents the PhotoId.
         readOnly: true
         example: 5557
 
@@ -162,7 +165,7 @@ components:
       description: Like Id
       schema:
         type: integer
-        description: integer
+        description: An integer that represents the LikeId.
         readOnly: true
         example: 515
     CommentId:
@@ -172,7 +175,7 @@ components:
       description: Comment Id
       schema:
         type: integer
-        description: integer
+        description: An integer that represents the CommentId.
         readOnly: true
         example: 515
     FollowerId:
@@ -184,7 +187,7 @@ components:
         type: string
         minLength: 3
         maxLength: 16
-        description: a string
+        description:  A string of minimum 3 and maximum 16 characters representing the FollowerId. 
         pattern: '^.*?$'
         example: Founder_Titan_Official
     BannedId:
@@ -194,21 +197,25 @@ components:
       description: The BannedId is a string (the username) that uniquely identifies a user in WasaPhoto.
       schema:
         type: string
-        description: a string
+        description:  A string of minimum 3 and maximum 16 characters representing the BannedId.
         minLength: 3
         maxLength: 16
         pattern: '^.*?$'
         example: Founder_Titan_Official
-        
-  
-
-
-
-
+  responses:
+    BadRequest:
+      description: |
+        The request was not compliant with the documentation
+        (eg. missing fields, etc).
+    InternalServerError:
+      description: |
+        The server encountered an internal error.
+        Further info in server logs.      
 paths:
   /session:
     post:
-      tags: ["login"]
+      tags:
+        - login
       summary: Logs in the user
       description: |
         If the user does not exist, it will be created,
@@ -221,6 +228,7 @@ paths:
           application/json:
             schema:
               type: object
+              description: the object that represents the requestBody (username login)
               properties:
                 name:
                   type: string
@@ -236,6 +244,7 @@ paths:
             application/json:
               schema:
                 type: object
+                description: an object
                 properties:
                   identifier:
                     # change here if you decide to use an integer
@@ -244,7 +253,8 @@ paths:
                     example: "abcdef012345"
   /users/:
     get:
-      tags: ["getting user profile"]
+      tags:
+        - user
       security:
         - bearerAuth: []
       operationId: getUserProfile
@@ -258,7 +268,11 @@ paths:
           required: true
           description: The username of the user you are looking for.
           schema:
+            description: A string of minimum 3 and maximum 16 characters representing the username.
             type: string
+            minLength: 3
+            maxLength: 16
+            pattern: '^.*?$'
 
       responses:
         200: 
@@ -268,16 +282,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         400: 
-           description: |
-            The request was not compliant with the documentation
-            (eg. missing fields,missing username, etc).
+           $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.   
+          $ref: "#/components/responses/InternalServerError"
     post:
-      tags: ["adding a user"]
+      tags:
+        - user
       security:
         - bearerAuth: []
       operationId: addUser
@@ -299,24 +309,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
-
-
-
-
-
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/:
     parameters:
       - $ref: "#/components/parameters/Username"
     get:
-      tags: ["getting user stream"]
+      tags:
+        - user
       security:
         - bearerAuth : []
       operationId: getMyStream
@@ -332,28 +333,41 @@ paths:
             application/json:
               schema:
                 type: array
+                description: An array representing the photostream.
                 minItems: 0
                 maxItems: 10000000
                 items: { $ref: "#/components/schemas/Photo" }
-        "400": 
-           description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+        400: 
+           $ref: "#/components/responses/BadRequest"
         404:
           description: |
             User not found.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.   
-   
-      
+          $ref: "#/components/responses/InternalServerError"  
+    delete:
+      tags:
+        - user
+      security:
+        - bearerAuth : []
+      operationId: deleteUser
+      summary: Delete a user.
+      description: |
+        Deletes the user with the specified username.
+      responses:
+        204:
+          description: Delete successfully performed.
+        400:
+          $ref: "#/components/responses/BadRequest"
+        404:
+          description: User with specified username not found in the system.
+        500:
+          $ref: "#/components/responses/InternalServerError"  
   /users/{Username}/username:
     parameters:
       - $ref: "#/components/parameters/Username"
     put:
-      tags: ["username setting"]
+      tags:
+        - user
       security:
         - bearerAuth : []
       operationId: setMyUserName
@@ -375,22 +389,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/Username"
         400:
-          description: |
-            The request was not compliant with the documentation
+          $ref: "#/components/responses/BadRequest"
         404:
           description: User not found.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
-        
-
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/:
     parameters:
       - $ref: "#/components/parameters/Username"
     post:
-      tags: ["uploading a photo"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: uploadPhoto
@@ -412,46 +421,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/Photo"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
     delete:
-      tags: ["deleting a photo"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: deletePhoto
-      summary: deletes a photo from the user PhotoStream.
+      summary: Deletes a photo from the user uploaded photos.
       description: |
         Deletes the photo with the specified id from the system.
       responses:
         204:
           description: Photo deleted successfully.
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         404:
           description: Photo with specified Id not found.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/likes/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
     post:
-      tags: ["like a photo"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: likePhoto
@@ -473,21 +474,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/Like"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/likes/{LikeId}/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
       - $ref: "#/components/parameters/LikeId"
     delete:
-      tags: ["unlike a photo"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: unlikePhoto
@@ -498,22 +495,18 @@ paths:
         204:
           description: Like removed successfully.
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         404:
           description: Like with specified Id not found in the system.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/comments/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
     post:
-      tags: ["comment photo"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: commentPhoto
@@ -535,21 +528,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/Comment"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/comments/{CommentId}/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
       - $ref: "#/components/parameters/CommentId"
     delete:
-      tags: ["deleting comment"]
+      tags:
+        - photos
       security:
         - bearerAuth : []
       operationId: uncommentPhoto
@@ -561,21 +550,17 @@ paths:
         204:
           description: Comment removed successfully.
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         404:
           description: Comment with specified Id not found in the system.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/:
     parameters:
       - $ref: "#/components/parameters/Username"
     post:
-      tags: ["follow user"]
+      tags:
+        - user
       security:
         - bearerAuth : []
       operationId: followUser
@@ -602,21 +587,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/FollowerId"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/{FollowerId}:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/FollowerId"
       
     delete:
-      tags: ["unfollow user"]
+      tags:
+       - user
       security:
         - bearerAuth : []
       operationId: unfollowUser
@@ -629,21 +610,17 @@ paths:
         204:
           description: Follower removed successfully.
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         404:
           description: Follower with specified username not found in the system.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/:
     parameters:
       - $ref: "#/components/parameters/Username"
     post:
-      tags: ["ban user"]
+      tags:
+         - user
       security:
         - bearerAuth : []
       operationId: banUser
@@ -667,21 +644,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/BannedId"
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/{BannedId}:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/BannedId"
 
     delete:
-      tags: ["unban user"]
+      tags:
+        - user
       security:
         - bearerAuth : []
       operationId: unbanUser
@@ -693,16 +666,11 @@ paths:
         204:
           description: Unban successfully performed.
         400:
-          description: |
-            The request was not compliant with the documentation
-            (eg. missing fields, etc).
+          $ref: "#/components/responses/BadRequest"
         404:
           description: User with specified username not found in the system.
         500:
-          description: |
-            The server encountered an internal error.
-            An unexpected condition has occurred.
-            Further info in server logs.
+          $ref: "#/components/responses/InternalServerError"
 
 
 
