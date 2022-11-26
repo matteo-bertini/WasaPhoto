@@ -7,11 +7,11 @@ info:
   version: 1.0.0
 tags:
   - name: login
-    description: Operations about login
+    description: Operations about login.
   - name: user
-    description: Operations about user
+    description: Operations about user.
   - name: photos
-    description: Operations about photos
+    description: Operations about photos.
 components:
   securitySchemes:
     bearerAuth:
