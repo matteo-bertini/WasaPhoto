@@ -22,21 +22,21 @@ components:
           type: string
           description: A string that uniquely identifies the user's profile on WasaPhoto.
           minLength: 3
-          maxLength: 16
+          maxLength: 30
           pattern: '^.*?$'
           example: Eren_yeager
     FollowerId:
           type: string
           description: A string that uniquely identifies a follower in the followers list.
           minLength: 3
-          maxLength: 16
+          maxLength: 30
           pattern: '^.*?$'
           example: Eren_yeager
     BannedId:
           type: string
           description: A string that uniquely identifies a banned user in the banned users list.
           minLength: 3
-          maxLength: 16
+          maxLength: 30
           pattern: '^.*?$'
           example: Eren_yeager
     Comment:
@@ -53,7 +53,7 @@ components:
           description: The username of the author of the comment.
           example: Erwin_Smith 
           minLength: 3
-          maxLength: 16
+          maxLength: 30
           pattern: '^.*?$'
         CommentText:
           type: string
@@ -106,7 +106,7 @@ components:
           type: string
           description: A string that uniquely identifies the user's profile on WasaPhoto.
           minLength: 3
-          maxLength: 16
+          maxLength: 30
           pattern: '^.*?$'
           example: Eren_yeager
         Followers:
@@ -142,9 +142,9 @@ components:
       description: The Username is a string that uniquely identifies a user in WasaPhoto.
       schema:
         type: string
-        description: A string of minimum 3 and maximum 16 characters representing the username.
+        description: A string of minimum 3 and maximum 30 characters representing the username.
         minLength: 3
-        maxLength: 16
+        maxLength: 30
         pattern: '^.*?$'
         example: Eren_Yeager
     PhotoId:
@@ -186,8 +186,8 @@ components:
       schema:
         type: string
         minLength: 3
-        maxLength: 16
-        description:  A string of minimum 3 and maximum 16 characters representing the FollowerId. 
+        maxLength: 30
+        description:  A string of minimum 3 and maximum 30 characters representing the FollowerId. 
         pattern: '^.*?$'
         example: Founder_Titan_Official
     BannedId:
@@ -197,9 +197,9 @@ components:
       description: The BannedId is a string (the username) that uniquely identifies a user in WasaPhoto.
       schema:
         type: string
-        description:  A string of minimum 3 and maximum 16 characters representing the BannedId.
+        description:  A string of minimum 3 and maximum 30 characters representing the BannedId.
         minLength: 3
-        maxLength: 16
+        maxLength: 30
         pattern: '^.*?$'
         example: Founder_Titan_Official
   responses:
@@ -235,7 +235,7 @@ paths:
                   example: Maria
                   pattern: '^.*?$'
                   minLength: 3
-                  maxLength: 16
+                  maxLength: 30
         required: true
       responses:
         '201':
@@ -268,10 +268,10 @@ paths:
           required: true
           description: The username of the user you are looking for.
           schema:
-            description: A string of minimum 3 and maximum 16 characters representing the username.
+            description: A string of minimum 3 and maximum 30 characters representing the username.
             type: string
             minLength: 3
-            maxLength: 16
+            maxLength: 30
             pattern: '^.*?$'
 
       responses:
