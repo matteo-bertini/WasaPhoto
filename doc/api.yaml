@@ -230,7 +230,7 @@ paths:
               type: object
               description: the object that represents the requestBody (username login)
               properties:
-                name:
+                username:
                   type: string
                   example: Maria
                   pattern: '^.*?$'
