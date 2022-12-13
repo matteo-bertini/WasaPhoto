@@ -64,3 +64,12 @@ type dologinRequestBody struct {
 type doLoginResponseBody struct {
 	Identifier string `json:"Identifier"`
 }
+type addUserRequestBody struct {
+	Username string `json:"Username"`
+}
+type setMyUsernameRequestBody struct {
+	Username string `json:"Username"`
+}
+type setMyUsernameResponseBody struct {
+	Username string `json:"Username"`
+}

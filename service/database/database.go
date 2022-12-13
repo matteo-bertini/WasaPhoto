@@ -36,8 +36,6 @@ import (
 	"fmt"
 )
 
-var ErrUserDoesNotExist = errors.New("user does not exist")
-
 // User struct represent a user in every API call between this package and the outside world.
 // Note that the internal representation of user in the database might be different.
 type User struct {
@@ -48,16 +46,27 @@ type User struct {
 	//UploadedPhotos []string
 }
 
+var ErrUserDoesNotExist error = errors.New("user does not exist")
+
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 	// DoLogin
 	DoLogin(username string) (*string, error)
 	// AddUser adds a user in the database
 	AddUser(u User) (User, error)
+	AddUser_Authcheck(username string, authstring string) (*bool, error)
 
 	// GetUserProfile gets a user profile searched via username
 	GetUserProfile(username string) (*User, error)
 	GetUserProfile_Authcheck(authstring string) (*bool, error)
+
+	// Deleteuser deletes a user from de system
+	DeleteUser(username string) error
+	DeleteUser_Authcheck(username string, authstring string) (*bool, error)
+
+	// SetMyUsername modifies the username of the specified user
+	SetMyUsername(username string, new_username string) (*string, error)
+	SetMyUsername_Authcheck(string, authstring string) (*bool, error)
 
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error

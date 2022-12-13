@@ -19,12 +19,16 @@ components:
       scheme: bearer
   schemas:
     Username:
-          type: string
+          type: object
           description: A string that uniquely identifies the user's profile on WasaPhoto.
-          minLength: 3
-          maxLength: 30
-          pattern: '^.*?$'
-          example: Eren_yeager
+          title: Username
+          properties:
+            Username:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              example: Eren_yeager
     FollowerId:
           type: string
           description: A string that uniquely identifies a follower in the followers list.
@@ -293,7 +297,7 @@ paths:
       operationId: addUser
       summary: Adds a user to WasaPhoto.
       description: |
-        Adds a user to WasaPhoto,using the unique username specified in the requestBody.
+        Adds a user to WasaPhoto,using the unique username specified in the object in the requestBody.
         The User profile will be returned in the response,more specifically, the new profile will have 
         no photos,no followers and no following.
       requestBody:
