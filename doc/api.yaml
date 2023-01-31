@@ -30,19 +30,27 @@ components:
               pattern: '^.*?$'
               example: Eren_yeager
     FollowerId:
-          type: string
-          description: A string that uniquely identifies a follower in the followers list.
-          minLength: 3
-          maxLength: 30
-          pattern: '^.*?$'
-          example: Eren_yeager
+          type: object
+          description: A string that uniquely identifies the user's profile on WasaPhoto.
+          title: FollowerId
+          properties:
+            FollowerId:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              example: Eren_yeager
     BannedId:
-          type: string
+          type: object
           description: A string that uniquely identifies a banned user in the banned users list.
-          minLength: 3
-          maxLength: 30
-          pattern: '^.*?$'
-          example: Eren_yeager
+          title: BannedId
+          properties:
+            BannedId:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              example: Eren_yeager
     Comment:
       type: object
       title: comment
@@ -590,6 +598,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FollowerId"
+        401:
+          description: Unauthorized
         400:
           $ref: "#/components/responses/BadRequest"
         500:
@@ -615,6 +625,8 @@ paths:
           description: Follower removed successfully.
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: Unauthorized
         404:
           description: Follower with specified username not found in the system.
         500:

@@ -1,6 +1,8 @@
 package utils
 
-import "strings"
+import (
+	"strings"
+)
 
 // checkUsername checks the validity of the username
 func CheckUsername(username string) bool {
@@ -21,5 +23,16 @@ func ParseAuthToken(auth_header string) *string {
 		return &(bearer_auth[1])
 
 	}
+
+}
+func CheckPresence(list []string, value string) bool {
+	for _, a := range list {
+		if a == value {
+			return true
+
+		}
+
+	}
+	return false
 
 }

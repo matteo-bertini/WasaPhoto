@@ -64,12 +64,18 @@ type dologinRequestBody struct {
 type doLoginResponseBody struct {
 	Identifier string `json:"Identifier"`
 }
+
+// addUser operation structs
 type addUserRequestBody struct {
 	Username string `json:"Username"`
 }
+
+// setMyUsername operation structs
 type setMyUsernameRequestBody struct {
 	Username string `json:"Username"`
 }
-type setMyUsernameResponseBody struct {
-	Username string `json:"Username"`
+
+// followUser operation structs
+type followUserRequestBody struct {
+	FollowerId string `json:"FollowerId"`
 }

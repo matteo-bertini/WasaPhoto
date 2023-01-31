@@ -68,6 +68,14 @@ type AppDatabase interface {
 	SetMyUsername(username string, new_username string) (*string, error)
 	SetMyUsername_Authcheck(string, authstring string) (*bool, error)
 
+	// FollowUser
+	FollowUser_Authcheck(username string, authstring string) (*bool, error)
+	FollowUser(username string, to_add string) error
+
+	// UnfollowUser
+	UnfollowUser(username string, to_del string) error
+	Authcheck(username string, authstring string) (*bool, error)
+
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error
 }
@@ -87,12 +95,30 @@ func New(db *sql.DB) (AppDatabase, error) {
 	var tableName string
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
+
+		// Creating the  users table
 		sqlStmt := `CREATE TABLE users (username TEXT NOT NULL PRIMARY KEY,followers INTEGER NOT NULL,following INTEGER NOT NULL,numberofphotos INTEGER NOT NULL);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
+
+		// Creating the authstrings table
 		sqlStmt = `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,authentication TEXT);`
+		_, err = db.Exec(sqlStmt)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+
+		// Creating the following_followers table
+		sqlStmt = `CREATE TABLE following_followers (username TEXT NOT NULL PRIMARY KEY,following TEXT,followers TEXT);`
+		_, err = db.Exec(sqlStmt)
+		if err != nil {
+			return nil, fmt.Errorf("error creating database structure: %w", err)
+		}
+
+		// Creating the ban_resume table
+		sqlStmt = `CREATE TABLE ban_resume (username TEXT NOT NULL PRIMARY KEY,has_banned TEXT,banned_by TEXT);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
