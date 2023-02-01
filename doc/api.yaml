@@ -422,9 +422,10 @@ paths:
         in the response.
       requestBody: 
         content:
-          application/json:
+          image/png:
             schema:
-              $ref: "#/components/schemas/Photo"
+              type: string
+              format: binary
       responses: 
         201:
           description: Photo uploaded successfully.
@@ -440,6 +441,32 @@ paths:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
+    get:
+      tags:
+        - photos
+      security:
+        - bearerAuth : []
+      operationId : getPhoto
+      summary: Gets the photo with the specified Id
+      description: |
+        Gets the photo with the specified Id
+      responses:
+        200: 
+          description: Request fullfilled.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            
+        400: 
+           $ref: "#/components/responses/BadRequest"
+        404:
+          description: |
+            User not found.
+        500:
+          $ref: "#/components/responses/InternalServerError"  
+          
     delete:
       tags:
         - photos
@@ -661,6 +688,8 @@ paths:
                 $ref: "#/components/schemas/BannedId"
         400:
           $ref: "#/components/responses/BadRequest"
+        404:
+          description: Username/BannedId not found
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/{BannedId}:

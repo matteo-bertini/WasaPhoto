@@ -56,6 +56,9 @@ type AppDatabase interface {
 	AddUser(u User) (User, error)
 	AddUser_Authcheck(username string, authstring string) (*bool, error)
 
+	// CheckExistence
+	CheckExistence(username string) (error, *bool)
+
 	// GetUserProfile gets a user profile searched via username
 	GetUserProfile(username string) (*User, error)
 	GetUserProfile_Authcheck(authstring string) (*bool, error)
@@ -75,6 +78,12 @@ type AppDatabase interface {
 	// UnfollowUser
 	UnfollowUser(username string, to_del string) error
 	Authcheck(username string, authstring string) (*bool, error)
+
+	// BanUser
+	BanUser(username string, to_ban string) error
+
+	// UnbanUser
+	UnbanUser(username string, to_del string) error
 
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error

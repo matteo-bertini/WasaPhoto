@@ -79,3 +79,7 @@ type setMyUsernameRequestBody struct {
 type followUserRequestBody struct {
 	FollowerId string `json:"FollowerId"`
 }
+
+type banUserRequestBody struct {
+	BannedId string `json:"BannedId"`
+}
