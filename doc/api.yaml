@@ -89,20 +89,23 @@ components:
       description: A photo
       properties:
         PhotoId: 
-          type: integer
+          type: string
           description: |
             The unique Id of the Photo in the User PhotoStream.
             Is the same PhotoId in photos/{PhotoId}
-          example: 152164
-        Likesnumber:
+          minLength: 3
+          maxLength: 200
+          pattern: '^.*?$'
+          example: "152164"
+        LikesNumber:
           type: integer
           description: The number of likes of the photo.
           example: 15
-        Commentsnumber:
+        CommentsNumber:
           type: integer
           description: The number of comments under the photo.
           example: 3
-        Dateofupload:
+        DateOfUpload:
           type: string
           format: date-time
           minLength: 20
@@ -165,10 +168,13 @@ components:
       required: true
       description: Photo Id
       schema:
-        type: integer
+        type: string
         description: An integer that represents the PhotoId.
+        minLength: 3
+        maxLength: 200
+        pattern: '^.*?$'
         readOnly: true
-        example: 5557
+        example: "152164"
 
     LikeId:
       name: LikeId
@@ -435,6 +441,10 @@ paths:
                 $ref: "#/components/schemas/Photo"
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: Unauthorized
+        404:
+          description: User with specified username not found in the system.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/:
@@ -461,6 +471,8 @@ paths:
             
         400: 
            $ref: "#/components/responses/BadRequest"
+        401:
+          description: Unauthorized
         404:
           description: |
             User not found.
