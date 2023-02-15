@@ -11,30 +11,24 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Non essendo previsto un RequestBody per la richiesta non controllo se è stato specificato o meno.
-	// in caso il RequestBody sia stato specificato verrà semplicemente ignorato
-
-	// Estrazione dell'username dall' URL e controllo dell'esistenza
-	urlusername := r.URL.Query().Get("Username")
+func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	// Controllo l'esistenza dell'user specificato nell'URL
+	urlusername := strings.Split(r.URL.Path, "/")[2]
 	err := rt.db.CheckUserExistence(urlusername)
 	if err != nil {
-		// L'user non esiste
 		if errors.Is(err, utils.ErrUserDoesNotExist) {
 			w.WriteHeader(http.StatusNotFound)
-			ctx.Logger.WithError(err).Error("L'user specificato nell' URL non esiste.")
+			ctx.Logger.WithError(err).Error("L'user specificato nell'URL non esiste.")
 			return
+
 		} else {
-			// Si è verificato un problema nel controllare l'esistenza dell'user
 			w.WriteHeader(http.StatusInternalServerError)
-			ctx.Logger.WithError(err).Error("Si è verificato un errore nel controllare l'esistenza dell'user nel database.")
+			ctx.Logger.WithError(err).Error("Si è verificato un problema nel controllare l'esistenza dell'user nell'URL.")
 			return
 		}
 	} else {
-		// Controllo che l'id passato come Authorization corrisponda ad un profilo autorizzato a vedere il profilo dell'user il cui
-		// username è specificato nella query
-		// Estrazione dell' Authorization dall'header
-
+		// L'user nell'URL esiste
+		// Controllo che sia stato specificato Authorization
 		auth_header := r.Header.Get("Authorization")
 
 		// Non è stato specificato il campo Authorization nell'header
@@ -55,68 +49,78 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 					return
 				} else {
 					// Id specificato nel campo Authorization in modo corretto
-
-					// Controllo che l'Id passato come Authorization corrisponda ad un utente esistente ed in tal caso estraggo username
+					id1 := strings.Split(r.Header.Get("Authorization"), " ")[1]
 					username1, err := rt.db.UsernameFromId(id1)
 					if err != nil {
 						if errors.Is(err, utils.ErrUserDoesNotExist) {
 							w.WriteHeader(http.StatusNotFound)
-							ctx.Logger.WithError(err).Error("L'id passato nell' Authorization non corrisponde ad un user registrato.")
+							ctx.Logger.WithError(err).Error("L'user il cui id è passato nell'authorization non è registrato.")
 						} else {
 							w.WriteHeader(http.StatusInternalServerError)
-							ctx.Logger.WithError(err).Error("Si è verificato un errore nell'estrazione dell'username dell'Id passato nell'Authorization.")
-
+							ctx.Logger.WithError(err).Error("Si è verificato un errore nell'estrarre l'username dell'id nell'Authorization.")
+							return
 						}
-
 					} else {
-						// Controllo che l'id1 corrisponda ad un profilo esistente
 						err = rt.db.CheckUserExistence(*username1)
 						if err != nil {
 							if errors.Is(err, utils.ErrUserDoesNotExist) {
 								w.WriteHeader(http.StatusNotFound)
-								ctx.Logger.WithError(err).Error("L'id passato nell' Authorization non corrisponde ad un user con profilo esistente.")
+								ctx.Logger.WithError(err).Error("L'user specificato nell'URL non esiste.")
 								return
 
 							} else {
 								w.WriteHeader(http.StatusInternalServerError)
-								ctx.Logger.WithError(err).Error("Si è verificato un errore nell controllare l'esistenza dell'username dell'id passato nell'Authorization.")
+								ctx.Logger.WithError(err).Error("Si è verificato un problema nel controllare l'esistenza dell'user nell'URL.")
 								return
 							}
-
 						} else {
-							// id1 corrisponde ad un user esistente
-							// Controllo che id1 sia autorizzato a vedere le informazioni di id2
+							// entrambi gli user esistono
 							id2, err := rt.db.IdFromUsername(urlusername)
 							if err != nil {
+								// Controllo solo un caso,l'user esiste già
 								w.WriteHeader(http.StatusInternalServerError)
-								ctx.Logger.WithError(err).Error("Non è stato possibile estrarre l'Id dell'username nella query.")
+								ctx.Logger.WithError(err).Error("Si è verificato un problema nell'estrazione dell'Id dell'user nell'URL.")
 								return
-
 							} else {
 								err = rt.db.IsAllowed(id1, *id2)
 								if err != nil {
 									if errors.Is(err, utils.ErrUserNotAllowed) {
 										w.WriteHeader(http.StatusUnauthorized)
-										ctx.Logger.WithError(err).Error("L'user il cui id è passato nell' Authorization non è autorizzato a vedere le informazioni dell'user specificato nella query.")
+										ctx.Logger.WithError(err).Error("L'user non è autorizzato a mettere like.")
+										return
+									} else {
+										w.WriteHeader(http.StatusInternalServerError)
+										ctx.Logger.WithError(err).Error("Si è verficato un errore nel controlalre l'autorizzazione.")
+										return
+
+									}
+								} else {
+									err = rt.db.CheckPhotoExistence(*id2, strings.Split(r.URL.Path, "/")[4])
+									if err != nil {
+										if errors.Is(err, utils.ErrPhotoDoesNotExist) {
+											w.WriteHeader(http.StatusNotFound)
+											ctx.Logger.WithError(err).Error("La foto cercata non esiste.")
+											return
+
+										} else {
+											w.WriteHeader(http.StatusInternalServerError)
+											ctx.Logger.WithError(err).Error("Si è verficato un errore nel controlalre l'esistenza della foto.")
+											return
+
+										}
+									}
+									err = rt.db.LikePhoto(*id2, strings.Split(r.URL.Path, "/")[4], id1)
+									if err != nil {
+										w.WriteHeader(http.StatusInternalServerError)
+										ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
 										return
 
 									} else {
-										w.WriteHeader(http.StatusInternalServerError)
-										ctx.Logger.WithError(err).Error("Non è stato possibile controllare se l'user il cui id è passato nell' Authorization è autorizzato a vedere le informazioni.")
-										return
-									}
-								} else {
-									database_user, err := rt.db.GetUserProfile(urlusername)
-									if err != nil {
-										w.WriteHeader(http.StatusInternalServerError)
-										ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")
-										return
-									} else {
-										var getUserProfileResponseBody getUserProfileResponseBody
-										getUserProfileResponseBody.FromDatabase(*database_user)
+										var likePhotoResponseBody likePhotoResponsetBody
+										likePhotoResponseBody.LikeId = strings.Split(r.URL.Path, "/")[4]
 										w.Header().Set("Content-Type", "application/json")
-										w.WriteHeader(http.StatusOK)
-										err = json.NewEncoder(w).Encode(getUserProfileResponseBody)
+										w.WriteHeader(http.StatusCreated)
+										err = json.NewEncoder(w).Encode(likePhotoResponseBody)
 										// Si è verificato un errore nell'encoding della risposta
 										if err != nil {
 											w.WriteHeader(http.StatusInternalServerError)
@@ -126,19 +130,22 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 											// Non si sono verificati errori,ritorno
 											return
 										}
+
 									}
+
 								}
 							}
-
 						}
+
 					}
 
 				}
 			} else {
 				w.WriteHeader(http.StatusBadRequest)
+				ctx.Logger.Error("La richiesta non ha specificato correttamente l'Authorization.")
 				return
 			}
 		}
-	}
 
+	}
 }

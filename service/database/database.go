@@ -1,92 +1,76 @@
-/*
-Package database is the middleware between the app database and the code. All data (de)serialization (save/load) from a
-persistent database are handled here. Database specific logic should never escape this package.
-
-To use this package you need to apply migrations to the database if needed/wanted, connect to it (using the database
-data source name from config), and then initialize an instance of AppDatabase from the DB connection.
-
-For example, this code adds a parameter in `webapi` executable for the database data source name (add it to the
-main.WebAPIConfiguration structure):
-
-	DB struct {
-		Filename string `conf:""`
-	}
-
-This is an example on how to migrate the DB and connect to it:
-
-	// Start Database
-	logger.Println("initializing database support")
-	db, err := sql.Open("sqlite3", "./foo.db")
-	if err != nil {
-		logger.WithError(err).Error("error opening SQLite DB")
-		return fmt.Errorf("opening SQLite: %w", err)
-	}
-	defer func() {
-		logger.Debug("database stopping")
-		_ = db.Close()
-	}()
-
-Then you can initialize the AppDatabase and pass it to the api package.
-*/
 package database
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 )
 
-// User struct represent a user in every API call between this package and the outside world.
-// Note that the internal representation of user in the database might be different.
-type User struct {
+type Database_photo struct {
+	PhotoId        string
+	LikesNumber    int
+	CommentsNumber int
+	DateOfUpload   string
+}
+type Database_user struct {
 	Username       string
 	Followers      int
 	Following      int
 	Numberofphotos int
-	//UploadedPhotos []string
+	UploadedPhotos []Database_photo
 }
-
-var ErrUserDoesNotExist error = errors.New("user does not exist")
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-	// DoLogin
-	DoLogin(username string) (*string, error)
-	// AddUser adds a user in the database
-	AddUser(u User) (User, error)
-	AddUser_Authcheck(username string, authstring string) (*bool, error)
 
-	// CheckExistence
-	CheckExistence(username string) (error, *bool)
+	// DoLogin resitituisce l'id relativo all'username passato come argomento. //
+	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrò resituito quello esistente //
+	DoLogin(username string) (*string, error)
+
+	// AddUser crea ed aggiunge il profilo dell'username //
+	AddUser(username string, id string) error
 
 	// GetUserProfile gets a user profile searched via username
-	GetUserProfile(username string) (*User, error)
-	GetUserProfile_Authcheck(authstring string) (*bool, error)
+	GetUserProfile(username string) (*Database_user, error)
 
-	// Deleteuser deletes a user from de system
-	DeleteUser(username string) error
-	DeleteUser_Authcheck(username string, authstring string) (*bool, error)
+	// Deleteuser elimina completamente un utente dal sistema //
+	DeleteUser(id string, username string) error
 
-	// SetMyUsername modifies the username of the specified user
-	SetMyUsername(username string, new_username string) (*string, error)
-	SetMyUsername_Authcheck(string, authstring string) (*bool, error)
+	// SetMyUsername modifica l'username dell'user con username passato come argomento //
+	SetMyUsername(old_username string, new_username string) error
 
-	// FollowUser
-	FollowUser_Authcheck(username string, authstring string) (*bool, error)
-	FollowUser(username string, to_add string) error
+	// FollowUser //
+	FollowUser(to_add_username string, to_add_id string, username string, id string) error
 
-	// UnfollowUser
-	UnfollowUser(username string, to_del string) error
-	Authcheck(username string, authstring string) (*bool, error)
+	// UnfollowUser //
+	UnfollowUser(username string, id string, to_del string, to_del_id string) error
 
-	// BanUser
-	BanUser(username string, to_ban string) error
+	// BanUser //
+	BanUser(username string, id string, to_ban_username string, to_ban_id string) error
 
-	// UnbanUser
-	UnbanUser(username string, to_del string) error
+	// UnbanUser //
+	UnbanUser(id string, to_del_id string) error
+
+	// UploadPhoto //
+	UploadPhoto(photo Database_photo, id string) error
+
+	// DeletePhoto //
+	DeletePhoto(userid string, photoid string) error
+
+	// LikePhoto //
+	LikePhoto(userid string, photoid string, likeid string) error
 
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error
+
+	// Funzioni ausiliarie definite in database_utilities
+	CheckAuthorization(request *http.Request, username string) error
+	CheckUserExistence(username string) error
+	IdFromUsername(username string) (*string, error)
+	UsernameFromId(id string) (*string, error)
+	IsAllowed(id1 string, id2 string) error
+	CheckPhotoExistence(user_id string, photoid string) error
 }
 
 type appdbimpl struct {
@@ -105,33 +89,21 @@ func New(db *sql.DB) (AppDatabase, error) {
 	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
 	if errors.Is(err, sql.ErrNoRows) {
 
-		// Creating the  users table
-		sqlStmt := `CREATE TABLE users (username TEXT NOT NULL PRIMARY KEY,followers INTEGER NOT NULL,following INTEGER NOT NULL,numberofphotos INTEGER NOT NULL);`
+		// Creazione della tabella authstrings
+		// authstrings memorizza per ogni username registrato l'id univoco che riconosce l'utente nel sistema e nelle richieste
+		sqlStmt := `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,id TEXT NOT NULL);`
+		_, err = db.Exec(sqlStmt)
+		if err != nil {
+			return nil, fmt.Errorf("Errore nella creazione della tabella authstrings: %w", err)
+		}
+		// Creazione della tabella users
+		// users memorizza  il profilo per ogni username registrato in authstrings
+		sqlStmt = `CREATE TABLE users (username TEXT NOT NULL PRIMARY KEY,followers INTEGER NOT NULL,following INTEGER NOT NULL,numberofphotos INTEGER NOT NULL);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			return nil, fmt.Errorf("error creating database structure: %w", err)
 		}
 
-		// Creating the authstrings table
-		sqlStmt = `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,authentication TEXT);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-
-		// Creating the following_followers table
-		sqlStmt = `CREATE TABLE following_followers (username TEXT NOT NULL PRIMARY KEY,following TEXT,followers TEXT);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
-
-		// Creating the ban_resume table
-		sqlStmt = `CREATE TABLE ban_resume (username TEXT NOT NULL PRIMARY KEY,has_banned TEXT,banned_by TEXT);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
 	}
 
 	return &appdbimpl{

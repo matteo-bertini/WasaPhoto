@@ -2,62 +2,65 @@ package api
 
 import (
 	"WasaPhoto/service/api/reqcontext"
-	"WasaPhoto/service/database"
 	"WasaPhoto/service/utils"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Parsing the username in the path
-	username := ps.ByName("Username")
-	auth_header := r.Header.Get("Authorization")
-	// Authentication token not specified in the header,sending back BadRequest
-	if auth_header == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else {
-		// Extraction of authentication token specified in the header
-		token := utils.ParseAuthToken(auth_header)
-		if token == nil {
-			w.WriteHeader(http.StatusBadRequest)
+	// La richiesta non ha body,quindi non controllo se sia stato specificato o meno.
+	// In caso sia stato specificato lo ignoro.
 
+	// Estraggo l'username dall'URL e ne controllo l'esistenza.
+	username := strings.Split(r.URL.Path, "/")[2]
+	err := rt.db.CheckUserExistence(username)
+	if err != nil {
+		if errors.Is(err, utils.ErrUserDoesNotExist) {
+			w.WriteHeader(http.StatusNotFound)
+			ctx.Logger.WithError(err).Error("L'username specificato nell'URL non esiste.")
+			return
 		} else {
-			if utils.CheckUsername(username) == false {
+			w.WriteHeader(http.StatusInternalServerError)
+			ctx.Logger.WithError(err).Error("Errore nella verifica dell'esistenza dell' username.")
+			return
+		}
+	} else {
+		// l'username specificato nell'URL corrispondono a user esistenti
+		err = rt.db.CheckAuthorization(r, username)
+		if err != nil {
+			// L'id non è stato specificato correttamente nell'authorization
+			if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+				ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 				w.WriteHeader(http.StatusBadRequest)
 				return
+				// L'id non è autorizzato ad effettuare l'operazione
+			} else if errors.Is(err, utils.ErrorUnauthorized) {
+				ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 
-			}
-			res, err := rt.db.DeleteUser_Authcheck(username, *token)
-			if err != nil {
+			} else {
+				// Errore nell'esecuzione delle query
+				ctx.Logger.WithError(err).Error("Si è verificato un errore nella verifica dell'id all'interno del database.")
 				w.WriteHeader(http.StatusInternalServerError)
 				return
-			} else {
-				if *res == false {
-					w.WriteHeader(http.StatusUnauthorized)
-					return
-				} else {
-					err = rt.db.DeleteUser(username)
-					if errors.Is(err, database.ErrUserDoesNotExist) {
-						// The fountain (indicated by `id`) does not exist, reject the action indicating an error on the client side.
-						w.WriteHeader(http.StatusNotFound)
-						return
-					} else if err != nil {
-						// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
-						// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
-						// Note (2): we are adding the error and an additional field (`id`) to the log entry, so that we will receive
-						// the identifier of the fountain that triggered the error.
-						ctx.Logger.WithError(err).WithField("username", username).Error("can't delete the user")
-						w.WriteHeader(http.StatusInternalServerError)
-						return
-					}
-
-				}
 			}
+		} else {
+			// Autorizzato
+			err = rt.db.DeleteUser(strings.Split(r.Header.Get("Authorization"), " ")[1], username)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")
+			} else {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+
 		}
+
 	}
 
-	w.WriteHeader(http.StatusNoContent)
 }

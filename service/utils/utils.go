@@ -1,38 +1,48 @@
 package utils
 
 import (
+	"errors"
 	"strings"
 )
 
-// checkUsername checks the validity of the username
+// Errori
+
+// CheckAuthorization //
+var ErrorAuthorizationNotSpecified error = errors.New("Authorization non specificata nell'header.")
+var ErrorBearerTokenNotSpecifiedWell error = errors.New("Bearer Token non specificato correttamente nel campo Authorization dell'header.")
+var ErrorUnauthorized error = errors.New("L'id passato nel campo Authorization non è autorizzato ad effettuare l'operazione.")
+
+// AddUser //
+var ErrorUserAlreadyExists error = errors.New("L'utente è già presente nel sistema quindi non è stato creato un nuovo profilo.")
+
+// FollowUser //
+var ErrorFollowerAlreadyAdded error = errors.New("L'user ")
+
+// BanUser //
+var ErrorUserAlreadyBanned error = errors.New("L'user è già bannato.")
+
+// CheckUserExistence //
+var ErrUserDoesNotExist error = errors.New("L'utente cercato non esiste: non ha ancora creato un profilo o non è ancora registrato.")
+
+// IsAllowed //
+var ErrUserNotAllowed error = errors.New("L'utente cercato non è autorizzato ad ottenere le informazioni.")
+
+// CheckPhotoExistence
+var ErrPhotoDoesNotExist error = errors.New("La foto non esiste.")
+
+// CheckUsername controlla che l'Username passato sia una stringa conforme alle specifiche dichiarate
+// La funzione ritorna true quando l'Username passato è valido,false altrimenti.
 func CheckUsername(username string) bool {
-	length := len(username)
-	if length < 3 || length > 30 {
+
+	// L'Username passato è composto solo da spazi bianchi quindi non è valido
+	if strings.TrimSpace(username) == "" {
 		return false
-	}
-	return true
-}
-
-// parseAuthToken parses the Bearer token from the header passed (e.g parseAuthToken("Bearer fnekbk") = "fnekbk")
-func ParseAuthToken(auth_header string) *string {
-	// Authentication token extraction
-	bearer_auth := strings.Split(auth_header, "Bearer ")
-	if bearer_auth[0] == "Bearer" {
-		return nil
 	} else {
-		return &(bearer_auth[1])
-
-	}
-
-}
-func CheckPresence(list []string, value string) bool {
-	for _, a := range list {
-		if a == value {
+		len := len(username)
+		if len > 30 || len < 3 {
+			return false
+		} else {
 			return true
-
 		}
-
 	}
-	return false
-
 }

@@ -1,21 +1,18 @@
 package database
 
-func (db *appdbimpl) SetMyUsername(username string, new_username string) (*string, error) {
-	res, err := db.c.Exec(`UPDATE authstrings SET username = ? WHERE username=?`, new_username, username)
+func (db *appdbimpl) SetMyUsername(old_username string, new_username string) error {
+	query1 := "UPDATE authstrings SET username = ? WHERE username = ?"
+	_, err := db.c.Exec(query1, new_username, old_username)
 	if err != nil {
-		return nil, err
-	}
-	res, err = db.c.Exec(`UPDATE users SET username = ? WHERE username = ?`, new_username, username)
-	if err != nil {
-		return nil, err
+		return err
+	} else {
+		query2 := "UPDATE users SET username = ? WHERE username = ?"
+		_, err = db.c.Exec(query2, new_username, old_username)
+		if err != nil {
+			return err
+		} else {
+			return nil
+		}
 	}
 
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return nil, err
-	} else if affected == 0 {
-		// If we didn't update any row, then the user didn't exist
-		return nil, ErrUserDoesNotExist
-	}
-	return &new_username, nil
 }

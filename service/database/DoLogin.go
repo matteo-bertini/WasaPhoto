@@ -1,38 +1,53 @@
 package database
 
-import "github.com/gofrs/uuid"
+import (
+	"github.com/segmentio/ksuid"
+)
 
 func (db *appdbimpl) DoLogin(username string) (*string, error) {
-	query := "SELECT authentication FROM authstrings WHERE username = ?"
-	var authstring string
-	// Issue the query to search the username authstring
-	rows, err := db.c.Query(query, username)
+	// Controllo che l'user con username specificato non sia già registrato
+
+	query1 := "SELECT id FROM authstrings WHERE username = ?"
+	rows, err := db.c.Query(query1, username)
+
+	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
 		return nil, err
-	}
-	// if the user is registered (an authstring already exists)
-	if rows.Next() == true {
-		err = rows.Scan(&authstring)
-		if err != nil {
-			return nil, err
-		}
-		if rows.Err() != nil {
-			return nil, err
-
-		}
-		rows.Close()
-		return &authstring, nil
-		// the user is not registered
 	} else {
-		query = "INSERT INTO authstrings (username,authentication) VALUES (?,?)"
-		id, _ := uuid.NewV4()
-		authstring = id.String()
-		_, err := db.c.Exec(query, username, authstring)
-		if err != nil {
-			return nil, err
-		}
-		return &authstring, nil
+		// La query è stata eseguita correttamente, ma non è stato possibile preparare il risultato
+		if rows.Next() == false {
+			err = rows.Err()
+			// Si è verificato un errore durante l'iterazione delle righe o nella loro chiusura
+			if err != nil {
+				return nil, err
+			} else {
+				// La query non ha dato nessun risultato,quindi devo creare una nuova entry
+				id := ksuid.New().String()
+				query2 := "INSERT INTO authstrings VALUES (?,?)"
+				_, err := db.c.Exec(query2, username, id)
+				if err != nil {
+					return nil, err
+				} else {
+					return &id, nil
+				}
 
+			}
+			// Esiste una entry nella tabella con l'username specificato quindi estraggo l'Id
+		} else {
+			var id string
+			err = rows.Scan(&id)
+			if err != nil {
+				return nil, err
+			} else {
+				err = rows.Close()
+				if err != nil {
+					return nil, err
+				} else {
+					return &id, nil
+				}
+			}
+
+		}
 	}
 
 }

@@ -4,68 +4,106 @@ import (
 	"WasaPhoto/service/api/reqcontext"
 	"WasaPhoto/service/utils"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) addUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	auth_header := r.Header.Get("Authorization")
-	// Authentication token not specified in the header,sending back BadRequest
-	if auth_header == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	} else {
-		// Extraction of authentication token specified in the header
-		token := utils.ParseAuthToken(auth_header)
-		if token == nil {
+
+	// Controllo che la richiesta abbia specificato il RequestBody ed in tal caso lo estraggo
+	var addUserRequestBody addUserRequestBody
+	err := json.NewDecoder(r.Body).Decode(&addUserRequestBody)
+	if err != nil {
+		// Non è stato specificato il RequestBody per la richiesta
+		if errors.Is(err, io.EOF) {
+			ctx.Logger.WithError(err).Error("Non è stato specificato il RequestBody per la richiesta.")
 			w.WriteHeader(http.StatusBadRequest)
+			return
 
 		} else {
-			var req_body addUserRequestBody
-			err := json.NewDecoder(r.Body).Decode(&req_body)
-			if err != nil {
-				// Il body passato non è parsabile come JSON,lo rifiuto e mando BadRequest
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			username := req_body.Username
-			if utils.CheckUsername(username) == false {
-				w.WriteHeader(http.StatusBadRequest)
-				return
+			// Il RequestBody è stato passato,ma non è stato possibile decodificarlo
+			ctx.Logger.WithError(err).Error("Non è stato possibile decodificare il RequestBody.")
+			w.WriteHeader(http.StatusBadRequest)
+			return
 
-			}
-			res, err := rt.db.AddUser_Authcheck(username, *token)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
+		}
+	} else { // Il RequestBody è stato decodficato
+
+		// C'è un errore nel RequestBody passato (nomi dei campi errati,campi non specificati,ecc)
+		if len(addUserRequestBody.Username) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			ctx.Logger.Error("Il json nel RequestBody presenta degli errori.")
+			return
+
+		} else { // Il RequestBody passato non presenta errori
+
+			// Controllo che l'Username passato nel RequestBody sia una stringa conforme alle specifiche
+			if utils.CheckUsername(addUserRequestBody.Username) == false {
+				w.WriteHeader(http.StatusBadRequest)
+				ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
 				return
-			} else {
-				if *res == false {
+			}
+			err = rt.db.CheckAuthorization(r, addUserRequestBody.Username)
+			if err != nil {
+				// L'id non è stato specificato correttamente nell'authorization
+				if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+					ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
+					w.WriteHeader(http.StatusBadRequest)
+					return
+					// L'id non è autorizzato ad effettuare l'operazione
+				} else if errors.Is(err, utils.ErrorUnauthorized) {
+					ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 					w.WriteHeader(http.StatusUnauthorized)
 					return
+
 				} else {
-					var user User
-					user.Username = username
-					dbuser, err := rt.db.AddUser(user.ToDatabase())
-					if err != nil {
-						// In this case, we have an error on our side. Log the error (so we can be notified) and send a 500 to the user
-						// Note: we are using the "logger" inside the "ctx" (context) because the scope of this issue is the request.
-						ctx.Logger.WithError(err).Error("Can't create the user")
+					// Errore nell'esecuzione delle query
+					ctx.Logger.WithError(err).Error("Si è verificato un errore nella verifica dell'id all'interno del database.")
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+			} else {
+				id := strings.Split(r.Header.Get("Authorization"), " ")[1]
+				err = rt.db.AddUser(addUserRequestBody.Username, id)
+				if err != nil {
+					if errors.Is(err, utils.ErrorUserAlreadyExists) {
+						ctx.Logger.WithError(err).Error("Non è stato possibile aggiungere l'utente al sistema in quanto è già presente.")
+						w.WriteHeader(http.StatusNoContent)
+						return
+					} else {
 						w.WriteHeader(http.StatusInternalServerError)
+						ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
+						return
+					}
+				} else {
+					// L'utente è stato creato,costruzione della risposta
+					var addUserResponseBody addUserResponseBody
+					addUserResponseBody.Username = addUserRequestBody.Username
+					addUserResponseBody.Followers = 0
+					addUserResponseBody.Following = 0
+					addUserResponseBody.NumberOfPhotos = 0
+					addUserResponseBody.UploadedPhotos = []Photo{}
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusCreated)
+					err = json.NewEncoder(w).Encode(addUserResponseBody)
+					// Si è verificato un errore nell'encoding della risposta
+					if err != nil {
+						w.WriteHeader(http.StatusInternalServerError)
+						ctx.Logger.WithError(err).Error("Si è verificato un errore nell'encoding della risposta.")
+						return
+					} else {
+						// Non si sono verificati errori,ritorno
 						return
 					}
 
-					// Here we can re-use `user` as FromDatabase is overwriting every variabile in the structure.
-					user.FromDatabase(dbuser)
-
-					// Send the output to the user.
-					w.Header().Set("Content-Type", "application/json")
-					_ = json.NewEncoder(w).Encode(user)
 				}
 
 			}
 		}
-
 	}
 
 }

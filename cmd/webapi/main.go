@@ -98,6 +98,10 @@ func run() error {
 		return fmt.Errorf("creating AppDatabase: %w", err)
 	}
 
+	// Creating the photos folder if it doesn't exists yet
+	path := "/tmp/WasaPhoto"
+	_ = os.Mkdir(path, os.ModePerm)
+
 	// Start (main) API server
 	logger.Info("initializing API server")
 
