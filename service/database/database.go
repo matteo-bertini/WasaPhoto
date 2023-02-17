@@ -7,6 +7,13 @@ import (
 	"net/http"
 )
 
+type Database_photostream_component struct {
+	Username       string
+	PhotoId        string
+	LikesNumber    int
+	CommentsNumber int
+	DateOfUpload   string
+}
 type Database_photo struct {
 	PhotoId        string
 	LikesNumber    int
@@ -31,8 +38,11 @@ type AppDatabase interface {
 	// AddUser crea ed aggiunge il profilo dell'username //
 	AddUser(username string, id string) error
 
-	// GetUserProfile gets a user profile searched via username
+	// GetUserProfile gets a user profile searched via username //
 	GetUserProfile(username string) (*Database_user, error)
+
+	// GetMyStream //
+	GetMyStream(id string) (*[]Database_photostream_component, error)
 
 	// Deleteuser elimina completamente un utente dal sistema //
 	DeleteUser(id string, username string) error
@@ -60,6 +70,15 @@ type AppDatabase interface {
 
 	// LikePhoto //
 	LikePhoto(userid string, photoid string, likeid string) error
+
+	// UnlikePhoto //
+	UnlikePhoto(userid string, photoid string, likeid string) error
+
+	// CommentPhoto //
+	CommentPhoto(userid string, photoid string, commentid string, commentauthor string, commenttext string) error
+
+	// UncommentPhoto //
+	UncommentPhoto(userid string, photoid string, commentid string, commentauthor string) error
 
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error

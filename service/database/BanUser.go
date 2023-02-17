@@ -34,6 +34,10 @@ func (db *appdbimpl) BanUser(username string, id string, to_ban_username string,
 				}
 			}
 		} else {
+			err = rows.Close()
+			if err != nil {
+				return err
+			}
 			return utils.ErrorUserAlreadyBanned
 		}
 	}

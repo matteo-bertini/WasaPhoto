@@ -26,7 +26,7 @@ func (db *appdbimpl) UploadPhoto(photo Database_photo, id string) error {
 					return err
 				} else {
 					table_name = "\"" + photo.PhotoId + "_comments" + "\""
-					sqlStmt := "CREATE TABLE " + table_name + " (user_id TEXT NOT NULL PRIMARY KEY,comment_id TEXT NOT NULL,comment_text TEXT NOT NULL)"
+					sqlStmt := "CREATE TABLE " + table_name + " (comment_id TEXT NOT NULL PRIMARY KEY,comment_author TEXT NOT NULL,comment_text TEXT NOT NULL)"
 					_, err = db.c.Exec(sqlStmt)
 					if err != nil {
 						return err

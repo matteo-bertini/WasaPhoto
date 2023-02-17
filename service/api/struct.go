@@ -89,6 +89,14 @@ func (ph *Photo) PhotoToDatabase() database.Database_photo {
 	return to_ret
 }
 
-type likePhotoResponsetBody struct {
+// likePhoto Operation //
+// In questo caso il RequestBody è uguale al ResponseBody in caso di successo //
+type likePhotoResponseBody struct {
 	LikeId string `json:"LikeId"`
+}
+
+type commentPhotoRequestBody struct {
+	CommentId     string `json:"CommentId"`
+	CommentAuthor string `json:"CommentAuthor"`
+	CommentText   string `json:"CommentText"`
 }

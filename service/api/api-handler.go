@@ -20,7 +20,7 @@ func (rt *_router) Handler() http.Handler {
 	// deleteUser //
 	rt.router.DELETE("/users/:Username/", rt.wrap(rt.deleteUser))
 
-	//rt.router.GET("/users/:Username/", rt.wrap(rt.getMyStream))
+	rt.router.GET("/users/:Username/", rt.wrap(rt.getMyStream))
 
 	// setMyUsername //
 	rt.router.PUT("/users/:Username/username", rt.wrap(rt.setMyUsername))
@@ -48,6 +48,15 @@ func (rt *_router) Handler() http.Handler {
 
 	// likePhoto //
 	rt.router.POST("/users/:Username/photos/:PhotoId/likes/", rt.wrap(rt.likePhoto))
+
+	// unlikePhoto //
+	rt.router.DELETE("/users/:Username/photos/:PhotoId/likes/:LikeId", rt.wrap(rt.unlikePhoto))
+
+	// commentPhoto //
+	rt.router.POST("/users/:Username/photos/:PhotoId/comments/", rt.wrap(rt.commentPhoto))
+
+	// uncommentPhoto //
+	rt.router.DELETE("/users/:Username/photos/:PhotoId/comments/:CommentId", rt.wrap(rt.uncommentPhoto))
 
 	// Special routes
 	rt.router.GET("/liveness", rt.liveness)

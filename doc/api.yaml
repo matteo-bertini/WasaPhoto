@@ -28,34 +28,42 @@ components:
               minLength: 3
               maxLength: 30
               pattern: '^.*?$'
-              example: Eren_yeager
+              example: Eren_Yeager
     FollowerId:
-          type: string
-          description: A string that uniquely identifies a follower in the followers list.
-          minLength: 3
-          maxLength: 30
-          pattern: '^.*?$'
-          example: Eren_yeager
+          type: object
+          description: A string that uniquely identifies the user's profile on WasaPhoto.
+          title: FollowerId
+          properties:
+            FollowerId:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              example: Eren_yeager
     BannedId:
-          type: string
+          type: object
           description: A string that uniquely identifies a banned user in the banned users list.
-          minLength: 3
-          maxLength: 30
-          pattern: '^.*?$'
-          example: Eren_yeager
+          title: BannedId
+          properties:
+            BannedId:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              example: Eren_yeager
     Comment:
       type: object
       title: comment
       description: a comment under a photo
       properties:
         CommentId:
-          type: integer
+          type: string
           description: The unnique comment identifier
-          example: 158
+          example: "jo3envm415er4"
         CommentAuthor:
           type: string
           description: The username of the author of the comment.
-          example: Erwin_Smith 
+          example: "Eren_Yeager" 
           minLength: 3
           maxLength: 30
           pattern: '^.*?$'
@@ -72,29 +80,32 @@ components:
       description: a like on a photo
       properties:
         LikeId: 
-          type: integer
+          type: string
           description: The unique like identifier.
-          example: 123
+          example: "a5dhrwr5h12g577"
     Photo:
       type: object
       title: photo
       description: A photo
       properties:
         PhotoId: 
-          type: integer
+          type: string
           description: |
             The unique Id of the Photo in the User PhotoStream.
             Is the same PhotoId in photos/{PhotoId}
-          example: 152164
-        Likesnumber:
+          minLength: 3
+          maxLength: 200
+          pattern: '^.*?$'
+          example: "152164"
+        LikesNumber:
           type: integer
           description: The number of likes of the photo.
           example: 15
-        Commentsnumber:
+        CommentsNumber:
           type: integer
           description: The number of comments under the photo.
           example: 3
-        Dateofupload:
+        DateOfUpload:
           type: string
           format: date-time
           minLength: 20
@@ -121,7 +132,7 @@ components:
           type: integer
           description: The number of following of the user.
           example: 26
-        Numberofphotos:
+        NumberOfPhotos:
           type: integer
           description: The number of photos that have been posted by the user
         UploadedPhotos:
@@ -132,12 +143,69 @@ components:
           maxItems: 10000000
           items: { $ref: "#/components/schemas/Photo"}
           example: 
-            - likesnumber: 2
-              commentsnumber: 1
-              dateofupload: 2022-03-20T09:12:28Z
-            - likesnumber: 12
-              commentsnumber: 5
-              dateofupload: 2021-11-20T09:42:18Z
+            - PhotoId: "1524151"
+              LikesNumber: 2
+              CommentsNumber: 1
+              DateOfUpload: 2022-03-20T09:12:28Z
+            - PhotoId: "513135"  
+              LikesNumber: 12
+              CommentsNumber: 5
+              DateOfUpload: 2021-11-20T09:42:18Z
+    PhotoStream:
+      type : array
+      title: PhotoStream
+      description : The personalized photostream for a user
+      minItems : 0
+      maxItems : 10000000
+      items :
+        type : object
+        title : PhotoStream component
+        description : a single component in the photostream
+        properties :
+          Username:
+            type: string
+            description: |
+              A string that uniquely identifies the user's profile on WasaPhoto,indicate who
+              owns the photo.
+            minLength: 3
+            maxLength: 30
+            pattern: '^.*?$'
+            example: Eren_yeager
+          PhotoId: 
+            type: string
+            description: |
+              The unique Id of the Photo in the User PhotoStream.
+              Is the same PhotoId in photos/{PhotoId}
+            minLength: 3
+            maxLength: 200
+            pattern: '^.*?$'
+            example: "152164"
+          LikesNumber:
+            type: integer
+            description: The number of likes of the photo.
+            example: 15
+          CommentsNumber:
+            type: integer
+            description: The number of comments under the photo.
+            example: 3
+          DateOfUpload:
+            type: string
+            format: date-time
+            minLength: 20
+            maxLength: 30
+            pattern: '^.*?$'
+            example: 2018-03-20T09:12:28Z
+      example: 
+      - Username : "Eren_Yeager"
+        PhotoId: "1524151"
+        LikesNumber: 2
+        CommentsNumber: 1
+        DateOfUpload: 2022-03-20T09:12:28Z
+      - Username : "Mikasa_Ackermann"
+        PhotoId: "513135"  
+        LikesNumber: 12
+        CommentsNumber: 5
+        DateOfUpload: 2021-11-20T09:42:18Z    
   parameters: 
     Username:
       name: Username
@@ -157,10 +225,13 @@ components:
       required: true
       description: Photo Id
       schema:
-        type: integer
+        type: string
         description: An integer that represents the PhotoId.
+        minLength: 3
+        maxLength: 200
+        pattern: '^.*?$'
         readOnly: true
-        example: 5557
+        example: "152164"
 
     LikeId:
       name: LikeId
@@ -168,10 +239,10 @@ components:
       required: true
       description: Like Id
       schema:
-        type: integer
-        description: An integer that represents the LikeId.
+        type: string
+        description: A string (the username) that represents the LikeId.
         readOnly: true
-        example: 515
+        example: "Paolo_Rossi"
     CommentId:
       name: CommentId
       in: path
@@ -209,11 +280,11 @@ components:
   responses:
     BadRequest:
       description: |
-        The request was not compliant with the documentation
+        Bad Request : The request was not compliant with the documentation
         (eg. missing fields, etc).
     InternalServerError:
       description: |
-        The server encountered an internal error.
+        Internal Server Error : The server encountered an internal error.
         Further info in server logs.      
 paths:
   /session:
@@ -232,29 +303,35 @@ paths:
           application/json:
             schema:
               type: object
-              description: the object that represents the requestBody (username login)
+              description: the object that represents the RequestBody (username login)
               properties:
-                username:
+                Username:
                   type: string
-                  example: Maria
+                  example: Eren_Yeager
                   pattern: '^.*?$'
                   minLength: 3
                   maxLength: 30
         required: true
       responses:
-        '201':
-          description: User log-in action successful
+        201:
+          description: |
+            Created : User log-in action successful
           content:
             application/json:
               schema:
                 type: object
                 description: an object
                 properties:
-                  identifier:
+                  Identifier:
                     # change here if you decide to use an integer
                     # or any other type of identifier
                     type: string
                     example: "abcdef012345"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+            
   /users/:
     get:
       tags:
@@ -267,7 +344,7 @@ paths:
         Return the profile of the user searched via username.
         If the user exists,the user profile will be returned in the response.
       parameters:
-        - name: username
+        - name: Username
           in: query
           required: true
           description: The username of the user you are looking for.
@@ -287,6 +364,15 @@ paths:
                 $ref: "#/components/schemas/User"
         400: 
            $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unauthorized : The id passed in the Authorization is not allowed to see the profile
+            of the user which unsername is specified in the URL query.
+        404: 
+          description: |
+            Not Found : The user which username is passed in the URL query does not exist or the Authorization specified does not correspond to an existing user.
+            
+       
         500:
           $ref: "#/components/responses/InternalServerError"
     post:
@@ -306,14 +392,20 @@ paths:
             schema:
               $ref: '#/components/schemas/Username'
       responses: 
+       
         201:
           description: User created successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        204: 
+          description: |
+            No Content : Request successful, a new user has not been added as it is already present in the system.
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: Unauthorized
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/:
@@ -336,11 +428,7 @@ paths:
           content: 
             application/json:
               schema:
-                type: array
-                description: An array representing the photostream.
-                minItems: 0
-                maxItems: 10000000
-                items: { $ref: "#/components/schemas/Photo" }
+                $ref: "#/components/schemas/PhotoStream" 
         400: 
            $ref: "#/components/responses/BadRequest"
         404:
@@ -363,7 +451,8 @@ paths:
         400:
           $ref: "#/components/responses/BadRequest"
         404:
-          description: User with specified username not found in the system.
+          description: |
+            NotFound : User with specified username not found in the system.
         500:
           $ref: "#/components/responses/InternalServerError"  
   /users/{Username}/username:
@@ -394,8 +483,12 @@ paths:
                 $ref: "#/components/schemas/Username"
         400:
           $ref: "#/components/responses/BadRequest"
+        401:  
+          description: |
+            Unauthorized : The id passed does not authorize the user to perform the operation.
         404:
-          description: User not found.
+          description: |
+            NotFound : User not found.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/:
@@ -414,24 +507,61 @@ paths:
         in the response.
       requestBody: 
         content:
-          application/json:
+          image/png:
             schema:
-              $ref: "#/components/schemas/Photo"
+              type: string
+              format: binary
       responses: 
         201:
-          description: Photo uploaded successfully.
+          description: | 
+            Created : Photo uploaded successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Photo"
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unauthorized : The user with the Id in the Authorization is not allowed to upload the photo on the profile.
+        404:
+          description: |  
+            Not Found : User with specified username not found in the system.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
+    get:
+      tags:
+        - photos
+      security:
+        - bearerAuth : []
+      operationId : getPhoto
+      summary: Gets the photo with the specified Id
+      description: |
+        Gets the photo with the specified Id
+      responses:
+        200: 
+          description: Request fullfilled.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            
+        400: 
+           $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unauthorized : The user is not authorized to see the content.
+        404:
+          description: |
+            Not Found : Resource not found.
+        500:
+          $ref: "#/components/responses/InternalServerError"  
+          
     delete:
       tags:
         - photos
@@ -443,11 +573,16 @@ paths:
         Deletes the photo with the specified id from the system.
       responses:
         204:
-          description: Photo deleted successfully.
+          description: |
+            No Content : Photo deleted successfully.
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unauthorized : The id passed is not allowed to delete this photo.
         404:
-          description: Photo with specified Id not found.
+          description: | 
+            Not Found : Photo with specified Id not found.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/likes/:
@@ -462,14 +597,8 @@ paths:
       operationId: likePhoto
       summary: Like a specific photo
       description: |
-        Adds a like to the list of likes of the specific photo,using the object in the requestBody.
-        The server will create a unique LikeId,the client can find it in the response.
+        Adds a like to the list of likes of the specific photo,using the object in the requestBody. 
         The likes counter of the specific photo will also be increased by one.
-      requestBody: 
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Like"
       responses:
         201:
           description: Like posted successfully.
@@ -479,9 +608,15 @@ paths:
                 $ref: "#/components/schemas/Like"
         400:
           $ref: "#/components/responses/BadRequest"
+        404:
+          description: |
+            Not Found: User or photo not found
+        401: 
+          description: |
+            Unauthorized : The user is not authorized to put a like on the photo.
         500:
           $ref: "#/components/responses/InternalServerError"
-  /users/{Username}/photos/{PhotoId}/likes/{LikeId}/:
+  /users/{Username}/photos/{PhotoId}/likes/{LikeId}:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
@@ -497,11 +632,16 @@ paths:
         Deletes the like with the specified id from the list of likes of a specific photo.
       responses:
         204:
-          description: Like removed successfully.
+          description: |
+            No Content : Like removed successfully.
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unaturhoized : The user is not authorized to remove the like.
         404:
-          description: Like with specified Id not found in the system.
+          description: | 
+            Not Found : Photo or username not found in the system.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/comments/:
@@ -526,13 +666,20 @@ paths:
               $ref: "#/components/schemas/Comment"
       responses:
         201:
-          description: Comment posted successfully.
+          description: |
+            Created : Comment posted successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Comment"
         400:
           $ref: "#/components/responses/BadRequest"
+        404:  
+          description: |
+            Not Found : Username or Photo in the URL does not exists.
+        401:
+          description: |
+            Unauthorized : The user is not authorized to perform the operation.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/comments/{CommentId}/:
@@ -585,11 +732,20 @@ paths:
               $ref: "#/components/schemas/FollowerId"
       responses: 
         201:
-          description: User followed successfully.
+          description: |
+            Created : User followed successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/FollowerId"
+        204:
+          description: |
+            No Content : Request successfull, a new follower was not added as either it is already present or the username in the RequestBody is the same in the URL (a user cannot follow himself).
+        401:
+          description: Unauthorized
+        404:
+          description : |
+            NotFound : The user specified does not exists.
         400:
           $ref: "#/components/responses/BadRequest"
         500:
@@ -612,11 +768,16 @@ paths:
         A user can remove HIS name from the followers list of another user.
       responses:
         204:
-          description: Follower removed successfully.
+          description: |
+            NoContent : Follower removed successfully.
         400:
           $ref: "#/components/responses/BadRequest"
+        401:
+          description: |
+            Unauthorized : The id passed does not authorize the user to perform the operation.
         404:
-          description: Follower with specified username not found in the system.
+          description: |
+            Not Found : The user with specified username does not exist in the system.
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/:
@@ -649,6 +810,8 @@ paths:
                 $ref: "#/components/schemas/BannedId"
         400:
           $ref: "#/components/responses/BadRequest"
+        404:
+          description: Username/BannedId not found
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/{BannedId}:
