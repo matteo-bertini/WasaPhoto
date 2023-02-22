@@ -20,6 +20,7 @@ func (rt *_router) Handler() http.Handler {
 	// deleteUser //
 	rt.router.DELETE("/users/:Username/", rt.wrap(rt.deleteUser))
 
+	// getMyStream //
 	rt.router.GET("/users/:Username/", rt.wrap(rt.getMyStream))
 
 	// setMyUsername //
