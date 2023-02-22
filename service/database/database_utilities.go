@@ -14,7 +14,7 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 
 	// Non è stato specificato il campo Authorization nell'header
 	if auth_header == "" {
-		return utils.ErrorAuthorizationNotSpecified
+		return utils.ErrAuthorizationNotSpecified
 	} else {
 		// Il campo Authorization è stato specificato nell'header (Authorization : Bearer abcdef)
 		splitted_authorization := strings.Split(auth_header, " ")
@@ -24,8 +24,8 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 			authorization_type := splitted_authorization[0]
 			id := splitted_authorization[1]
 			// Id non specificato in conformità con le specifiche
-			if authorization_type != "Bearer" || strings.TrimSpace(id) == "" {
-				return utils.ErrorBearerTokenNotSpecifiedWell
+			if authorization_type != utils.Bearer_Authorization || strings.TrimSpace(id) == "" {
+				return utils.ErrBearerTokenNotSpecifiedWell
 			} else {
 				// Id specificato nel campo Authorization in modo corretto
 				query1 := "SELECT * FROM authstrings WHERE id = ? AND username = ?"
@@ -36,13 +36,13 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 				} else {
 					found := rows.Next()
 					if found == false {
-						// Si è verififcato un errore nella preparazione della result row o nella chiusura delle rows (se rows.Next()==false vengono chiuse automaticamente)
+						// Si è verififcato un errore nella preparazione della result row o nella chiusura delle rows (se il next è ==false vengono chiuse automaticamente)
 						if rows.Err() != nil {
 							return rows.Err()
 
 						} else {
 							// Non è stato trovata una entry nel database con username ed id specificati
-							return utils.ErrorUnauthorized
+							return utils.ErrUnauthorized
 
 						}
 
@@ -58,7 +58,7 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 				}
 			}
 		} else {
-			return utils.ErrorBearerTokenNotSpecifiedWell
+			return utils.ErrBearerTokenNotSpecifiedWell
 		}
 	}
 }
@@ -177,30 +177,32 @@ func (db *appdbimpl) IsAllowed(id1 string, id2 string) error {
 	// Controllo che id1 non abbia bannato id2
 	table_name := "\"" + id1 + "_bans" + "\""
 	query1 := "SELECT id FROM " + table_name + " WHERE id = ?"
-	rows, err := db.c.Query(query1, id2)
+	rows1, err := db.c.Query(query1, id2)
+	defer rows1.Close()
 	if err != nil {
 		return err
 	} else {
-		found := rows.Next()
+		found := rows1.Next()
 		if found == true {
 			return utils.ErrUserNotAllowed
 		} else {
-			if rows.Err() != nil {
-				return rows.Err()
+			if rows1.Err() != nil {
+				return rows1.Err()
 			} else {
 				// id1 non ha bannato id2
 				table_name := "\"" + id2 + "_bans" + "\""
 				query2 := "SELECT id FROM " + table_name + " WHERE id = ?"
-				rows, err := db.c.Query(query2, id1)
+				rows2, err := db.c.Query(query2, id1)
+				defer rows2.Close()
 				if err != nil {
 					return err
 				} else {
-					found := rows.Next()
+					found := rows2.Next()
 					if found == true {
 						return utils.ErrUserNotAllowed
 					} else {
-						if rows.Err() != nil {
-							return rows.Err()
+						if rows2.Err() != nil {
+							return rows2.Err()
 						} else {
 							// id2 non ha bannato id1
 							return nil

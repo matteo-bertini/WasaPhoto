@@ -49,7 +49,7 @@ func (db *appdbimpl) FollowUser(to_add_username string, to_add_id string, userna
 			if err != nil {
 				return err
 			} else {
-				return utils.ErrorFollowerAlreadyAdded
+				return utils.ErrFollowerAlreadyAdded
 			}
 		}
 	}

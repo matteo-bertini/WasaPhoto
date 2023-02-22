@@ -6,6 +6,7 @@ func (db *appdbimpl) BanUser(username string, id string, to_ban_username string,
 	table_name := "\"" + id + "_bans" + "\""
 	query0 := "SELECT * FROM " + table_name + " WHERE id = ?"
 	rows, err := db.c.Query(query0, to_ban_id)
+	defer rows.Close()
 	if err != nil {
 		return err
 	} else {
@@ -13,6 +14,7 @@ func (db *appdbimpl) BanUser(username string, id string, to_ban_username string,
 			if rows.Err() != nil {
 				return rows.Err()
 			} else {
+				rows.Close()
 				query1 := "INSERT INTO " + table_name + " VALUES (?)"
 				_, err := db.c.Exec(query1, to_ban_id)
 				if err != nil {
@@ -38,7 +40,7 @@ func (db *appdbimpl) BanUser(username string, id string, to_ban_username string,
 			if err != nil {
 				return err
 			}
-			return utils.ErrorUserAlreadyBanned
+			return utils.ErrUserAlreadyBanned
 		}
 	}
 

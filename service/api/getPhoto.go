@@ -49,7 +49,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 				authorization_type := splitted_authorization[0]
 				id1 := splitted_authorization[1]
 				// Id non specificato in conformità con le specifiche
-				if authorization_type != "Bearer" || strings.TrimSpace(id1) == "" {
+				if authorization_type != utils.Bearer_Authorization || strings.TrimSpace(id1) == "" {
 					w.WriteHeader(http.StatusBadRequest)
 					return
 				} else {

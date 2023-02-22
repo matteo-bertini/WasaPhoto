@@ -54,6 +54,9 @@ func (db *appdbimpl) GetMyStream(id string) (*[]Database_photostream_component, 
 			}
 
 		}
+		if rows0.Err() != nil {
+			return nil, rows0.Err()
+		}
 		return &stream, nil
 
 	}

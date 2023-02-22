@@ -66,12 +66,12 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 			err = rt.db.CheckAuthorization(r, followUserRequestBody.FollowerId)
 			if err != nil {
 				// L'id non è stato specificato correttamente nell'authorization
-				if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+				if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 					ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 					w.WriteHeader(http.StatusBadRequest)
 					return
 					// L'id non è autorizzato ad effettuare l'operazione
-				} else if errors.Is(err, utils.ErrorUnauthorized) {
+				} else if errors.Is(err, utils.ErrUnauthorized) {
 					ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 					w.WriteHeader(http.StatusUnauthorized)
 					return
@@ -122,7 +122,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 						} else {
 							err = rt.db.FollowUser(followUserRequestBody.FollowerId, strings.Split(r.Header.Get("Authorization"), " ")[1], urlusername, *url_id)
 							if err != nil {
-								if errors.Is(err, utils.ErrorFollowerAlreadyAdded) {
+								if errors.Is(err, utils.ErrFollowerAlreadyAdded) {
 									w.WriteHeader(http.StatusNoContent)
 									ctx.Logger.WithError(err).Error("L'user è già presente nella lista dei followers dell'altro.")
 									return

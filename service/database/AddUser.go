@@ -66,7 +66,7 @@ func (db *appdbimpl) AddUser(username string, id string) error {
 			if err != nil {
 				return err
 			} else {
-				return utils.ErrorUserAlreadyExists
+				return utils.ErrUserAlreadyExists
 			}
 		}
 	}

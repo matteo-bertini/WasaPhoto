@@ -5,21 +5,24 @@ import (
 	"strings"
 )
 
+// Costanti //
+const Bearer_Authorization = "Bearer"
+
 // Errori
 
 // CheckAuthorization //
-var ErrorAuthorizationNotSpecified error = errors.New("Authorization non specificata nell'header.")
-var ErrorBearerTokenNotSpecifiedWell error = errors.New("Bearer Token non specificato correttamente nel campo Authorization dell'header.")
-var ErrorUnauthorized error = errors.New("L'id passato nel campo Authorization non è autorizzato ad effettuare l'operazione.")
+var ErrAuthorizationNotSpecified error = errors.New("Authorization non specificata nell'header.")
+var ErrBearerTokenNotSpecifiedWell error = errors.New("Bearer Token non specificato correttamente nel campo Authorization dell'header.")
+var ErrUnauthorized error = errors.New("L'id passato nel campo Authorization non è autorizzato ad effettuare l'operazione.")
 
 // AddUser //
-var ErrorUserAlreadyExists error = errors.New("L'utente è già presente nel sistema quindi non è stato creato un nuovo profilo.")
+var ErrUserAlreadyExists error = errors.New("L'utente è già presente nel sistema quindi non è stato creato un nuovo profilo.")
 
 // FollowUser //
-var ErrorFollowerAlreadyAdded error = errors.New("L'user ")
+var ErrFollowerAlreadyAdded error = errors.New("L'user ")
 
 // BanUser //
-var ErrorUserAlreadyBanned error = errors.New("L'user è già bannato.")
+var ErrUserAlreadyBanned error = errors.New("L'user è già bannato.")
 
 // CheckUserExistence //
 var ErrUserDoesNotExist error = errors.New("L'utente cercato non esiste: non ha ancora creato un profilo o non è ancora registrato.")

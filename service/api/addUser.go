@@ -50,12 +50,12 @@ func (rt *_router) addUser(w http.ResponseWriter, r *http.Request, ps httprouter
 			err = rt.db.CheckAuthorization(r, addUserRequestBody.Username)
 			if err != nil {
 				// L'id non è stato specificato correttamente nell'authorization
-				if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+				if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 					ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 					w.WriteHeader(http.StatusBadRequest)
 					return
 					// L'id non è autorizzato ad effettuare l'operazione
-				} else if errors.Is(err, utils.ErrorUnauthorized) {
+				} else if errors.Is(err, utils.ErrUnauthorized) {
 					ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 					w.WriteHeader(http.StatusUnauthorized)
 					return
@@ -70,7 +70,7 @@ func (rt *_router) addUser(w http.ResponseWriter, r *http.Request, ps httprouter
 				id := strings.Split(r.Header.Get("Authorization"), " ")[1]
 				err = rt.db.AddUser(addUserRequestBody.Username, id)
 				if err != nil {
-					if errors.Is(err, utils.ErrorUserAlreadyExists) {
+					if errors.Is(err, utils.ErrUserAlreadyExists) {
 						ctx.Logger.WithError(err).Error("Non è stato possibile aggiungere l'utente al sistema in quanto è già presente.")
 						w.WriteHeader(http.StatusNoContent)
 						return

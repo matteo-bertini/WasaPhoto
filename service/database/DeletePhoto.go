@@ -22,14 +22,14 @@ func (db *appdbimpl) DeletePhoto(userid string, photoid string) error {
 				table_name := "\"" + photoid + "_likes" + "\""
 
 				stmt1 := "DROP TABLE " + table_name
-				_, err = db.c.Query(stmt1)
+				_, err = db.c.Exec(stmt1)
 				if err != nil {
 					return err
 				} else {
 					table_name := "\"" + photoid + "_comments" + "\""
 
 					stmt1 := "DROP TABLE " + table_name
-					_, err = db.c.Query(stmt1)
+					_, err = db.c.Exec(stmt1)
 					if err != nil {
 						return err
 					} else {

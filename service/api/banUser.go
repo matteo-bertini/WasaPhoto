@@ -82,12 +82,12 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 					err = rt.db.CheckAuthorization(r, urlusername)
 					if err != nil {
 						// L'id non è stato specificato correttamente nell'authorization
-						if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+						if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 							ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 							w.WriteHeader(http.StatusBadRequest)
 							return
 							// L'id non è autorizzato ad effettuare l'operazione
-						} else if errors.Is(err, utils.ErrorUnauthorized) {
+						} else if errors.Is(err, utils.ErrUnauthorized) {
 							ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 							w.WriteHeader(http.StatusUnauthorized)
 							return
@@ -121,7 +121,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 							} else {
 								err = rt.db.BanUser(urlusername, strings.Split(r.Header.Get("Authorization"), " ")[1], banUserRequestBody.BannedId, *to_ban_id)
 								if err != nil {
-									if errors.Is(err, utils.ErrorUserAlreadyBanned) {
+									if errors.Is(err, utils.ErrUserAlreadyBanned) {
 										w.WriteHeader(http.StatusForbidden)
 										ctx.Logger.WithError(err).Error("L'username passato nel RequestBody è già bannato dall'user il cui username è specificato nell'URL")
 										return

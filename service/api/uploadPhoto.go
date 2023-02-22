@@ -36,12 +36,12 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 		err = rt.db.CheckAuthorization(r, urlusername)
 		if err != nil {
 			// L'id non è stato specificato correttamente nell'authorization
-			if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+			if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 				ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 				w.WriteHeader(http.StatusBadRequest)
 				return
 				// L'id non è autorizzato ad effettuare l'operazione
-			} else if errors.Is(err, utils.ErrorUnauthorized) {
+			} else if errors.Is(err, utils.ErrUnauthorized) {
 				ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 				w.WriteHeader(http.StatusUnauthorized)
 				return

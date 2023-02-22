@@ -5,6 +5,7 @@ import (
 	"WasaPhoto/service/utils"
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
@@ -32,12 +33,12 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 		err = rt.db.CheckAuthorization(r, username)
 		if err != nil {
 			// L'id non è stato specificato correttamente nell'authorization
-			if errors.Is(err, utils.ErrorAuthorizationNotSpecified) || errors.Is(err, utils.ErrorBearerTokenNotSpecifiedWell) {
+			if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 				ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
 				w.WriteHeader(http.StatusBadRequest)
 				return
 				// L'id non è autorizzato ad effettuare l'operazione
-			} else if errors.Is(err, utils.ErrorUnauthorized) {
+			} else if errors.Is(err, utils.ErrUnauthorized) {
 				ctx.Logger.WithError(err).Error("L'id passato non è autorizzato ad effettuare l'operazione.")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
@@ -54,7 +55,16 @@ func (rt *_router) deleteUser(w http.ResponseWriter, r *http.Request, ps httprou
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")
+				return
 			} else {
+				// Elimino la cartella delle foto
+				err = os.RemoveAll("/tmp/WasaPhoto/" + strings.Split(r.Header.Get("Authorization"), " ")[1])
+				if err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					ctx.Logger.WithError(err).Error("Si è verificato un errore nella rimozione dei files.")
+					return
+
+				}
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}

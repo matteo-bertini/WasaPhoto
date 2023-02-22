@@ -1,5 +1,7 @@
 package database
 
+import "WasaPhoto/service/utils"
+
 func (db *appdbimpl) GetUserProfile(username string) (*Database_user, error) {
 	query1 := "SELECT * FROM users WHERE username = ?"
 	var db_user Database_user
@@ -57,7 +59,11 @@ func (db *appdbimpl) GetUserProfile(username string) (*Database_user, error) {
 				}
 			}
 		} else {
-			return nil, rows.Err()
+			if rows.Err() != nil {
+				return nil, rows.Err()
+			} else {
+				return nil, utils.ErrUserDoesNotExist
+			}
 		}
 
 	}
