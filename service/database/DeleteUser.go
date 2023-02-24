@@ -5,32 +5,41 @@ func (db *appdbimpl) RemoveAllFollowers(id string, username string) error {
 	table_name := "\"" + id + "_followers" + "\""
 	query1 := "SELECT * FROM " + table_name
 	rows, err := db.c.Query(query1)
-	defer rows.Close()
+
+	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
 		return err
 	} else {
+		// La query è stata eseguita correttamente
 		var follower_id string
 		followers := []string{}
+		// Aggiungo tutti i followers alla lista per toglierli dopo
 		for rows.Next() == true {
 			err = rows.Scan(&follower_id)
+			// Si è verificato un errore nello scan
 			if err != nil {
 				return err
 
 			} else {
+				// Aggiungo il follower_id alla lista
 				followers = append(followers, follower_id)
 			}
 
 		}
+		// Si è verificato un errore nella preparazione del risultato o nella chiusura automatica delle rows
 		if rows.Err() != nil {
 			return rows.Err()
 
 		} else {
+			// Le rows sono state chiuse automaticamente
 			for _, f := range followers {
 				follower_username, err := db.UsernameFromId(f)
+				// Si è verificato un errore
 				if err != nil {
 					return err
 				} else {
 					err = db.UnfollowUser(username, id, *follower_username, f)
+					// Si è verificato un errore
 					if err != nil {
 						return err
 					}
@@ -49,13 +58,17 @@ func (db *appdbimpl) RemoveAllFollowing(id string, username string) error {
 	table_name := "\"" + id + "_following" + "\""
 	query1 := "SELECT * FROM " + table_name
 	rows, err := db.c.Query(query1)
-	defer rows.Close()
+
+	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
 		return err
 	} else {
+		// La query è stata eseguita correttamente
 		var following_id string
 		following := []string{}
+		// Aggiungo tutti i following alla lista per toglierli dopo
 		for rows.Next() == true {
+			// Si è verificato un errore nello scan
 			err = rows.Scan(&following_id)
 			if err != nil {
 				return err
@@ -65,16 +78,20 @@ func (db *appdbimpl) RemoveAllFollowing(id string, username string) error {
 			}
 
 		}
+		// Si è verificato un errore nella preparazione del risultato o nella chiusura automatica delle rows
 		if rows.Err() != nil {
 			return rows.Err()
 
 		} else {
+			// Le rows sono state chiuse automaticamente
 			for _, f := range following {
 				following_username, err := db.UsernameFromId(f)
+				// Si è verificato un errore
 				if err != nil {
 					return err
 				} else {
 					err = db.UnfollowUser(*following_username, f, username, id)
+					// Si è verificato un errore
 					if err != nil {
 						return err
 					}
@@ -93,14 +110,18 @@ func (db *appdbimpl) RemoveAllPhotos(id string, username string) error {
 	table_name := "\"" + id + "_photos" + "\""
 	query1 := "SELECT * FROM " + table_name
 	rows, err := db.c.Query(query1)
-	defer rows.Close()
+
+	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
 		return err
 	} else {
+		// La query è stata eseguita correttamente
 		var photo Database_photo
 		photos := []string{}
+		// Aggiungo tutte le foto alla lista per toglierle dopo
 		for rows.Next() == true {
 			err = rows.Scan(&photo.PhotoId, &photo.LikesNumber, &photo.CommentsNumber, &photo.DateOfUpload)
+			// Si è verificato un errore nello scan
 			if err != nil {
 				return err
 
@@ -109,12 +130,18 @@ func (db *appdbimpl) RemoveAllPhotos(id string, username string) error {
 			}
 
 		}
+		// Si è verificato un errore nella preparazione del risultato o nella chiusura automatica delle rows
 		if rows.Err() != nil {
 			return rows.Err()
 
 		} else {
+			// Le rows sono state chiuse automaticamente
 			for _, ph := range photos {
 				err = db.DeletePhoto(id, ph)
+				// Si è verificato un errore
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 

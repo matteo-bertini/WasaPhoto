@@ -170,7 +170,7 @@ func (db *appdbimpl) UsernameFromId(id string) (*string, error) {
 	}
 }
 
-// La funzione IsAllowed controlla che l'user con id1 sia in autorizzato a vedere le informazioni dell'user con id2
+// La funzione IsAllowed controlla che l'user con id1 sia autorizzato a vedere le informazioni dell'user con id2
 // Questa funzione assume come condizione che entrambi gli utenti esistano
 func (db *appdbimpl) IsAllowed(id1 string, id2 string) error {
 
@@ -178,33 +178,51 @@ func (db *appdbimpl) IsAllowed(id1 string, id2 string) error {
 	table_name := "\"" + id1 + "_bans" + "\""
 	query1 := "SELECT id FROM " + table_name + " WHERE id = ?"
 	rows1, err := db.c.Query(query1, id2)
-	defer rows1.Close()
+
+	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
 		return err
 	} else {
 		found := rows1.Next()
+		// id1 ha bannato id2
 		if found == true {
-			return utils.ErrUserNotAllowed
+			err = rows1.Close()
+			if err != nil {
+				return err
+			} else {
+				return utils.ErrUserNotAllowed
+			}
+
 		} else {
+			// Si è verificato un errore nella preparazione dei risultati o nella chiusura automatica delle rows
 			if rows1.Err() != nil {
 				return rows1.Err()
 			} else {
 				// id1 non ha bannato id2
+				// Controllo che id2 non abbia bannato id1
 				table_name := "\"" + id2 + "_bans" + "\""
 				query2 := "SELECT id FROM " + table_name + " WHERE id = ?"
 				rows2, err := db.c.Query(query2, id1)
-				defer rows2.Close()
+				// Si è verificato un errore nell'esecuzione della query
 				if err != nil {
 					return err
 				} else {
 					found := rows2.Next()
 					if found == true {
-						return utils.ErrUserNotAllowed
+						// id2 ha bannato id1
+						err = rows2.Close()
+						if err != nil {
+							return err
+						} else {
+							return utils.ErrUserNotAllowed
+						}
+
 					} else {
+						// Si è verificato un errore nella preparazione dei risultati o nella chiusura automatica delle rows
 						if rows2.Err() != nil {
 							return rows2.Err()
 						} else {
-							// id2 non ha bannato id1
+							// id2 non ha bannato id1,id1 è autorizzato a vedere le informazioni di id1
 							return nil
 						}
 					}
