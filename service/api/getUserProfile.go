@@ -39,7 +39,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 		// Non è stato specificato il campo Authorization nell'header
 		if auth_header == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else {
 			// Il campo Authorization è stato specificato nell'header (Authorization : Bearer abcdef)
@@ -51,7 +51,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 				id1 := splitted_authorization[1]
 				// Id non specificato in conformità con le specifiche
 				if authorization_type != utils.Bearer_Authorization || strings.TrimSpace(id1) == "" {
-					w.WriteHeader(http.StatusBadRequest)
+					w.WriteHeader(http.StatusUnauthorized)
 					return
 				} else {
 					// Id specificato nel campo Authorization in modo corretto
@@ -60,12 +60,13 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 					username1, err := rt.db.UsernameFromId(id1)
 					if err != nil {
 						if errors.Is(err, utils.ErrUserDoesNotExist) {
-							w.WriteHeader(http.StatusNotFound)
+							w.WriteHeader(http.StatusUnauthorized)
 							ctx.Logger.WithError(err).Error("L'id passato nell' Authorization non corrisponde ad un user registrato.")
+							return
 						} else {
 							w.WriteHeader(http.StatusInternalServerError)
 							ctx.Logger.WithError(err).Error("Si è verificato un errore nell'estrazione dell'username dell'Id passato nell'Authorization.")
-
+							return
 						}
 
 					} else {
@@ -73,7 +74,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 						err = rt.db.CheckUserExistence(*username1)
 						if err != nil {
 							if errors.Is(err, utils.ErrUserDoesNotExist) {
-								w.WriteHeader(http.StatusNotFound)
+								w.WriteHeader(http.StatusUnauthorized)
 								ctx.Logger.WithError(err).Error("L'id passato nell' Authorization non corrisponde ad un user con profilo esistente.")
 								return
 
@@ -85,15 +86,15 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 						} else {
 							// id1 corrisponde ad un user esistente
-							// Controllo che id1 sia autorizzato a vedere le informazioni di id2
-							id2, err := rt.db.IdFromUsername(urlusername)
+							// Controllo che id1 sia autorizzato a vedere le informazioni di urlusername
+							urlid, err := rt.db.IdFromUsername(urlusername)
 							if err != nil {
 								w.WriteHeader(http.StatusInternalServerError)
 								ctx.Logger.WithError(err).Error("Non è stato possibile estrarre l'Id dell'username nella query.")
 								return
 
 							} else {
-								err = rt.db.IsAllowed(id1, *id2)
+								err = rt.db.IsAllowed(id1, *urlid)
 								if err != nil {
 									if errors.Is(err, utils.ErrUserNotAllowed) {
 										w.WriteHeader(http.StatusUnauthorized)
@@ -135,7 +136,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 
 				}
 			} else {
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 		}
