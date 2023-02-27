@@ -34,7 +34,7 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 			// L'id non è stato specificato correttamente nell'authorization
 			if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 				ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusUnauthorized)
 				return
 				// L'id non è autorizzato ad effettuare l'operazione
 			} else if errors.Is(err, utils.ErrUnauthorized) {

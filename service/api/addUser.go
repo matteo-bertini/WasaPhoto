@@ -67,12 +67,13 @@ func (rt *_router) addUser(w http.ResponseWriter, r *http.Request, ps httprouter
 					return
 				}
 			} else {
+				// Autorizzato
 				id := strings.Split(r.Header.Get("Authorization"), " ")[1]
 				err = rt.db.AddUser(addUserRequestBody.Username, id)
 				if err != nil {
 					if errors.Is(err, utils.ErrUserAlreadyExists) {
-						ctx.Logger.WithError(err).Error("Non è stato possibile aggiungere l'utente al sistema in quanto è già presente.")
-						w.WriteHeader(http.StatusNoContent)
+						ctx.Logger.WithError(err).Error("L'username passato nel RequestBody corrisponde ad un profilo già esistente.")
+						w.WriteHeader(http.StatusForbidden)
 						return
 					} else {
 						w.WriteHeader(http.StatusInternalServerError)

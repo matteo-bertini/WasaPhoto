@@ -13,7 +13,7 @@ import (
 )
 
 func (rt *_router) setMyUsername(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// Estraggo il vecchio username dall' URL
+	// Estraggo il vecchio username dall' URL e ne controllo l'esistenza
 	old_username := strings.Split(r.URL.Path, "/")[2]
 	err := rt.db.CheckUserExistence(old_username)
 	if err != nil {
@@ -63,13 +63,13 @@ func (rt *_router) setMyUsername(w http.ResponseWriter, r *http.Request, ps http
 					ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
 					return
 				} else {
-					// L'username passato nel RequestBody è conforme
+					// L'username passato nel RequestBody è conforme alle specifiche
 					err = rt.db.CheckAuthorization(r, old_username)
 					if err != nil {
 						// L'id non è stato specificato correttamente nell'authorization
 						if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 							ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
-							w.WriteHeader(http.StatusBadRequest)
+							w.WriteHeader(http.StatusUnauthorized)
 							return
 							// L'id non è autorizzato ad effettuare l'operazione
 						} else if errors.Is(err, utils.ErrUnauthorized) {

@@ -15,7 +15,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 	// Non essendo previsto un RequestBody per la richiesta non controllo se è stato specificato o meno.
 	// in caso il RequestBody sia stato specificato verrà semplicemente ignorato
 
-	// Estrazione dell'username dall' URL e controllo dell'esistenza
+	// Estrazione dell'username dalla query nell'URL e controllo dell'esistenza
 	urlusername := r.URL.Query().Get("Username")
 	err := rt.db.CheckUserExistence(urlusername)
 	if err != nil {
@@ -74,7 +74,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 						err = rt.db.CheckUserExistence(*username1)
 						if err != nil {
 							if errors.Is(err, utils.ErrUserDoesNotExist) {
-								w.WriteHeader(http.StatusUnauthorized)
+								w.WriteHeader(http.StatusForbidden)
 								ctx.Logger.WithError(err).Error("L'id passato nell' Authorization non corrisponde ad un user con profilo esistente.")
 								return
 
@@ -97,7 +97,7 @@ func (rt *_router) getUserProfile(w http.ResponseWriter, r *http.Request, ps htt
 								err = rt.db.IsAllowed(id1, *urlid)
 								if err != nil {
 									if errors.Is(err, utils.ErrUserNotAllowed) {
-										w.WriteHeader(http.StatusUnauthorized)
+										w.WriteHeader(http.StatusForbidden)
 										ctx.Logger.WithError(err).Error("L'user il cui id è passato nell' Authorization non è autorizzato a vedere le informazioni dell'user specificato nella query.")
 										return
 

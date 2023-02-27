@@ -38,7 +38,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 
 		// Non è stato specificato il campo Authorization nell'header
 		if auth_header == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else {
 			// Il campo Authorization è stato specificato nell'header (Authorization : Bearer abcdef)
@@ -58,7 +58,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 					username, err := rt.db.UsernameFromId(id1)
 					if err != nil {
 						if errors.Is(err, utils.ErrUserDoesNotExist) {
-							w.WriteHeader(http.StatusNotFound)
+							w.WriteHeader(http.StatusUnauthorized)
 							ctx.Logger.WithError(err).Error("L'Id nell'authorization non corrisponde ad un user registrato.")
 							return
 
@@ -72,7 +72,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 						err = rt.db.CheckUserExistence(*username)
 						if err != nil {
 							if errors.Is(err, utils.ErrUserDoesNotExist) {
-								w.WriteHeader(http.StatusNotFound)
+								w.WriteHeader(http.StatusForbidden)
 								ctx.Logger.WithError(err).Error("L'Id nell'authorization non corrisponde ad un user con profilo esistente.")
 								return
 
@@ -93,7 +93,7 @@ func (rt *_router) getPhoto(w http.ResponseWriter, r *http.Request, ps httproute
 							err = rt.db.IsAllowed(id1, *id2)
 							if err != nil {
 								if errors.Is(err, utils.ErrUserNotAllowed) {
-									w.WriteHeader(http.StatusUnauthorized)
+									w.WriteHeader(http.StatusForbidden)
 									ctx.Logger.WithError(err).Error("L'user non è autorizzato a vedere le informazioni.")
 									return
 

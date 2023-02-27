@@ -27,6 +27,9 @@ var ErrUserAlreadyBanned error = errors.New("L'user è già bannato.")
 // CheckUserExistence //
 var ErrUserDoesNotExist error = errors.New("L'utente cercato non esiste: non ha ancora creato un profilo o non è ancora registrato.")
 
+// LikePhoto //
+var ErrLikeAlreadyExists error = errors.New("Il like con id specificato è già presente sulla foto.")
+
 // IsAllowed //
 var ErrUserNotAllowed error = errors.New("L'utente cercato non è autorizzato ad ottenere le informazioni.")
 

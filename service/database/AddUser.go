@@ -62,6 +62,7 @@ func (db *appdbimpl) AddUser(username string, id string) error {
 				}
 			}
 		} else {
+			// L'username corrisponde ad un profilo già esistente
 			err = rows.Close()
 			if err != nil {
 				return err

@@ -68,8 +68,8 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 				if err != nil {
 					// L'user non esiste
 					if errors.Is(err, utils.ErrUserDoesNotExist) {
-						w.WriteHeader(http.StatusNotFound)
-						ctx.Logger.WithError(err).Error("L'user specificato nell' URL non esiste.")
+						w.WriteHeader(http.StatusForbidden)
+						ctx.Logger.WithError(err).Error("L'user specificato nel RequestBody non esiste.")
 						return
 					} else {
 						// Si è verificato un problema nel controllare l'esistenza dell'user
@@ -84,7 +84,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 						// L'id non è stato specificato correttamente nell'authorization
 						if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 							ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
-							w.WriteHeader(http.StatusBadRequest)
+							w.WriteHeader(http.StatusUnauthorized)
 							return
 							// L'id non è autorizzato ad effettuare l'operazione
 						} else if errors.Is(err, utils.ErrUnauthorized) {
@@ -103,14 +103,15 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 						// Un user non può bannare se stesso
 						if urlusername == banUserRequestBody.BannedId {
 							w.WriteHeader(http.StatusForbidden)
+							ctx.Logger.Error("Un user non può bannare se stesso.")
 							return
 
 						} else {
 							to_ban_id, err := rt.db.IdFromUsername(banUserRequestBody.BannedId)
 							if err != nil {
 								if errors.Is(err, utils.ErrUserDoesNotExist) {
-									w.WriteHeader(http.StatusNotFound)
-									ctx.Logger.WithError(err).Error("L'user specificato nell'URL non esiste.")
+									w.WriteHeader(http.StatusForbidden)
+									ctx.Logger.WithError(err).Error("L'user specificato nel RequestBody non è registrato.")
 									return
 
 								} else {

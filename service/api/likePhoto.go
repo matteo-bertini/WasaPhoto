@@ -33,7 +33,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 		// Non è stato specificato il campo Authorization nell'header
 		if auth_header == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else {
 			// Il campo Authorization è stato specificato nell'header (Authorization : Bearer abcdef)
@@ -45,7 +45,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 				id1 := splitted_authorization[1]
 				// Id non specificato in conformità con le specifiche
 				if authorization_type != utils.Bearer_Authorization || strings.TrimSpace(id1) == "" {
-					w.WriteHeader(http.StatusBadRequest)
+					w.WriteHeader(http.StatusUnauthorized)
 					return
 				} else {
 					// Id specificato nel campo Authorization in modo corretto
@@ -53,7 +53,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 					username1, err := rt.db.UsernameFromId(id1)
 					if err != nil {
 						if errors.Is(err, utils.ErrUserDoesNotExist) {
-							w.WriteHeader(http.StatusNotFound)
+							w.WriteHeader(http.StatusUnauthorized)
 							ctx.Logger.WithError(err).Error("L'user il cui id è passato nell'authorization non è registrato.")
 						} else {
 							w.WriteHeader(http.StatusInternalServerError)
@@ -64,8 +64,8 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 						err = rt.db.CheckUserExistence(*username1)
 						if err != nil {
 							if errors.Is(err, utils.ErrUserDoesNotExist) {
-								w.WriteHeader(http.StatusNotFound)
-								ctx.Logger.WithError(err).Error("L'user specificato nell'URL non esiste.")
+								w.WriteHeader(http.StatusForbidden)
+								ctx.Logger.WithError(err).Error("L'user specificato non esiste.")
 								return
 
 							} else {
@@ -85,7 +85,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 								err = rt.db.IsAllowed(id1, *id2)
 								if err != nil {
 									if errors.Is(err, utils.ErrUserNotAllowed) {
-										w.WriteHeader(http.StatusUnauthorized)
+										w.WriteHeader(http.StatusForbidden)
 										ctx.Logger.WithError(err).Error("L'user non è autorizzato a mettere like.")
 										return
 									} else {
@@ -111,6 +111,12 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 									}
 									err = rt.db.LikePhoto(*id2, strings.Split(r.URL.Path, "/")[4], id1)
 									if err != nil {
+										if errors.Is(utils.ErrLikeAlreadyExists, err) {
+											w.WriteHeader(http.StatusForbidden)
+											ctx.Logger.WithError(err).Error("Like sulla photo già presente.")
+											return
+
+										}
 										w.WriteHeader(http.StatusInternalServerError)
 										ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
 										return
@@ -141,7 +147,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 				}
 			} else {
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusUnauthorized)
 				ctx.Logger.Error("La richiesta non ha specificato correttamente l'Authorization.")
 				return
 			}

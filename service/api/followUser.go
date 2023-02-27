@@ -68,7 +68,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 				// L'id non è stato specificato correttamente nell'authorization
 				if errors.Is(err, utils.ErrAuthorizationNotSpecified) || errors.Is(err, utils.ErrBearerTokenNotSpecifiedWell) {
 					ctx.Logger.WithError(err).Error("Il campo Authorization nell'header presenta degli errori.")
-					w.WriteHeader(http.StatusBadRequest)
+					w.WriteHeader(http.StatusUnauthorized)
 					return
 					// L'id non è autorizzato ad effettuare l'operazione
 				} else if errors.Is(err, utils.ErrUnauthorized) {
@@ -90,8 +90,8 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 				if err != nil {
 					// L'user non esiste
 					if errors.Is(err, utils.ErrUserDoesNotExist) {
-						w.WriteHeader(http.StatusNotFound)
-						ctx.Logger.WithError(err).Error("L'user specificato nell' URL non esiste.")
+						w.WriteHeader(http.StatusForbidden)
+						ctx.Logger.WithError(err).Error("L'operazione non può essere completata,l'user specificato nel RequestBody non esiste.")
 						return
 					} else {
 						// Si è verificato un problema nel controllare l'esistenza dell'user
@@ -116,14 +116,14 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 						}
 					} else {
 						if urlusername == followUserRequestBody.FollowerId {
-							w.WriteHeader(http.StatusNoContent)
+							w.WriteHeader(http.StatusForbidden)
 							ctx.Logger.Error("Un user non può seguire se stesso.")
 
 						} else {
 							err = rt.db.FollowUser(followUserRequestBody.FollowerId, strings.Split(r.Header.Get("Authorization"), " ")[1], urlusername, *url_id)
 							if err != nil {
 								if errors.Is(err, utils.ErrFollowerAlreadyAdded) {
-									w.WriteHeader(http.StatusNoContent)
+									w.WriteHeader(http.StatusForbidden)
 									ctx.Logger.WithError(err).Error("L'user è già presente nella lista dei followers dell'altro.")
 									return
 								}
