@@ -47,11 +47,17 @@ func (rt *_router) Handler() http.Handler {
 	// deletePhoto //
 	rt.router.DELETE("/users/:Username/photos/:PhotoId/", rt.wrap(rt.deletePhoto))
 
+	// getLikes //
+	rt.router.GET("/users/:Username/photos/:PhotoId/likes/", rt.wrap(rt.getLikes))
+
 	// likePhoto //
 	rt.router.POST("/users/:Username/photos/:PhotoId/likes/", rt.wrap(rt.likePhoto))
 
 	// unlikePhoto //
 	rt.router.DELETE("/users/:Username/photos/:PhotoId/likes/:LikeId", rt.wrap(rt.unlikePhoto))
+
+	// getComments //
+	rt.router.GET("/users/:Username/photos/:PhotoId/comments/", rt.wrap(rt.getComments))
 
 	// commentPhoto //
 	rt.router.POST("/users/:Username/photos/:PhotoId/comments/", rt.wrap(rt.commentPhoto))

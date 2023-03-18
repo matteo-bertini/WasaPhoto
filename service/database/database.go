@@ -27,6 +27,14 @@ type Database_user struct {
 	Numberofphotos int
 	UploadedPhotos []Database_photo
 }
+type Database_like struct {
+	Username string
+}
+type Database_comment struct {
+	CommentId     string
+	CommentAuthor string
+	CommentText   string
+}
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
@@ -68,11 +76,17 @@ type AppDatabase interface {
 	// DeletePhoto //
 	DeletePhoto(userid string, photoid string) error
 
+	// GetLikes //
+	GetLikes(photoid string) (*[]Database_like, error)
+
 	// LikePhoto //
 	LikePhoto(userid string, photoid string, likeid string) error
 
 	// UnlikePhoto //
 	UnlikePhoto(userid string, photoid string, likeid string) error
+
+	// GetComments //
+	GetComments(photoid string) (*[]Database_comment, error)
 
 	// CommentPhoto //
 	CommentPhoto(userid string, photoid string, commentid string, commentauthor string, commenttext string) error

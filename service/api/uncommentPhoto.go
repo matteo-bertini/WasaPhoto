@@ -118,7 +118,7 @@ func (rt *_router) uncommentPhoto(w http.ResponseWriter, r *http.Request, ps htt
 
 										}
 									} else {
-										err = rt.db.UncommentPhoto(*urlid, photoid, strings.Split(r.URL.Path, "/")[6], *username)
+										err = rt.db.UncommentPhoto(*urlid, photoid, strings.Split(r.URL.Path, "/")[6], strings.Split(r.Header.Get("Authorization"), " ")[1])
 										if err != nil {
 											w.WriteHeader(http.StatusInternalServerError)
 											ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")

@@ -123,7 +123,7 @@ func (rt *_router) likePhoto(w http.ResponseWriter, r *http.Request, ps httprout
 
 									} else {
 										var likePhotoResponseBody likePhotoResponseBody
-										likePhotoResponseBody.LikeId = strings.Split(r.URL.Path, "/")[4]
+										likePhotoResponseBody.LikeId = id1
 										w.Header().Set("Content-Type", "application/json")
 										w.WriteHeader(http.StatusCreated)
 										err = json.NewEncoder(w).Encode(likePhotoResponseBody)

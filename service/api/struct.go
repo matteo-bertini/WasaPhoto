@@ -3,7 +3,6 @@ package api
 import "WasaPhoto/service/database"
 
 // In questo file vengono dichiarate le struct necessarie per il funzionamento del programma //
-
 type Photo struct {
 	PhotoId        string `json:"PhotoId"`
 	LikesNumber    int    `json:"LikesNumber"`
@@ -89,12 +88,23 @@ func (ph *Photo) PhotoToDatabase() database.Database_photo {
 	return to_ret
 }
 
+// getComments Operation //
+type getLikesResponseBody struct {
+	Likes []database.Database_like `json:"Likes"`
+}
+
 // likePhoto Operation //
 // In questo caso il RequestBody è uguale al ResponseBody in caso di successo //
 type likePhotoResponseBody struct {
 	LikeId string `json:"LikeId"`
 }
 
+// getComments Operation //
+type getCommentsResponseBody struct {
+	Comments []database.Database_comment `json:"Comments"`
+}
+
+// commentPhoto Operation //
 type commentPhotoRequestBody struct {
 	CommentId     string `json:"CommentId"`
 	CommentAuthor string `json:"CommentAuthor"`

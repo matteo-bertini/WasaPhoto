@@ -541,8 +541,6 @@ paths:
     get:
       tags:
         - photos
-      security:
-        - bearerAuth : []
       operationId : getPhoto
       summary: Gets the photo with the specified Id
       description: |
@@ -639,6 +637,35 @@ paths:
             Unauthorized : The user is not authorized to put a like on the photo.
         500:
           $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - photos
+      operationId: getLikes
+      summary: Get the list of likes of a specific photo
+      description: |
+        Returns a collection of likes of a specific photo.
+      responses:
+        200: 
+          description: |
+            OK : Request fullfilled.
+          content: 
+            application/json:
+              schema:
+                type: object
+                title: Likes
+                description: The Likes on a Photo
+                properties:
+                  Likes:
+                    type: array
+                    description: The array that contains the list of likes
+                    title: Likes
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/Username"
+        500:
+          $ref: "#/components/responses/InternalServerError"  
+      
   /users/{Username}/photos/{PhotoId}/likes/{LikeId}:
     parameters:
       - $ref: "#/components/parameters/Username"
@@ -705,6 +732,37 @@ paths:
             Unauthorized : The user is not authorized to perform the operation.
         500:
           $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - photos
+      operationId: getComments
+      summary: Get the list of comments on a specific photo
+      description: |
+        Returns a collection of comments of a specific photo.
+      responses:
+        200: 
+          description: |
+            OK : Request fullfilled.
+          content: 
+             application/json:
+              schema:
+                type: object
+                title: commenst
+                description: The comments on a Photo
+                properties:
+                  Comments:
+                    type: array
+                    description: The array that contains the list of comments
+                    title: Likes
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/Comment"
+        404:
+          description: |
+            Not Found : The photo specified in the URL does not exist.
+        500:
+          $ref: "#/components/responses/InternalServerError"  
   /users/{Username}/photos/{PhotoId}/comments/{CommentId}/:
     parameters:
       - $ref: "#/components/parameters/Username"

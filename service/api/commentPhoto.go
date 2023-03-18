@@ -133,7 +133,7 @@ func (rt *_router) commentPhoto(w http.ResponseWriter, r *http.Request, ps httpr
 								} else {
 									// Generazione del CommentId
 									commentPhotoRequestBody.CommentId = ksuid.New().String()
-									err = rt.db.CommentPhoto(*urlid, photoid, commentPhotoRequestBody.CommentId, commentPhotoRequestBody.CommentAuthor, commentPhotoRequestBody.CommentText)
+									err = rt.db.CommentPhoto(*urlid, photoid, commentPhotoRequestBody.CommentId, strings.Split(r.Header.Get("Authorization"), " ")[1], commentPhotoRequestBody.CommentText)
 									if err != nil {
 										w.WriteHeader(http.StatusInternalServerError)
 										ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")
