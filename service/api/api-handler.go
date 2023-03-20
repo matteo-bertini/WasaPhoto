@@ -26,6 +26,15 @@ func (rt *_router) Handler() http.Handler {
 	// setMyUsername //
 	rt.router.PUT("/users/:Username/username", rt.wrap(rt.setMyUsername))
 
+	// getFollowers //
+	rt.router.GET("/users/:Username/followers/", rt.wrap(rt.getFollowers))
+
+	// getFollowing //
+	rt.router.GET("/users/:Username/following", rt.wrap(rt.getFollowing))
+
+	// getBanned //
+	rt.router.GET("/users/:Username/bannedusers/", rt.wrap(rt.getBanned))
+
 	// followUser //
 	rt.router.POST("/users/:Username/followers/", rt.wrap(rt.followUser))
 

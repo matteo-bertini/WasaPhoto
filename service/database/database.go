@@ -27,6 +27,18 @@ type Database_user struct {
 	Numberofphotos int
 	UploadedPhotos []Database_photo
 }
+
+type Database_follower struct {
+	FollowerId string
+}
+
+type Database_following struct {
+	Username string
+}
+
+type Database_banned struct {
+	BannedId string
+}
 type Database_like struct {
 	Username string
 }
@@ -57,6 +69,15 @@ type AppDatabase interface {
 
 	// SetMyUsername modifica l'username dell'user con username passato come argomento //
 	SetMyUsername(old_username string, new_username string) error
+
+	// GetFollowers //
+	GetFollowers(id string) (*[]Database_follower, error)
+
+	// GetFollowing //
+	GetFollowing(id string) (*[]Database_following, error)
+
+	// GetBanned //
+	GetBanned(id string) (*[]Database_banned, error)
 
 	// FollowUser //
 	FollowUser(to_add_username string, to_add_id string, username string, id string) error

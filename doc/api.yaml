@@ -818,6 +818,22 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/Username"
+        401:
+          description: |
+            Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
+        403: 
+          description : |
+            Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
+
+            - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the profile. (has banned the user in the url or was banned by the user in the url).
+            - The id passed in the Authorization corresponds to an registered user but with no existing profile.
+        404: 
+          description: |
+            Not Found : The user which username is passed in the URL query does not exist.
+            
+       
+        500:
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/:
     parameters:
       - $ref: "#/components/parameters/Username"
@@ -1016,6 +1032,22 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/BannedId"  
+        401:
+          description: |
+            Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
+        403: 
+          description : |
+            Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
+
+            - The id passed in the Authorization corresponds to a User (with an existing profile) which username doesn't match the username in the URL (an user can only see his ban list).
+            - The id passed in the Authorization corresponds to an registered user but with no existing profile.
+        404: 
+          description: |
+            Not Found : The user which username is passed in the URL query does not exist.
+            
+       
+        500:
+          $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/{BannedId}:
     parameters:
       - $ref: "#/components/parameters/Username"
