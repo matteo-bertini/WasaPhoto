@@ -747,7 +747,7 @@ paths:
              application/json:
               schema:
                 type: object
-                title: commenst
+                title: comments
                 description: The comments on a Photo
                 properties:
                   Comments:
@@ -787,6 +787,37 @@ paths:
           description: Comment with specified Id not found in the system.
         500:
           $ref: "#/components/responses/InternalServerError"
+  /users/{Username}/following :
+    parameters:
+      - $ref: "#/components/parameters/Username"
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      operationId: getFollowing
+      summary: Get the following of the specified profile.
+      description: |
+        Returns the list of following of the profile specified in the URL.
+      responses:
+        200: 
+          description: |
+            OK : Request fullfilled.
+          content: 
+             application/json:
+              schema:
+                type: object
+                title: followers
+                description: The following of the user
+                properties:
+                  Following:
+                    type: array
+                    description: The array that contains the list of following
+                    title: following
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/Username"
   /users/{Username}/followers/:
     parameters:
       - $ref: "#/components/parameters/Username"
@@ -833,6 +864,50 @@ paths:
             NotFound : The user specified in the URL does not exists.
         400:
           $ref: "#/components/responses/BadRequest"
+        500:
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      operationId: getFollowers
+      summary: Get the followers of the specified profile.
+      description: |
+        Returns the list of followers of the profile specified in the URL.
+      responses:
+        200: 
+          description: |
+            OK : Request fullfilled.
+          content: 
+             application/json:
+              schema:
+                type: object
+                title: followers
+                description: The followers of the user
+                properties:
+                  Followers:
+                    type: array
+                    description: The array that contains the list of followers
+                    title: followers
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/FollowerId"
+        401:
+          description: |
+            Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
+        403: 
+          description : |
+            Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
+
+            - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the profile. (has banned the user in the url or was banned by the user in the url).
+            - The id passed in the Authorization corresponds to an registered user but with no existing profile.
+        404: 
+          description: |
+            Not Found : The user which username is passed in the URL query does not exist.
+            
+       
         500:
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/{FollowerId}:
@@ -913,6 +988,34 @@ paths:
             Not Found : the user specified in the URL does not exists.
         500:
           $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - user
+      security:
+        - bearerAuth: []
+      operationId: getBanned
+      summary: Get the banned users of the specified profile.
+      description: |
+        Returns the list of banned users of the profile specified in the URL.
+      responses:
+        200: 
+          description: |
+            OK : Request fullfilled.
+          content: 
+             application/json:
+              schema:
+                type: object
+                title: bannedusers
+                description: The bannedusers of the user
+                properties:
+                  BannedUsers:
+                    type: array
+                    description: The array that contains the list of bannedusers
+                    title: bannedusers
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/BannedId"  
   /users/{Username}/bannedusers/{BannedId}:
     parameters:
       - $ref: "#/components/parameters/Username"
