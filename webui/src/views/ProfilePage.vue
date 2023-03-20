@@ -1,5 +1,6 @@
 <script>
 export default {
+	
 	// Reactive State
 	data: function () {
 		return {
@@ -19,18 +20,18 @@ export default {
 			IsBanned : false
 		}
 	},
+	
 	// Dichiarazione del watcher: quando L'Username nel path cambierà,verrà caricato il profilo corrispondente 
 	watch:{
         currentPath(newUsername,oldUsername){
             if (newUsername !== oldUsername){
-                this.loadProfile()
+                this.LoadProfile()
             }
         },
     },
 
 	computed:{
-
-        currentPath(){
+		currentPath(){
             return this.$route.params.Username;
         },
 	},
@@ -38,7 +39,7 @@ export default {
 	methods: {
 		
 		// Caricamento del profilo da mostrare
-		async loadProfile(){
+		async LoadProfile(){
 
 			// Controllo se chi sta visualizzando il profilo ne è il proprietario,la pagina ne viene influenzata
 			if(this.$route.params.Username === `${localStorage.getItem("Username")}`){
@@ -47,6 +48,7 @@ export default {
 			else{
 				this.IsOwner=false;
 			}
+
 			// Richieste http
 
 			// Impostazione del config per la richiesta getUserProfile
@@ -112,8 +114,7 @@ export default {
 					return;
 				}
 			}catch(e){
-				console.log(e);
-				return;
+				// GetUserProfile
 			}
 		},
 		
@@ -202,7 +203,7 @@ export default {
 		
 		
 		// Upload di una foto 
-		async uploadPhoto() {
+		async UploadPhoto() {
 			let input_file = document.getElementById('photo_uploader').files[0];
 			const reader = new FileReader();
 			reader.readAsArrayBuffer(input_file);
@@ -236,7 +237,7 @@ export default {
 		},
 		
 		// Rimozione di una foto dalla visualizzazione
-		removePhotoFromList(photoid){
+		RemovePhotoFromList(photoid){
 			this.Photos = this.Photos.filter(photo => photo.PhotoId !== photoid);
 			this.NumberOfPhotos -=1;
 		},
@@ -253,7 +254,7 @@ export default {
 
 	// Eseguita appena il componente è stato montato
  	async mounted()  {
-		await this.loadProfile();
+		await this.LoadProfile();
 	},
 	
 	
@@ -286,7 +287,7 @@ export default {
 			
 			<!-- Se chi visualizza il profilo ne è il proprietario mostro il pulsante UploadPhoto -->
 			<div v-if="IsOwner">
-				<input type="file" id="photo_uploader" ref="photo_uploader" @change="uploadPhoto" accept=".png" hidden/>
+				<input type="file" id="photo_uploader" ref="photo_uploader" @change="UploadPhoto" accept=".png" hidden/>
 				<label for="photo_uploader" class="btn btn-dark" type="button" style="height: 40px; width:160px">
 					<i class="fa-solid fa-upload"></i>
 					Upload Photo
@@ -345,7 +346,7 @@ export default {
 			:likesnumber = "photo.LikesNumber"
 			:commentsnumber = "photo.CommentsNumber"
 			:dateofupload = "photo.DateOfUpload"
-			@photo_deleted_from_database = "removePhotoFromList"/>
+			@photo_deleted_from_database = "RemovePhotoFromList"/>
 		
 		</div>
 

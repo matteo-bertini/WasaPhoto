@@ -278,6 +278,8 @@
 
 <style>
 	#deletephotobutton:hover {
-		color: #8b0000
+		color: #8b0000;
+		transform: scale(1.3,1.3)
 	}
+	
 </style>
