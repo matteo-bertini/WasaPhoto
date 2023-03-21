@@ -20,12 +20,12 @@ export default {
            		localStorage.setItem('Username',this.Username);
 				if(this.checked == false){
 					let response2 = await this.$axios.post("/users/", {Username: this.Username},{headers: { Authorization: `Bearer ${localStorage.getItem("Authstring")}`}});
-            		this.$router.push("/"+this.Username);
+            		this.$router.push("/users/"+this.Username);
 					this.loading = false;
             		return
 				}
 				else{
-					this.$router.push("/"+this.Username)
+					this.$router.push("/users/"+this.Username)
 					this.loading = false;
             		return
 
@@ -56,7 +56,7 @@ export default {
 	<div class = "container-fluid" >
 		<div class="row">
 			<div class="col">
-					<ErrorMsg v-if="errormsg" :msg="errormsg"></ErrorMsg>
+					<ErrorMsg v-if="errormsg" :Message="errormsg"></ErrorMsg>
 			</div>
 		</div>
 		<div class="row" style="display: flex; justify-content: center; align-items: center; vertical-align: middle; margin-top: 250px;" >

@@ -25,7 +25,8 @@ export default {
 	watch:{
         currentPath(newUsername,oldUsername){
             if (newUsername !== oldUsername){
-                this.LoadProfile()
+                this.LoadProfile();
+				return;
             }
         },
     },
@@ -114,7 +115,9 @@ export default {
 					return;
 				}
 			}catch(e){
-				// GetUserProfile
+			
+				this.$router.replace("/profilenotfound");
+				return;
 			}
 		},
 		
@@ -162,6 +165,7 @@ export default {
 
 		},
 		
+		// Click sul pulsante Ban
 		async BanUnbanButtonPressed(){
 			// Chi visualizza il profilo lo segue già
 			if(this.IsBanned==true){
@@ -201,8 +205,13 @@ export default {
 			}
 		},
 		
+		// Click sul pulsante Settings
+		SettingsButtonPressed(){
+			this.$router.replace("/users/"+this.Username+"/settings");
+			return;
+		},
 		
-		// Upload di una foto 
+		// Click sul pulsante Upload Photo
 		async UploadPhoto() {
 			let input_file = document.getElementById('photo_uploader').files[0];
 			const reader = new FileReader();
@@ -264,7 +273,7 @@ export default {
 </script>
 
 <template>
-	<div class="container-fluid" style=" display:flex; flex-direction: column; " >
+	<div class="container" style=" display:flex; flex-direction: column; " >
 		
 		<!-- Titolo e barra di ricerca -->
 		<div style="display: flex; flex-direction: column; align-items: center; row-gap: 10px; margin-top: 3px;">
@@ -303,8 +312,8 @@ export default {
 			
 			<div class="card" style="width: fit-content; text-align: center;">
 				<div class="card-body">
-					<h5 class ="card-title" style="font-size: 30px;">{{Username}}</h5>
-					<p class="card-text" style="font-size: 15px;">
+					<h5 class ="card-title" style="font-size: xx-large;">{{Username}}</h5>
+					<p class="card-text" style="font-size: medium;">
 						Post: {{NumberOfPhotos}} | 
 						<button data-bs-toggle="modal" :data-bs-target="'#FollowersModal' +Username" style="border:none; background-color: rgba(255, 255, 255, 0);">
 							Followers: {{FollowersNumber}} 
@@ -318,7 +327,7 @@ export default {
 			</div>
 			
 			<div>
-				<button v-if="IsOwner" class="btn btn-dark" @click="GoToSettings" type="button" style="height: 40px; width:160px"> 
+				<button v-if="IsOwner" class="btn btn-dark" @click="SettingsButtonPressed" type="button" style="height: 40px; width:160px"> 
 					<i class="fa-solid fa-gear"></i>
 					Settings
 				</button>
