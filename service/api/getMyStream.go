@@ -62,9 +62,10 @@ func (rt *_router) getMyStream(w http.ResponseWriter, r *http.Request, ps httpro
 				ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni di database.")
 				return
 			} else {
+				getMyStreamResponseBody := getMyStreamResponseBody{PhotoStream: *photostream}
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				err = json.NewEncoder(w).Encode(photostream)
+				err = json.NewEncoder(w).Encode(getMyStreamResponseBody)
 				// Si è verificato un errore nell'encoding della risposta
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)

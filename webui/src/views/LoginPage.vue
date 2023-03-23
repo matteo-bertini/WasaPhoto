@@ -3,47 +3,67 @@ export default {
 	// Dichiarazione del reactive state
 	data: function () {
 		return {
-			errormsg: null,
-			loading: false,
-			checked : false,
+			ErrorMessage: null,
 			Username : "",
 			
 		}
 	},
 	methods: {
-		doLogin :async function () {
-			this.loading = true;
-    		this.errormsg = null;
+		// Click sul pulsante Login
+		async LoginButtonPressed(){
 			try{
-				let response1 = await this.$axios.post("/session", {Username: this.Username});
-            	localStorage.setItem('Authstring',response1.data.Identifier);
-           		localStorage.setItem('Username',this.Username);
-				if(this.checked == false){
-					let response2 = await this.$axios.post("/users/", {Username: this.Username},{headers: { Authorization: `Bearer ${localStorage.getItem("Authstring")}`}});
-            		this.$router.push("/users/"+this.Username);
-					this.loading = false;
-            		return
-				}
-				else{
-					this.$router.push("/users/"+this.Username)
-					this.loading = false;
-            		return
-
-				}
-			}catch(e){
-				if(e.response.status == 403){
-					this.errormsg = "Oops! Sembra che tu abbia già un profilo esistente. Per favore spunta la casella in basso a sinistra nel pannello di login.";
-					this.loading = false;
-					return;
-				}else{
-					this.errormsg = e.toString();
-					this.loading = false;
-					return;
-
-				}
+				
+				// DoLogin
+				let doLogin_response = await this.$axios.post("/session",{Username:this.Username});
+				localStorage.setItem("Authstring",doLogin_response.data.Identifier);
+				localStorage.setItem("Username",this.Username);
 				
 
+				// GetUserProfile per vedere se devo o meno creare il profilo
+				let getUserProfile_config = {
+					headers: {
+						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
+					},
+					params: {
+						Username: this.Username
+					},
+					validateStatus: function (status) {
+						 return status <500; 
+  					},
+				};
+				let getUserProfile_response =  await this.$axios.get("/users/",getUserProfile_config);
+				
+				// Se la risposta è 404,devo creare il profilo
+				if(getUserProfile_response.status==404){
+					
+					// AddUser
+					let addUser_config = {
+						headers: {
+							Authorization: `Bearer ${localStorage.getItem("Authstring")}`
+						}
+					}
+					try{
+						let addUser_response = await this.$axios.post("/users/",{Username:this.Username},addUser_config);
+						this.$router.push("/users/"+this.Username+"/");
+						return;
+					}
+					catch(e){
+						console.log(e);
+						return;
+					}
+
+
+				}
+				this.$router.push("/users/"+this.Username+"/");
+				return;
+
+
+			}catch(e){
+				console.log(e);
+				return;
 			}
+
+
 		}
 	}
 	
@@ -53,51 +73,43 @@ export default {
 </script>
 
 <template>
-	<div class = "container-fluid" >
-		<div class="row">
-			<div class="col">
-					<ErrorMsg v-if="errormsg" :Message="errormsg"></ErrorMsg>
-			</div>
+	<div class="container" style="display: flex; flex-direction: column; width:100vw; height: 100vh; justify-content: flex-start; align-items: center;">
+		
+		<!-- Titolo -->
+		<div>
+			<span class="badge badge-secondary" style="display: flex; flex-direction: column; justify-content: center; align-items: center; width: 40vw; height: 20vh; font-size: 5em; color: rgb(0, 0, 0); background-color: white;">
+				WasaPhoto
+			
+			</span>
 		</div>
-		<div class="row" style="display: flex; justify-content: center; align-items: center; vertical-align: middle; margin-top: 250px;" >
-			<div class="col">
-				<div class="card" style="background-color:rgba(255, 255, 255, 0.285);">
-					<p style="text-align: center; color: black; font-size:50px;">Welcome to WasaPhoto!</p>
-					<p style="text-align: center; color: black; font-size:18px">
-						Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! <br>
-						You can upload your photos directly from your PC, and they will be visible to everyone following you.
-					</p>	
+		
+		
+		
+		<!-- Pannello di Login -->
+		<div class="card" style="display: flex; flex-direction: column; position: absolute; top: 35%; width: 50vw; height: 20%; justify-content: center; align-items: center; background-color:rgba(255, 255, 255, 0.285);">
+			<span style="font-family:Arial; font-size:xx-large; font-weight: bolder;">LOGIN</span>
+			<input id="LoginTextArea" type="text" class="form-control" v-model="Username" style="width: 40%;" placeholder="Type here your username...">
+			<button @click="LoginButtonPressed" id="LoginButton" class="btn btn-dark" style="margin-top: 2em;" >
+				<i class="fa-solid fa-right-to-bracket"> Login/Register </i>
+			
+			</button>	
+		</div>
 
-				</div>
-			</div>
-			<div class="col">
-				<div class="card" style="background-color:rgba(255, 255, 255, 0.285); display: flex; justify-content: center; align-items: center; text-align: center;">
-					<div>
-						<h1 style="font-family:Arial;">LOGIN</h1>
-					</div>
-					<div>
-						<input name="LoginTextArea" class="form-control" v-model="Username" placeholder="Enter here your username" style="width:fit-content" >
-						<button type="button" @click="doLogin" class="btn btn-dark" :disabled = "Username==null || Username.length<3 || Username.length>30 || Username.trim().length<3"  style="width:fit-content; margin-top: 10px;">Login/Register</button>
-					</div>
-					
-					<div style="display: inline-flex; align-self: flex-start; margin-left: 15px; margin-bottom: 5px;">
-						<input type="checkbox" id="checkbox" v-model="checked"/>
-						<label for="checkbox" style="margin-left: 5px;">I have a profile</label>
-
-					</div>
-					
-						
-				</div>
+		
 
 
-			</div>
 
-		</div>	
+		
 	</div>
+	
 </template>
 
 <style>
+	#LoginButton:hover{
+		transform: scale(1.1);
+
+	}
 	
 
-
+	
 </style>

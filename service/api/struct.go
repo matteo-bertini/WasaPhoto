@@ -125,3 +125,8 @@ type commentPhotoRequestBody struct {
 	CommentAuthor string `json:"CommentAuthor"`
 	CommentText   string `json:"CommentText"`
 }
+
+// getMyStream Operation //
+type getMyStreamResponseBody struct {
+	PhotoStream []database.Database_photostream_component `json:"PhotoStream"`
+}

@@ -1,18 +1,14 @@
 <script setup>
 	import { RouterLink, RouterView } from 'vue-router'
-	</script>
-	<script>
+</script>
+<script>
 	export default {}
-	</script>
+</script>
 	
-	<template>
-		<RouterView />
-	</template>
+<template>
+	<RouterView />
+</template>
 	
-	<style>
-	body{
-		background: gray
-	
-	}
-	</style>
+<style>
+</style>
 	

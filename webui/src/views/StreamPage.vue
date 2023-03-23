@@ -1,0 +1,110 @@
+<script>
+    export default{
+        data(){
+            return{
+                Username:"",
+                PhotoStream: []
+            }
+        },
+        async mounted(){
+
+            // Setto l'Username
+            this.Username=this.$route.params.Username;
+
+            // Richiesta del photostream da mostrare
+            let getMyStream_config = {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("Authstring")}`
+                }
+            };
+            try{
+                let getMyStream_response = await this.$axios.get("/users/"+this.Username+"/",getMyStream_config);
+                this.PhotoStream = getMyStream_response.data.PhotoStream;
+                return;
+
+            }catch(e){
+                console.log(e);
+                return;
+            }
+
+            
+
+        },
+        methods: {
+            // Click sul pulsante Profile
+			ProfileButtonPressed(){
+				this.$router.replace("/users/"+this.Username);
+				return;
+			},
+
+			// Click sul pulsante Logout
+			LogoutButtonPressed(){
+
+				// Pulizia del localstorage
+				localStorage.clear();
+
+				// Ritorno alla schermata di Login
+				this.$router.replace("/login");
+				return;
+
+			},
+        }
+    }
+
+</script>
+
+<template>
+    
+    <div class="container-fluid" style="display: flex; flex-direction: column;">
+        <!-- Pulsanti Profile e Logout-->
+        <div style="display: flex; flex-direction: row; justify-content: space-between; margin-left: 3rem; margin-top: 2rem; margin-right: 3rem;">
+            
+            <!-- Back Button -->
+            <div>
+                <button class="btn btn-primary" id="ProfileButton" @click="ProfileButtonPressed">
+                    <i class="fa solid fa-user"> Profile</i>
+                </button>
+            </div>
+            
+            <!-- Logout Button -->
+            <div>
+                <button class="btn btn-dark" id="LogoutButton" @click="LogoutButtonPressed" style="background-color: darkred;">
+                    <i class="fa solid fa-right-from-bracket" style="color: black;"> Logout</i>
+                </button>
+            </div>
+        
+        
+        </div>
+
+        <!-- Titolo: Username stream -->
+        <div style="display: flex; flex-direction: row; justify-content: center; margin-top: 5em;">
+            <h1>
+                <span class="badge badge-primary" style="background-color: black;">
+                    {{Username}}'s stream
+                </span>
+            </h1>
+        </div>
+
+        <!-- PhotoStream -->
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <Photo v-for="Photo in PhotoStream"
+                :key = "Photo.PhotoId"
+			    :owner = "Photo.Username"
+			    :photoid = "Photo.PhotoId"
+			    :likesnumber = "Photo.LikesNumber"
+			    :commentsnumber = "Photo.CommentsNumber"
+			    :dateofupload = "Photo.DateOfUpload">
+            </Photo>
+
+        </div>
+
+       
+
+
+    </div>
+
+</template>
+
+<style>
+
+</style>

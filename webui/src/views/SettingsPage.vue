@@ -139,7 +139,7 @@
 			<!-- Back Button -->
 			<div>
 				<button class="btn btn-primary" id="BackButton" @click="BackButtonPressed">
-					<i class="fa solid fa-right-from-bracket"> Back</i>
+					<i class="fa solid fa-arrow-left"> Back</i>
 				</button>
 			</div>
 

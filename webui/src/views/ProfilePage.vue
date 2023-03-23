@@ -115,9 +115,12 @@ export default {
 					return;
 				}
 			}catch(e){
+				if(e.response.status==403 || e.response.status==404){
+					this.$router.replace("/profilenotfound");
+					return;
+
+				}
 			
-				this.$router.replace("/profilenotfound");
-				return;
 			}
 		},
 		
@@ -257,8 +260,13 @@ export default {
 			// Aggiorno l'URL e la pagina si aggiorna automaticamente con i dati giusti
 			this.$router.push(this.ToSearch);
 			this.ToSearch="";
-		}
+		},
 		
+		// Click sul pulsante MyStream
+		MyStreamButtonPressed(){
+			this.$router.replace("/users/"+this.Username+"/stream");
+			return;
+		}
 	},
 
 	// Eseguita appena il componente è stato montato
@@ -309,6 +317,8 @@ export default {
 					<i class="fa-solid fa-minus" v-else id="UnfollowIcon"> Unfollow</i>
 				</button>
 			</div>
+
+			
 			
 			<div class="card" style="width: fit-content; text-align: center;">
 				<div class="card-body">
@@ -339,6 +349,13 @@ export default {
 			</div>
 		</div>
 
+		<!-- MyStream Button-->
+		<div style="display: flex; flex-direction: row; justify-content: center; align-items: center; margin-top: 3em;">
+			<button  id="MyStreamButton" @click="MyStreamButtonPressed" class="btn  btn-dark">
+				My Stream
+			</button>
+		</div>
+		
 		<!-- Etichetta Photos -->
 		<div style="display: flex; justify-content: center; margin-top: 15px;">
 			<h3>Photos</h3>	
@@ -395,6 +412,9 @@ export default {
 </template>
 
 <style>
+	html,body{
+		background-image: url("../assets/images/purple.jpg");
+	}
 	
 
 
