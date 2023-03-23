@@ -151,61 +151,45 @@ components:
               LikesNumber: 12
               CommentsNumber: 5
               DateOfUpload: 2021-11-20T09:42:18Z
-    PhotoStream:
-      type : array
-      title: PhotoStream
-      description : The personalized photostream for a user
-      minItems : 0
-      maxItems : 10000000
-      items :
-        type : object
-        title : PhotoStream component
-        description : a single component in the photostream
-        properties :
-          Username:
-            type: string
-            description: |
-              A string that uniquely identifies the user's profile on WasaPhoto,indicate who
-              owns the photo.
-            minLength: 3
-            maxLength: 30
-            pattern: '^.*?$'
-            example: Eren_yeager
-          PhotoId: 
-            type: string
-            description: |
-              The unique Id of the Photo in the User PhotoStream.
-              Is the same PhotoId in photos/{PhotoId}
-            minLength: 3
-            maxLength: 200
-            pattern: '^.*?$'
-            example: "152164"
-          LikesNumber:
-            type: integer
-            description: The number of likes of the photo.
-            example: 15
-          CommentsNumber:
-            type: integer
-            description: The number of comments under the photo.
-            example: 3
-          DateOfUpload:
-            type: string
-            format: date-time
-            minLength: 20
-            maxLength: 30
-            pattern: '^.*?$'
-            example: 2018-03-20T09:12:28Z
-      example: 
-      - Username : "Eren_Yeager"
-        PhotoId: "1524151"
-        LikesNumber: 2
-        CommentsNumber: 1
-        DateOfUpload: 2022-03-20T09:12:28Z
-      - Username : "Mikasa_Ackermann"
-        PhotoId: "513135"  
-        LikesNumber: 12
-        CommentsNumber: 5
-        DateOfUpload: 2021-11-20T09:42:18Z    
+    PhotoStreamComponent:
+     
+      type : object
+      title : PhotoStream component
+      description : a single component in the photostream
+      properties :
+        Username:
+          type: string
+          description: |
+            A string that uniquely identifies the user's profile on WasaPhoto,indicate who
+            owns the photo.
+          minLength: 3
+          maxLength: 30
+          pattern: '^.*?$'
+          example: Eren_yeager
+        PhotoId: 
+          type: string
+          description: |
+            The unique Id of the Photo in the User PhotoStream.
+            Is the same PhotoId in photos/{PhotoId}
+          minLength: 3
+          maxLength: 200
+          pattern: '^.*?$'
+          example: "152164"
+        LikesNumber:
+          type: integer
+          description: The number of likes of the photo.
+          example: 15
+        CommentsNumber:
+          type: integer
+          description: The number of comments under the photo.
+          example: 3
+        DateOfUpload:
+          type: string
+          format: date-time
+          minLength: 20
+          maxLength: 30
+          pattern: '^.*?$'
+          example: 2018-03-20T09:12:28Z
   parameters: 
     Username:
       name: Username
@@ -434,7 +418,18 @@ paths:
           content: 
             application/json:
               schema:
-                $ref: "#/components/schemas/PhotoStream" 
+                type: object
+                title: followers
+                description: The following of the user
+                properties:
+                  PhotoStream:
+                    type: array
+                    description: The array that contains the photostream components
+                    title: PhotoStream
+                    minItems : 0
+                    maxItems : 10000000
+                    items:
+                      $ref: "#/components/schemas/PhotoStreamComponent"
         404:
           description: |
            Not Found : The user specified in the URL does not exist.
