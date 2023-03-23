@@ -419,8 +419,8 @@ paths:
             application/json:
               schema:
                 type: object
-                title: followers
-                description: The following of the user
+                title: PhotoStream
+                description: The personalized photostream of the user
                 properties:
                   PhotoStream:
                     type: array
@@ -802,7 +802,7 @@ paths:
              application/json:
               schema:
                 type: object
-                title: followers
+                title: following
                 description: The following of the user
                 properties:
                   Following:
