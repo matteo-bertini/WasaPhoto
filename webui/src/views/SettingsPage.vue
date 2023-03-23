@@ -131,10 +131,10 @@
 	<ErrorMsg v-if="ErrorMessage" :Message =ErrorMessage></ErrorMsg>
 
 
-	<div class="container" style="display: flex; flex-direction: column; margin-top: 20px;">
+	<div id="SettingsPageContainer" class="container-fluid" style="display: flex; flex-direction: column;  min-width: 100vw; min-height: 100vh;">
 		
 		<!-- Pannello superiore: pulsanti Back e Logout -->
-		<div style="display: flex; flex-direction: row; justify-content: space-between;">
+		<div style="display: flex; flex-direction: row; justify-content: space-between; margin-top: 2em;">
 			
 			<!-- Back Button -->
 			<div>
@@ -233,6 +233,14 @@
 </template>
 
 <style>
+	#SettingsPageContainer{
+		background: rgb(87,32,122);
+		background: -moz-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		background: -webkit-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		background: linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#57207a",endColorstr="#57207a",GradientType=1); 
+	}
+
 	#BackButton:hover{
 		transform: scale(1.1,1.1);
 	}

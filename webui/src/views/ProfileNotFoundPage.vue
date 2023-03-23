@@ -3,7 +3,7 @@
 		methods:{
 			AstronautClicked(){
 				// La pagina cercata non esiste,rimando alla pagina di login.
-				this.$router.replace("/login")
+				this.$router.replace("/users/"+localStorage.getItem("Username"));
 				return;
 			}
 
@@ -109,7 +109,7 @@
 		<div class="error">
 			<div class="error__title">Oops</div>
 			<div class="error__description">
-				Seems that the page you are looking for does not exist.<br>
+				We couldn't find the profile you are looking for.<br>
 				Click on the astronaut to go back :)
 			
 			</div>

@@ -156,7 +156,8 @@ html,body {
 	height: 100%;
   	width: 100%;
   	margin: 0px;
-	background-image: url("../assets/images/purple.jpg");
+	background: linear-gradient(90deg, #2f3640 23%, #181b20 100%);
+
 }
 .moon {
 	background: linear-gradient(90deg, #d0d0d0 48%, #919191 100%);

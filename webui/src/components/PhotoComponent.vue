@@ -176,7 +176,7 @@
 </script>
 
 <template>
-	<div class="card" style="width: 375px; height: 375px;">
+	<div class="card" style="width: 30em; height: 30em; display: flex; flex-direction: column;">
 
 		<!-- Pulsante di eliminazione foto -->
 		<div  style="display: flex; flex-direction: row; justify-content: flex-end;">
@@ -187,9 +187,8 @@
 		</div>
 
 		<!-- Foto -->
-		<div style="display: flex; flex-direction: row; justify-content: center; margin-top: 15px;">
-			<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto."
-				style="width:250px; height:250px;">
+		<div style="display: flex; flex-direction: row; justify-content: center; height: 70%; width: 100%; margin-top: 15px;">
+			<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto.">
 		</div>
 
 		<!-- Pannello Inferiore -->
@@ -200,7 +199,7 @@
 					style=" height: 20px;width: fit-content; display: flex; flex-direction: row; justify-content: center; align-items: center;">
 
 					<!-- Numero di "Mi Piace" -->
-					<button data-bs-toggle="modal" :data-bs-target="'#LikesModal' +PhotoId"
+					<button class="btn" data-bs-toggle="modal" :data-bs-target="'#LikesModal' +PhotoId"
 						style="border:none; background-color: #ffffff; font-size: 20px;">{{LikesNumber}}</button>
 
 					<!-- Pulsante Like -->
@@ -221,7 +220,7 @@
 					</div>
 
 					<!-- Numero di Commenti -->
-					<button data-bs-toggle="modal" :data-bs-target="'#CommentsModal'+PhotoId"
+					<button class="btn" data-bs-toggle="modal" :data-bs-target="'#CommentsModal'+PhotoId"
 						style="border:none; background-color: white; font-size: 20px;">{{CommentsNumber}}</button>
 				</div>
 			</div>
@@ -279,7 +278,11 @@
 <style>
 	#deletephotobutton:hover {
 		color: #8b0000;
-		transform: scale(1.3,1.3)
+		transform: scale(1.3)
+	}
+	.btn:hover{
+		transform: scale(1.2);
+		
 	}
 	
 </style>

@@ -55,7 +55,7 @@
 
 <template>
     
-    <div class="container-fluid" style="display: flex; flex-direction: column;">
+    <div id="StreamPageContainer" class="container-fluid" style="display: flex; flex-direction: column; min-width: 100vw; min-height: 100vh;">
         <!-- Pulsanti Profile e Logout-->
         <div style="display: flex; flex-direction: row; justify-content: space-between; margin-left: 3rem; margin-top: 2rem; margin-right: 3rem;">
             
@@ -86,7 +86,7 @@
         </div>
 
         <!-- PhotoStream -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap:2rem">
             <Photo v-for="Photo in PhotoStream"
                 :key = "Photo.PhotoId"
 			    :owner = "Photo.Username"
@@ -106,5 +106,12 @@
 </template>
 
 <style>
+    #StreamPageContainer{
+        background: rgb(87,32,122);
+		background: -moz-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		background: -webkit-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		background: linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
+		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#57207a",endColorstr="#57207a",GradientType=1); 
+    }
 
 </style>
