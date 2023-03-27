@@ -91,6 +91,7 @@
 					let deleteUser_response = await this.$axios.delete("/users/"+this.Username+"/",deleteUser_config);
 					localStorage.clear();
 					this.$router.replace("/login");
+					return;
 
 				}
 				catch(e){
