@@ -52,7 +52,9 @@ export default {
 			// Richieste http
 
 			// Impostazione del config per la richiesta getUserProfile
-			let getUserProfile_config = await {headers: {Authorization: `Bearer ${localStorage.getItem("Authstring")}`},params: {Username: this.$route.params.Username}}
+			let getUserProfile_config = await {
+				headers: {Authorization: `Bearer ${localStorage.getItem("Authstring")}`},
+				params: {Username: this.$route.params.Username}}
 			try{
 				
 				// getUserProfile
@@ -169,7 +171,7 @@ export default {
 			let banUser_response = await this.$axios.post("/users/"+`${localStorage.getItem("Username")}`+"/bannedusers/",{"BannedId":this.Username},banUser_config);
 			
 			//Ritorno al mio profilo
-			this.$router.push("/users/"+localStorage.getItem("Username"));
+			this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
 			return
 
 			
@@ -225,8 +227,9 @@ export default {
 		async SearchProfile(){
 			
 			// Aggiorno l'URL e la pagina si aggiorna automaticamente con i dati giusti
-			this.$router.push(this.ToSearch);
+			this.$router.replace("/users/"+this.ToSearch+"/");
 			this.ToSearch="";
+			return;
 		},
 		
 		// Click sul pulsante MyStream
@@ -235,7 +238,7 @@ export default {
 			return;
 		},
 		BackButtonPressed(){
-			this.$router.replace("/users/"+localStorage.getItem("Username"));
+			this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
 			return;
 		}
 	},
@@ -359,9 +362,8 @@ export default {
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<div v-for="Follower in Followers">
+						<div v-for="Follower in Followers" :key="Follower">
 							{{Follower}}
-
 						</div>
 					</div>
 				</div>
@@ -377,7 +379,7 @@ export default {
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<div v-for="Follow in Following">
+						<div v-for="Follow in Following" :key="Follow">
 							{{Follow}}
 						</div>
 					</div>

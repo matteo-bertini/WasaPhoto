@@ -33,7 +33,7 @@
         methods: {
             // Click sul pulsante Profile
 			ProfileButtonPressed(){
-				this.$router.replace("/users/"+this.Username);
+				this.$router.replace("/users/"+this.Username+"/");
 				return;
 			},
 
@@ -86,7 +86,7 @@
         </div>
 
         <!-- PhotoStream -->
-        <div style="display: flex; flex-direction: column; align-items: center; gap:2rem">
+        <div v-if="PhotoStream.length>0" style="display: flex; flex-direction: column; align-items: center; gap:2rem; margin-top: 5rem;">
             <Photo v-for="Photo in PhotoStream"
                 :key = "Photo.PhotoId"
 			    :owner = "Photo.Username"
@@ -95,6 +95,11 @@
 			    :commentsnumber = "Photo.CommentsNumber"
 			    :dateofupload = "Photo.DateOfUpload">
             </Photo>
+
+        </div>
+
+        <div v-else style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height:40em;">
+            <i class="fa-solid fa-heart-crack" style="font-size: x-large;"> No content yet! Follow somebody to see photos here.</i>
 
         </div>
 

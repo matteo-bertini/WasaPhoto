@@ -3,7 +3,7 @@
 		methods:{
 			AstronautClicked(){
 				// La pagina cercata non esiste,rimando alla pagina di login.
-				this.$router.replace("/users/"+localStorage.getItem("Username"));
+				this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
 				return;
 			}
 

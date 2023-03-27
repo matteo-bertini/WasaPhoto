@@ -15,7 +15,7 @@
 
 			// Click sul pulsante Back
 			BackButtonPressed(){
-				this.$router.replace("/users/"+this.Username);
+				this.$router.replace("/users/"+this.Username+"/");
 				return;
 			},
 
@@ -165,7 +165,7 @@
 					</div>
 					<div style="display: flex; flex-direction: row;gap: 5px;">
 						<input type="text"  v-model="NewUsername" :placeholder="'Current Username: '+Username" id="ChangeUsernameTextArea" class="form-control">
-						<button  id="ChangeUsernameConfirmButton" class="btn btn-primary" @click="ConfirmButtonPressed">Confirm</button>
+						<button  id="ChangeUsernameConfirmButton" :disabled = "NewUsername.length==0 || NewUsername.length < 3 || NewUsername.length>30 || NewUsername.trim().length<3 || NewUsername.trim().length>30" class="btn btn-primary" @click="ConfirmButtonPressed">Confirm</button>
 					</div>
 					<div id="UsernameHelperBlock" class="form-text"> 
 						Your username must be 3-30 characters long, contain letters and numbers, and must not contain spaces. 
@@ -226,7 +226,7 @@
 				</div>
 				<div class="modal-body" style="display: flex; flex-direction: column; align-items: center;">
 					<span>By clicking the button below you will irreversibly delete your account.</span>
-					<button class="btn" id="DeleteUserConfirmationButton" style="background-color: darkred; color: white;" @click="DeleteUserButtonPressed" >Confirm</button>
+					<button class="btn" id="DeleteUserConfirmationButton" data-bs-toggle="modal" data-bs-target="#DeleteUserModal" style="background-color: darkred; color: white;" @click="DeleteUserButtonPressed" >Confirm</button>
 				</div>
 			</div>
 		</div>
