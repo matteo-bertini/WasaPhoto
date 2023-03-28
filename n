@@ -1,0 +1,628 @@
+errors
+
+  Message :   Property names must be snake case: Username
+  Path    :   components.schemas.Username.properties
+  Line    :   28
+
+  Message :   Property names must be snake case: FollowerId
+  Path    :   components.schemas.FollowerId.properties
+  Line    :   41
+
+  Message :   Property names must be snake case: BannedId
+  Path    :   components.schemas.BannedId.properties
+  Line    :   53
+
+  Message :   Property names must be snake case: CommentId
+  Path    :   components.schemas.Comment.properties
+  Line    :   65
+
+  Message :   Property names must be snake case: CommentAuthor
+  Path    :   components.schemas.Comment.properties
+  Line    :   65
+
+  Message :   Property names must be snake case: CommentText
+  Path    :   components.schemas.Comment.properties
+  Line    :   65
+
+  Message :   Property names must be snake case: LikeId
+  Path    :   components.schemas.Like.properties
+  Line    :   91
+
+  Message :   Property names must be snake case: PhotoId
+  Path    :   components.schemas.Photo.properties
+  Line    :   100
+
+  Message :   Property names must be snake case: LikesNumber
+  Path    :   components.schemas.Photo.properties
+  Line    :   100
+
+  Message :   Property names must be snake case: CommentsNumber
+  Path    :   components.schemas.Photo.properties
+  Line    :   100
+
+  Message :   Property names must be snake case: DateOfUpload
+  Path    :   components.schemas.Photo.properties
+  Line    :   100
+
+  Message :   Property names must be snake case: Username
+  Path    :   components.schemas.User.properties
+  Line    :   130
+
+  Message :   Property names must be snake case: Followers
+  Path    :   components.schemas.User.properties
+  Line    :   130
+
+  Message :   Property names must be snake case: Following
+  Path    :   components.schemas.User.properties
+  Line    :   130
+
+  Message :   Property names must be snake case: NumberOfPhotos
+  Path    :   components.schemas.User.properties
+  Line    :   130
+
+  Message :   Property names must be snake case: UploadedPhotos
+  Path    :   components.schemas.User.properties
+  Line    :   130
+
+  Message :   Property names must be snake case: Username
+  Path    :   components.schemas.PhotoStreamComponent.properties
+  Line    :   170
+
+  Message :   Property names must be snake case: PhotoId
+  Path    :   components.schemas.PhotoStreamComponent.properties
+  Line    :   170
+
+  Message :   Property names must be snake case: LikesNumber
+  Path    :   components.schemas.PhotoStreamComponent.properties
+  Line    :   170
+
+  Message :   Property names must be snake case: CommentsNumber
+  Path    :   components.schemas.PhotoStreamComponent.properties
+  Line    :   170
+
+  Message :   Property names must be snake case: DateOfUpload
+  Path    :   components.schemas.PhotoStreamComponent.properties
+  Line    :   170
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.Username
+  Line    :   206
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.PhotoId
+  Line    :   218
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.LikeId
+  Line    :   232
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.CommentId
+  Line    :   245
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.FollowerId
+  Line    :   255
+
+  Message :   Path parameter names must be snake case
+  Path    :   components.parameters.BannedId
+  Line    :   267
+
+  Message :   Property names must be snake case: Username
+  Path    :   paths./session.post.requestBody.content.application/json.schema.properties
+  Line    :   306
+
+  Message :   Property names must be snake case: Identifier
+  Path    :   paths./session.post.responses.201.content.application/json.schema.properties
+  Line    :   324
+
+  Message :   Query parameter names must be snake case
+  Path    :   paths./users/.get.parameters.0
+  Line    :   348
+
+  Message :   Property names must be snake case: PhotoStream
+  Path    :   paths./users/{Username}/.get.responses.200.content.application/json.schema.properties
+  Line    :   441
+
+  Message :   Property names must be snake case: Likes
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.get.responses.200.content.application/json.schema.properties
+  Line    :   673
+
+  Message :   Property names must be snake case: Comments
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.get.responses.200.content.application/json.schema.properties
+  Line    :   768
+
+  Message :   Property names must be snake case: Following
+  Path    :   paths./users/{Username}/following.get.responses.200.content.application/json.schema.properties
+  Line    :   828
+
+  Message :   Property names must be snake case: Followers
+  Path    :   paths./users/{Username}/followers/.get.responses.200.content.application/json.schema.properties
+  Line    :   920
+
+  Message :   Property names must be snake case: BannedUsers
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.200.content.application/json.schema.properties
+  Line    :   1042
+
+warnings
+
+  Message :   Major version segment not present in either server URLs or paths
+  Path    :   
+  Line    :   0
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   components.responses.BadRequest
+  Line    :   280
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   components.responses.InternalServerError
+  Line    :   284
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./session.post.operationId
+  Line    :   298
+
+  Message :   Request body schemas should be defined as a $ref to a named schema.
+  Path    :   paths./session.post.requestBody.content.application/json.schema
+  Line    :   303
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./session.post.responses.201.content.application/json
+  Line    :   320
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./session.post.responses.201.content.application/json.schema
+  Line    :   321
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/
+  Line    :   336
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/.get.operationId
+  Line    :   342
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/.get.summary
+  Line    :   343
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/.get.responses.200.content.application/json
+  Line    :   364
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/.get.responses.401
+  Line    :   367
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/.get.responses.403
+  Line    :   370
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/.get.responses.404
+  Line    :   376
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/.post.operationId
+  Line    :   388
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/.post.summary
+  Line    :   389
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/.post.responses.201.content.application/json
+  Line    :   404
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/.post.responses.403
+  Line    :   407
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/.post.responses.401
+  Line    :   412
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/
+  Line    :   417
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/.get.operationId
+  Line    :   425
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/.get.summary
+  Line    :   426
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/.get.responses.200.content.application/json
+  Line    :   436
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/.get.responses.200.content.application/json.schema
+  Line    :   437
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/.get.responses.404
+  Line    :   450
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/.delete.operationId
+  Line    :   460
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/.delete.summary
+  Line    :   461
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/.delete.responses.404
+  Line    :   469
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/username.put.operationId
+  Line    :   482
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/username.put.summary
+  Line    :   483
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/username.put.responses.200.content.application/json
+  Line    :   498
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/username.put.responses.401
+  Line    :   503
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/username.put.responses.404
+  Line    :   506
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/photos/
+  Line    :   511
+
+  Message :   Operations with non-form request bodies should set a name with the x-codegen-request-body-name extension.
+  Path    :   paths./users/{Username}/photos/.post
+  Line    :   514
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/.post.operationId
+  Line    :   519
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/photos/.post.responses.201.content.application/json
+  Line    :   539
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/.post.responses.401
+  Line    :   544
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/.post.responses.404
+  Line    :   547
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/
+  Line    :   552
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.get.operationId
+  Line    :   559
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.get.responses.401
+  Line    :   575
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.get.responses.403
+  Line    :   578
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.get.responses.404
+  Line    :   585
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.delete.operationId
+  Line    :   598
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.delete.summary
+  Line    :   599
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.delete.responses.401
+  Line    :   608
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/.delete.responses.404
+  Line    :   611
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/
+  Line    :   616
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.post.operationId
+  Line    :   625
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.post.responses.201.content.application/json
+  Line    :   635
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.post.responses.403
+  Line    :   638
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.post.responses.404
+  Line    :   645
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.post.responses.401
+  Line    :   651
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.get.operationId
+  Line    :   659
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.get.responses.200.content.application/json
+  Line    :   668
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/.get.responses.200.content.application/json.schema
+  Line    :   669
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/{LikeId}.delete.operationId
+  Line    :   695
+
+  Message :   operationIds should follow naming convention: operationId verb should be delete or remove
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/{LikeId}.delete.operationId
+  Line    :   695
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/{LikeId}.delete.summary
+  Line    :   696
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/{LikeId}.delete.responses.401
+  Line    :   705
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/likes/{LikeId}.delete.responses.404
+  Line    :   708
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/
+  Line    :   713
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.post.operationId
+  Line    :   722
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.post.responses.201.content.application/json
+  Line    :   738
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.post.responses.404
+  Line    :   743
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.post.responses.401
+  Line    :   746
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.get.operationId
+  Line    :   754
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.get.responses.200.content.application/json
+  Line    :   763
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.get.responses.200.content.application/json.schema
+  Line    :   764
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/.get.responses.404
+  Line    :   777
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/{CommentId}/
+  Line    :   782
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/{CommentId}/.delete.operationId
+  Line    :   792
+
+  Message :   operationIds should follow naming convention: operationId verb should be delete or unset
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/{CommentId}/.delete.operationId
+  Line    :   792
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/{CommentId}/.delete.summary
+  Line    :   793
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/photos/{PhotoId}/comments/{CommentId}/.delete.responses.404
+  Line    :   802
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/following.get.operationId
+  Line    :   814
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/following.get.summary
+  Line    :   815
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/following.get.responses.200.content.application/json
+  Line    :   823
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/following.get.responses.200.content.application/json.schema
+  Line    :   824
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/following.get.responses.401
+  Line    :   837
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/following.get.responses.403
+  Line    :   840
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/following.get.responses.404
+  Line    :   846
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/followers/
+  Line    :   853
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/followers/.post.operationId
+  Line    :   861
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/followers/.post.summary
+  Line    :   862
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/followers/.post.responses.201.content.application/json
+  Line    :   882
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.post.responses.403
+  Line    :   885
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.post.responses.401
+  Line    :   891
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.post.responses.404
+  Line    :   894
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/followers/.get.operationId
+  Line    :   906
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/followers/.get.summary
+  Line    :   907
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/followers/.get.responses.200.content.application/json
+  Line    :   915
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/followers/.get.responses.200.content.application/json.schema
+  Line    :   916
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.get.responses.401
+  Line    :   929
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.get.responses.403
+  Line    :   932
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/.get.responses.404
+  Line    :   938
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/followers/{FollowerId}.delete.operationId
+  Line    :   955
+
+  Message :   operationIds should follow naming convention: operationId verb should be delete or remove
+  Path    :   paths./users/{Username}/followers/{FollowerId}.delete.operationId
+  Line    :   955
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/followers/{FollowerId}.delete.summary
+  Line    :   956
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/{FollowerId}.delete.responses.401
+  Line    :   967
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/followers/{FollowerId}.delete.responses.404
+  Line    :   970
+
+  Message :   Path must not end with slash.
+  Path    :   paths./users/{Username}/bannedusers/
+  Line    :   975
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/bannedusers/.post.operationId
+  Line    :   983
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/bannedusers/.post.summary
+  Line    :   984
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/bannedusers/.post.responses.201.content.application/json
+  Line    :   1001
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.post.responses.401
+  Line    :   1006
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.post.responses.403
+  Line    :   1009
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.post.responses.404
+  Line    :   1018
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/bannedusers/.get.operationId
+  Line    :   1028
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/bannedusers/.get.summary
+  Line    :   1029
+
+  Message :   Response bodies should include an example response
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.200.content.application/json
+  Line    :   1037
+
+  Message :   Response schemas should be defined as a $ref to a named schema.
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.200.content.application/json.schema
+  Line    :   1038
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.401
+  Line    :   1051
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.403
+  Line    :   1054
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/.get.responses.404
+  Line    :   1060
+
+  Message :   Operation ids must be snake case
+  Path    :   paths./users/{Username}/bannedusers/{BannedId}.delete.operationId
+  Line    :   1077
+
+  Message :   operationIds should follow naming convention: operationId verb should be delete or remove
+  Path    :   paths./users/{Username}/bannedusers/{BannedId}.delete.operationId
+  Line    :   1077
+
+  Message :   Summary should not have a trailing period
+  Path    :   paths./users/{Username}/bannedusers/{BannedId}.delete.summary
+  Line    :   1078
+
+  Message :   Request bodies and non-204 responses should define a content object
+  Path    :   paths./users/{Username}/bannedusers/{BannedId}.delete.responses.404
+  Line    :   1087
+
