@@ -8,7 +8,7 @@ func (db *appdbimpl) UnfollowUser(username string, id string, to_del string, to_
 		return err
 	} else {
 		found := rows.Next()
-		if found == false {
+		if !found {
 			if rows.Err() != nil {
 				return rows.Err()
 			} else {

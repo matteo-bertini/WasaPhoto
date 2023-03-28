@@ -12,7 +12,7 @@ func (db *appdbimpl) GetMyStream(id string) (*[]Database_photostream_component, 
 		var following_id string
 		var photostream_component Database_photostream_component
 		stream := []Database_photostream_component{}
-		for rows0.Next() == true {
+		for rows0.Next() {
 			// Memorizzo l'id del following
 			err = rows0.Scan(&following_id)
 			if err != nil {
@@ -27,7 +27,7 @@ func (db *appdbimpl) GetMyStream(id string) (*[]Database_photostream_component, 
 
 				} else {
 					found := rows1.Next()
-					if found == false {
+					if !found {
 						if rows1.Err() != nil {
 							return nil, rows1.Err()
 						}

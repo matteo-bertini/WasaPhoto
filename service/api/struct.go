@@ -56,7 +56,6 @@ func (r *getUserProfileResponseBody) FromDatabase(db_user database.Database_user
 		UploadedPhotos = append(UploadedPhotos, to_add)
 	}
 	r.UploadedPhotos = UploadedPhotos
-	return
 
 }
 

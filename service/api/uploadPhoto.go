@@ -69,9 +69,9 @@ func (rt *_router) uploadPhoto(w http.ResponseWriter, r *http.Request, ps httpro
 					return
 				} else {
 					var osfile *os.File
-					var path string
+
 					// Verrà creata una cartella con nome Id dell'user se già non esiste (per questo non viene controllato l'errore)
-					path = "/tmp/WasaPhoto/" + strings.Split(r.Header.Get("Authorization"), " ")[1]
+					path := "/tmp/WasaPhoto/" + strings.Split(r.Header.Get("Authorization"), " ")[1]
 					_ = os.Mkdir(path, os.ModePerm)
 
 					// Creazione dell'Id della foto

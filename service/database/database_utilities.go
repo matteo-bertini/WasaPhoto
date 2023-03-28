@@ -35,7 +35,7 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 					return err
 				} else {
 					found := rows.Next()
-					if found == false {
+					if !found {
 						// Si è verififcato un errore nella preparazione della result row o nella chiusura delle rows (se il next è ==false vengono chiuse automaticamente)
 						if rows.Err() != nil {
 							return rows.Err()
@@ -74,7 +74,7 @@ func (db *appdbimpl) CheckUserExistence(username string) error {
 	} else {
 		found := rows.Next()
 		// Non è stata trovata una entry o c'è stato un errore
-		if found == false {
+		if !found {
 			// Si è verificato un errore nella preparazione del risultato o nella chiusura delle righe
 			if rows.Err() != nil {
 				return rows.Err()
@@ -106,7 +106,7 @@ func (db *appdbimpl) IdFromUsername(username string) (*string, error) {
 	} else {
 		found := rows.Next()
 		// Non è stata trovata una entry o c'è stato un errore
-		if found == false {
+		if !found {
 			// Si è verificato un errore nella preparazione del risultato o nella chiusura delle righe
 			if rows.Err() != nil {
 				return nil, rows.Err()
@@ -143,7 +143,7 @@ func (db *appdbimpl) UsernameFromId(id string) (*string, error) {
 	} else {
 		found := rows.Next()
 		// Non è stata trovata una entry o c'è stato un errore
-		if found == false {
+		if !found {
 			// Si è verificato un errore nella preparazione del risultato o nella chiusura delle righe
 			if rows.Err() != nil {
 				return nil, rows.Err()
@@ -185,7 +185,7 @@ func (db *appdbimpl) IsAllowed(id1 string, id2 string) error {
 	} else {
 		found := rows1.Next()
 		// id1 ha bannato id2
-		if found == true {
+		if found {
 			err = rows1.Close()
 			if err != nil {
 				return err
@@ -208,7 +208,7 @@ func (db *appdbimpl) IsAllowed(id1 string, id2 string) error {
 					return err
 				} else {
 					found := rows2.Next()
-					if found == true {
+					if found {
 						// id2 ha bannato id1
 						err = rows2.Close()
 						if err != nil {
@@ -246,7 +246,7 @@ func (db *appdbimpl) CheckPhotoExistence(user_id string, photoid string) error {
 		// Query eseguita correttamente
 		found := rows.Next()
 		// Non è stato preparato un risultato
-		if found == false {
+		if !found {
 			// Si è verificato un errore nella preparazione del risultato o nella chiusura delle rows
 			if rows.Err() != nil {
 				return rows.Err()

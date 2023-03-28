@@ -10,7 +10,7 @@ func (db *appdbimpl) GetBanned(id string) (*[]Database_banned, error) {
 	} else {
 		var bannedid string
 		bannedusers := []Database_banned{}
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&bannedid)
 			// Si è verificato un errore nella scan
 			if err != nil {

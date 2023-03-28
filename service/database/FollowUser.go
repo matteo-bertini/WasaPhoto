@@ -9,7 +9,7 @@ func (db *appdbimpl) FollowUser(to_add_username string, to_add_id string, userna
 	if err != nil {
 		return err
 	} else {
-		if rows.Next() == false {
+		if !rows.Next() {
 			if rows.Err() != nil {
 				return rows.Err()
 			} else {

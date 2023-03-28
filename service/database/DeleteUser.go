@@ -14,7 +14,7 @@ func (db *appdbimpl) RemoveAllFollowers(id string, username string) error {
 		var follower_id string
 		followers := []string{}
 		// Aggiungo tutti i followers alla lista per toglierli dopo
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&follower_id)
 			// Si è verificato un errore nello scan
 			if err != nil {
@@ -67,7 +67,7 @@ func (db *appdbimpl) RemoveAllFollowing(id string, username string) error {
 		var following_id string
 		following := []string{}
 		// Aggiungo tutti i following alla lista per toglierli dopo
-		for rows.Next() == true {
+		for rows.Next() {
 			// Si è verificato un errore nello scan
 			err = rows.Scan(&following_id)
 			if err != nil {
@@ -119,7 +119,7 @@ func (db *appdbimpl) RemoveAllPhotos(id string, username string) error {
 		var photo Database_photo
 		photos := []string{}
 		// Aggiungo tutte le foto alla lista per toglierle dopo
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&photo.PhotoId, &photo.LikesNumber, &photo.CommentsNumber, &photo.DateOfUpload)
 			// Si è verificato un errore nello scan
 			if err != nil {

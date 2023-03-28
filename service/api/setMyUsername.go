@@ -58,7 +58,7 @@ func (rt *_router) setMyUsername(w http.ResponseWriter, r *http.Request, ps http
 			} else { // Il RequestBody passato non presenta errori
 
 				// Controllo che l'Username passato nel RequestBody sia una stringa conforme alle specifiche
-				if utils.CheckUsername(setMyUsernameRequestBody.Username) == false {
+				if !utils.CheckUsername(setMyUsernameRequestBody.Username) {
 					w.WriteHeader(http.StatusBadRequest)
 					ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
 					return

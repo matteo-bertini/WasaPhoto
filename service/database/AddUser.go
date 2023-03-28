@@ -11,7 +11,7 @@ func (db *appdbimpl) AddUser(username string, id string) error {
 	} else {
 		found := rows.Next()
 		// Non è stata trovata una entry
-		if found == false {
+		if !found {
 			// Si è verificato un errore nel preparare il risultato o nella chiusura delle righe
 			if rows.Err() != nil {
 				return err

@@ -11,7 +11,7 @@ func (db *appdbimpl) GetLikes(photoid string) (*[]Database_like, error) {
 	} else {
 		var likeid string
 		likes := []Database_like{}
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&likeid)
 			// Si è verificato un errore nella scan
 			if err != nil {

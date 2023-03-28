@@ -12,7 +12,7 @@ func (db *appdbimpl) GetUserProfile(username string) (*Database_user, error) {
 	} else {
 		found := rows.Next()
 		// é stato trovato un record (user profile) nella tabella users
-		if found == true {
+		if found {
 			// Memorizzo i valori del record trovato nella struct da ritornare
 			err = rows.Scan(&db_user.Username, &db_user.Followers, &db_user.Following, &db_user.Numberofphotos)
 			if err != nil {
@@ -34,7 +34,7 @@ func (db *appdbimpl) GetUserProfile(username string) (*Database_user, error) {
 							return nil, err
 						} else {
 							uploaded_photos := []Database_photo{}
-							for rows.Next() == true {
+							for rows.Next() {
 								var photo Database_photo
 								err = rows.Scan(&photo.PhotoId, &photo.LikesNumber, &photo.CommentsNumber, &photo.DateOfUpload)
 								if err != nil {

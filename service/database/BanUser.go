@@ -12,7 +12,7 @@ func (db *appdbimpl) BanUser(username string, id string, to_ban_username string,
 		return err
 	} else {
 		// La query è stata eseguita correttamente
-		if rows.Next() == false {
+		if !rows.Next() {
 			// Si è verificato un errore nel preparare il risultato o nel chiudere le rows
 			if rows.Err() != nil {
 				return rows.Err()

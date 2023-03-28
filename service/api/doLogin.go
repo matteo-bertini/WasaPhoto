@@ -42,7 +42,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		} else { // Il RequestBody passato non presenta errori
 
 			// Controllo che l'Username passato nel RequestBody sia una stringa conforme alle specifiche
-			if utils.CheckUsername(doLoginRequestBody.Username) == false {
+			if !utils.CheckUsername(doLoginRequestBody.Username) {
 				w.WriteHeader(http.StatusBadRequest)
 				ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
 				return

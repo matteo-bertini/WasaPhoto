@@ -13,7 +13,7 @@ func (db *appdbimpl) GetComments(photoid string) (*[]Database_comment, error) {
 		var CommentAuthor string
 		var CommentText string
 		comments := []Database_comment{}
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&CommentId, &CommentAuthor, &CommentText)
 			// Si è verificato un errore nella scan
 			if err != nil {

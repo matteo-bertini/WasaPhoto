@@ -58,7 +58,7 @@ func (rt *_router) followUser(w http.ResponseWriter, r *http.Request, ps httprou
 		} else { // Il RequestBody passato non presenta errori
 
 			// Controllo che l'Username passato nel RequestBody sia una stringa conforme alle specifiche
-			if utils.CheckUsername(followUserRequestBody.FollowerId) == false {
+			if !utils.CheckUsername(followUserRequestBody.FollowerId) {
 				w.WriteHeader(http.StatusBadRequest)
 				ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
 				return

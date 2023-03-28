@@ -148,7 +148,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 		sqlStmt := `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,id TEXT NOT NULL);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
-			return nil, fmt.Errorf("Errore nella creazione della tabella authstrings: %w", err)
+			return nil, fmt.Errorf("errore nella creazione della tabella authstrings: %w", err)
 		}
 		// Creazione della tabella users
 		// users memorizza  il profilo per ogni username registrato in authstrings

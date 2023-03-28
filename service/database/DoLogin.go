@@ -15,7 +15,7 @@ func (db *appdbimpl) DoLogin(username string) (*string, error) {
 		return nil, err
 	} else {
 		// La query è stata eseguita correttamente, ma non è stato possibile preparare il risultato
-		if rows.Next() == false {
+		if !rows.Next() {
 			err = rows.Err()
 			// Si è verificato un errore durante l'iterazione delle righe o nella loro chiusura
 			if err != nil {

@@ -10,7 +10,7 @@ func (db *appdbimpl) LikePhoto(userid string, photoid string, likeid string) err
 		return err
 	} else {
 		found := rows.Next()
-		if found == true {
+		if found {
 			err = rows.Close()
 			if err != nil {
 				return err
@@ -20,6 +20,9 @@ func (db *appdbimpl) LikePhoto(userid string, photoid string, likeid string) err
 			}
 
 		} else {
+			if rows.Err() != nil {
+				return rows.Err()
+			}
 			query1 := "INSERT INTO " + table_name + " VALUES (?)"
 			_, err := db.c.Exec(query1, likeid)
 			if err != nil {

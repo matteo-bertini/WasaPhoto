@@ -10,7 +10,7 @@ func (db *appdbimpl) GetFollowing(id string) (*[]Database_following, error) {
 	} else {
 		var followingid string
 		following := []Database_following{}
-		for rows.Next() == true {
+		for rows.Next() {
 			err = rows.Scan(&followingid)
 			// Si è verificato un errore nella scan
 			if err != nil {
