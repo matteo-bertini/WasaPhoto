@@ -168,7 +168,7 @@ components:
       title : PhotoStream component
       description : a single component in the photostream
       properties :
-        Username:
+        PhotoStreamComponentUsername:
           type: string
           description: |
             A string that uniquely identifies the user's profile on WasaPhoto,indicate who
@@ -177,7 +177,7 @@ components:
           maxLength: 30
           pattern: '^.*?$'
           example: Eren_yeager
-        PhotoId: 
+        PhotoStreamComponentPhotoId: 
           type: string
           description: |
             The unique Id of the Photo in the User PhotoStream.
@@ -186,15 +186,15 @@ components:
           maxLength: 200
           pattern: '^.*?$'
           example: "152164"
-        LikesNumber:
+        PhotoStreamComponentLikesNumber:
           type: integer
           description: The number of likes of the photo.
           example: 15
-        CommentsNumber:
+        PhotoStreamComponentCommentsNumber:
           type: integer
           description: The number of comments under the photo.
           example: 3
-        DateOfUpload:
+        PhotoStreamComponentDateOfUpload:
           type: string
           format: date-time
           minLength: 20
