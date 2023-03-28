@@ -12,7 +12,6 @@ tags:
     description: Operations about user.
   - name: photos
     description: Operations about photos.
-
 servers:
   - url: http://localhost:3000
 components:
@@ -33,7 +32,6 @@ components:
               pattern: '^.*?$'
               description: The Username 
               example: Eren_Yeager
-              
     FollowerId:
           type: object
           description: A string that uniquely identifies the user's profile on WasaPhoto.
@@ -228,7 +226,6 @@ components:
         pattern: '^.*?$'
         readOnly: true
         example: "152164"
-
     LikeId:
       name: LikeId
       in: path
@@ -331,8 +328,7 @@ paths:
         400:
           $ref: "#/components/responses/BadRequest"
         500:
-          $ref: "#/components/responses/InternalServerError"
-            
+          $ref: "#/components/responses/InternalServerError"           
   /users/:
     get:
       tags:
@@ -680,8 +676,7 @@ paths:
                     items:
                       $ref: "#/components/schemas/Username"
         500:
-          $ref: "#/components/responses/InternalServerError"  
-      
+          $ref: "#/components/responses/InternalServerError"       
   /users/{Username}/photos/{PhotoId}/likes/{LikeId}:
     parameters:
       - $ref: "#/components/parameters/Username"
@@ -779,7 +774,7 @@ paths:
             Not Found : The photo specified in the URL does not exist.
         500:
           $ref: "#/components/responses/InternalServerError"  
-  /users/{Username}/photos/{PhotoId}/comments/{CommentId}/:
+  /users/{Username}/photos/{PhotoId}/comments/{CommentId}:
     parameters:
       - $ref: "#/components/parameters/Username"
       - $ref: "#/components/parameters/PhotoId"
