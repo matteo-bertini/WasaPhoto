@@ -86,7 +86,7 @@ export default {
 		<div class="card" style="display: flex; flex-direction: column; position: absolute; top: 35%; width: 50vw; height: 20%; justify-content: center; align-items: center; background-color:rgba(255, 255, 255, 0.285);">
 			<span  id="LoginPageTitleSpan" style="font-family:Helvetica; font-size:xx-large; font-weight: bolder;">Login</span>
 			<input id="LoginTextArea" type="text" class="form-control" v-model="Username" style="width: 40%;" placeholder="Type here your username...">
-			<button @click="LoginButtonPressed" :disabled = "Username.length==0 || Username.length < 3 || Username.length>30 || Username.trim().length<3 || Username.trim().length>30" id="LoginButton" class="btn btn-dark" style="margin-top: 2em;" >
+			<button @click="LoginButtonPressed" :disabled = "Username.length==0 || Username.length < 3 || Username.length>30 || Username.trim().length<3 || Username.trim().length>30" id="LoginButton" class="btn btn-dark" style="margin-top: 1em; margin-bottom: 1em;" >
 				<i class="fa-solid fa-right-to-bracket"> Login/Register </i>
 			
 			</button>	

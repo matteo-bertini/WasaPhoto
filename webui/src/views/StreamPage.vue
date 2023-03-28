@@ -88,12 +88,12 @@
         <!-- PhotoStream -->
         <div v-if="PhotoStream.length>0" style="display: flex; flex-direction: column; align-items: center; gap:2rem; margin-top: 5rem;">
             <Photo v-for="Photo in PhotoStream"
-                :key = "Photo.PhotoId"
-			    :owner = "Photo.Username"
-			    :photoid = "Photo.PhotoId"
-			    :likesnumber = "Photo.LikesNumber"
-			    :commentsnumber = "Photo.CommentsNumber"
-			    :dateofupload = "Photo.DateOfUpload">
+                :key = "Photo.PhotoStreamComponentPhotoId"
+			    :owner = "Photo.PhotoStreamComponentUsername"
+			    :photoid = "Photo.PhotoStreamComponentPhotoId"
+			    :likesnumber = "Photo.PhotoStreamComponentLikesNumber"
+			    :commentsnumber = "Photo.PhotoStreamComponentCommentsNumber"
+			    :dateofupload = "Photo.PhotoStreamComponentDateOfUpload">
             </Photo>
 
         </div>

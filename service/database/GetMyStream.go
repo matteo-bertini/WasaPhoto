@@ -32,7 +32,7 @@ func (db *appdbimpl) GetMyStream(id string) (*[]Database_photostream_component, 
 							return nil, rows1.Err()
 						}
 					} else {
-						err = rows1.Scan(&photostream_component.PhotoId, &photostream_component.LikesNumber, &photostream_component.CommentsNumber, &photostream_component.DateOfUpload)
+						err = rows1.Scan(&photostream_component.PhotoStreamComponentPhotoId, &photostream_component.PhotoStreamComponentLikesNumber, &photostream_component.PhotoStreamComponentCommentsNumber, &photostream_component.PhotoStreamComponentDateOfUpload)
 						if err != nil {
 							return nil, err
 						} else {
@@ -40,7 +40,7 @@ func (db *appdbimpl) GetMyStream(id string) (*[]Database_photostream_component, 
 							if err != nil {
 								return nil, err
 							}
-							photostream_component.Username = *following_username
+							photostream_component.PhotoStreamComponentUsername = *following_username
 							stream = append(stream, photostream_component)
 							err = rows1.Close()
 							if err != nil {

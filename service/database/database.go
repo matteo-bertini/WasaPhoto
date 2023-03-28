@@ -8,11 +8,11 @@ import (
 )
 
 type Database_photostream_component struct {
-	Username       string
-	PhotoId        string
-	LikesNumber    int
-	CommentsNumber int
-	DateOfUpload   string
+	PhotoStreamComponentUsername       string
+	PhotoStreamComponentPhotoId        string
+	PhotoStreamComponentLikesNumber    int
+	PhotoStreamComponentCommentsNumber int
+	PhotoStreamComponentDateOfUpload   string
 }
 type Database_photo struct {
 	PhotoId        string
