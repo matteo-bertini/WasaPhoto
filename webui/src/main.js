@@ -5,8 +5,9 @@ import axios from './services/axios.js';
 import ErrorMsg from './components/ErrorMsg.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import PhotoComponent from "./components/PhotoComponent.vue"
-import LikesList from "./components/LikesList.vue"
+import Like from "./components/Like.vue"
 import Comment from "./components/Comment.vue"
+
 
 
 import './assets/dashboard.css'
@@ -17,8 +18,9 @@ app.config.globalProperties.$axios = axios;
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
 app.component("Photo",PhotoComponent);
-app.component("LikesList",LikesList);
+app.component("Like",Like);
 app.component("Comment",Comment);
+
 
 app.use(router)
 app.mount('#app')

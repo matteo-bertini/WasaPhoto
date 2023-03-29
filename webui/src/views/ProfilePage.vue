@@ -240,7 +240,18 @@ export default {
 		BackButtonPressed(){
 			this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
 			return;
+		},
+		FollowedUserClicked(Follow){
+			this.$router.replace("/users/"+Follow+"/");
+			return;
+
+		},
+		FollowerUserClicked(Follower){
+			this.$router.replace("/users/"+Follower+"/");
+			return;
+
 		}
+
 	},
 
 	// Eseguita appena il componente è stato montato
@@ -361,9 +372,14 @@ export default {
 						<h1 class="modal-title fs-5" id="exampleModalLabel">Followers</h1>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-					<div class="modal-body">
-						<div v-for="Follower in Followers" :key="Follower">
-							{{Follower}}
+					<div class="modal-body" style="width: fit-content; height: fit-content;">
+						<div v-if="FollowersNumber==0">
+							The user has no followers
+						</div>
+						<div v-else>
+							<div data-bs-toggle="modal" :data-bs-target="'#FollowersModal'+Username" class="FollowerUser_div" v-for="Follower in Followers" :key="Follower" @click="FollowerUserClicked(Follower)">
+								{{Follower}}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -378,9 +394,14 @@ export default {
 						<h1 class="modal-title fs-5" id="exampleModalLabel">Following</h1>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-					<div class="modal-body">
-						<div v-for="Follow in Following" :key="Follow">
-							{{Follow}}
+					<div class="modal-body" style="width: fit-content; height: fit-content;">
+						<div v-if="FollowingNumber==0">
+							The user does not follow anyone
+						</div>
+						<div v-else>
+							<div data-bs-toggle="modal" :data-bs-target="'#FollowingModal'+Username" class="FollowedUser_div" v-for="Follow in Following" :key="Follow" @click="FollowedUserClicked(Follow)">
+								{{Follow}}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -427,6 +448,18 @@ export default {
 	}
 	#ProfilePageBackButton:hover{
 		transform: scale(1.1);
+	}
+	.FollowedUser_div:hover{
+		transform: scale(1.1);
+		cursor: pointer;
+		color:#007bff;
+
+	}
+	.FollowerUser_div:hover{
+		transform: scale(1.1);
+		cursor: pointer;
+		color:#007bff;
+
 	}
 	
 </style>

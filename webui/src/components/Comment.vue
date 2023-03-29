@@ -33,7 +33,12 @@ export default {
 
 			}
 
-		}
+		},
+		commentAuthorPressed(CommentAuthor){
+				this.$router.replace("/users/"+CommentAuthor+"/");
+				return;
+
+			}
 	},
 	mounted(){
 		if(this.CommentAuthor !== `${localStorage.getItem("Username")}`){
@@ -53,9 +58,9 @@ export default {
 <template>
 	<div style="display: flex; flex-direction: column;">
 		<div style="display: flex; flex-direction: row; align-items: center;">
-			<span style="font-size:larger;">
+			<div data-bs-toggle="modal" :data-bs-target="'#CommentsModal'+PhotoId" @click="commentAuthorPressed(CommentAuthor)" class="CommentAuthor" style="font-size:larger;">
 				{{CommentAuthor}}
-			</span>
+			</div>
 			<button class="btn" v-if="isAuthor" @click="deleteComment" id="deleteCommentButton" style="border: none;">
 				<i class="fa-regular fa-trash-can"></i>
 			</button>
@@ -73,6 +78,11 @@ export default {
 <style>
 	#deleteCommentButton:hover{
 		color:#8b0000
+	}
+	.CommentAuthor:hover{
+		transform:scale(1.2);
+		color:#007bff;
+		cursor: pointer;
 	}
 
 </style>

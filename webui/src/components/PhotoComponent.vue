@@ -117,11 +117,15 @@
 
 				}
 			},
-			UpdateCommentList(CommentId) {
+			updateCommentList(CommentId) {
 				this.Comments = this.Comments.filter(Comment => Comment.CommentId !== CommentId);
 				this.CommentsNumber--;
 				return;
 
+			},
+			likePressed(Like) {
+				this.$router.replace("/users/"+Like+"/");
+				return;
 			}
 		},
 
@@ -237,8 +241,16 @@
 					<h1 class="modal-title fs-5" id="exampleModalLabel">Likes</h1>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-				<div class="modal-body">
-					<LikesList :LikesList="Likes"></LikesList>
+				<div class="modal-body" style="width: fit-content; height: fit-content;">
+					<div v-if="this.Likes.length == 0">
+						<p>Ancora nessun mi piace</p>
+					</div>
+					<div v-else>
+						<Like data-bs-toggle="modal" :data-bs-target="'#LikesModal'+PhotoId" v-for="Like in Likes" :key ="Like" :LikeUsername="Like" @click="likePressed(Like)">
+							{{Like}}
+						</Like>
+					</div>
+					
 				</div>
 			</div>
 		</div>
@@ -252,7 +264,7 @@
 					<h1 class="modal-title fs-5" id="exampleModalLabel">Comments</h1>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-				<div class="modal-body">
+				<div class="modal-body" style="width: fit-content; height: fit-content;">
 					<div>
 						<div v-if="this.Comments.length == 0">
 							<p>Ancora nessun commento</p>
@@ -262,7 +274,7 @@
 							<div v-for="Comment in Comments" :key="Comment.CommentId">
 								<Comment :PhotoOwner="PhotoOwner" :PhotoId="PhotoId" :CommentId="Comment.CommentId"
 									:CommentAuthor="Comment.CommentAuthor" :CommentText="Comment.CommentText"
-									@commentdeleted="UpdateCommentList">
+									@commentdeleted="updateCommentList">
 								</Comment>
 								<hr />
 							</div>
