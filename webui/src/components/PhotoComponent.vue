@@ -126,6 +126,11 @@
 			likePressed(Like) {
 				this.$router.replace("/users/"+Like+"/");
 				return;
+			},
+			photoOwnerPressed(){
+				this.$router.replace("/users/"+this.PhotoOwner+"/");
+				return;
+
 			}
 		},
 
@@ -182,17 +187,27 @@
 <template>
 	<div class="card" style="width: 30em; height: 30em; display: flex; flex-direction: column;">
 
-		<!-- Pulsante di eliminazione foto -->
-		<div  style="display: flex; flex-direction: row; justify-content: flex-end;">
-			<button class="btn"  :disabled = "IsOwner === false" id="deletephotobutton" @click="deletePhoto" type="button" style="border: none;">
-				<i class="fa-regular fa-trash-can"></i>
-			</button>
+		<!-- Titolo della card -->
+		<div cass="card-title" style="display: flex; flex-direction: row; width: 30em; height: 2em;">
 			
+			<!-- Owner della foto (solo se chi visualizza non è l'owner della foto) -->
+			<div class= "PhotoOwner_div" v-if="!IsOwner" @click="photoOwnerPressed" style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; margin-top: 0.7em; margin-left:0.9em; width: fit-content; height: 100%;">
+				<i class="fa-solid">{{PhotoOwner}}</i>
+			</div>
+
+			<!-- Pulsante di eliminazione foto (solo se chi visualizza è l'owner della foto) -->
+			<div v-else style="display: flex; flex-direction: row; justify-content: flex-end; width: 100%; height: 100%;">
+				<button class="btn"  :disabled = "IsOwner === false" id="deletephotobutton" @click="deletePhoto" type="button" style="border: none;">
+					<i class="fa-regular fa-trash-can"></i>
+				</button>
+			</div>
 		</div>
+
+		
 
 		<!-- Foto -->
 		<div style="display: flex; flex-direction: row; justify-content: center; height: 70%; width: 100%; margin-top: 15px;">
-			<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto.">
+			<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto." data-bs-toggle="modal" :data-bs-target="'#PhotoFullSizeModal'+PhotoId" >
 		</div>
 
 		<!-- Pannello Inferiore -->
@@ -285,6 +300,20 @@
 		</div>
 	</div>
 
+	<!-- PhotoFullSizeModal -->
+	<div class="modal fade" :id="'PhotoFullSizeModal' + PhotoId" tabindex="-1">
+		<div class="modal-dialog modal-dialog-scrollable modal-xl" >
+			<div class="modal-content" style="display:flex; flex-direction:column; align-items: center;">
+				<div class="modal-header" style="display: flex; flex-direction: row; justify-content: flex-end; width: 100%;">
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body" style="display:flex; flex-direction:row; align-items:center; width: fit-content; height: fit-content;">
+					<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto.">
+				</div>
+			</div>
+		</div>
+	</div>
+
 </template>
 
 <style>
@@ -295,6 +324,11 @@
 	.btn:hover{
 		transform: scale(1.2);
 		
+	}
+	.PhotoOwner_div:hover{
+		transform: scale(1.1);
+		color:#007bff;
+		cursor: pointer;
 	}
 	
 </style>
