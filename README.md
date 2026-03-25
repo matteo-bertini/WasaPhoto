@@ -1,6 +1,6 @@
-# WasaPhoto
+# WasaPhoto 
 
-WasaPhoto is a versatile social media platform designed for photo sharing and interaction. With WasaPhoto, users can seamlessly upload and share their favorite photos, engage with content through likes and comments, follow other users to stay updated on their posts, and even manage their connections by blocking unwanted users.
+WasaPhoto is a versatile social media platform designed for photo sharing and interaction. This project was developed as part of the coursework for the "Web and Software Architectures" university course. With WasaPhoto, users can seamlessly upload and share their favorite photos, engage with content through likes and comments, follow other users to stay updated on their posts, and even manage their connections by blocking unwanted users.
 
 ## Key Features:
 
