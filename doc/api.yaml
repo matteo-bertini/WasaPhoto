@@ -20,6 +20,27 @@ components:
       type: http
       scheme: bearer
   schemas:
+    LoginRequest:
+          type: object
+          description: The request body containing the user credentials (Username and Password) required to authenticate an existing user or create a new account.
+          title: LoginRequest
+          required:
+            - Username
+            - Password
+          properties:
+            Username:
+              type: string
+              minLength: 3
+              maxLength: 30
+              pattern: '^.*?$'
+              description: The unique identifier for the user.
+              example: Eren_Yeager
+            Password:
+              type: string
+              format: password
+              minLength: 8
+              description: The user's secret password
+              example: "Secret123!"
     Username:
           type: object
           description: A string that uniquely identifies the user's profile on WasaPhoto.
@@ -287,27 +308,18 @@ paths:
     post:
       tags:
         - login
-      summary: Logs in the user
+      summary: Logs in or registers the user
       description: |
         If the user does not exist, it will be created,
         and an identifier is returned.
         If the user exists, the user identifier is returned
       operationId: doLogin
       requestBody:
-        description: User details
+        description: User credentials for authentication
         content:
           application/json:
             schema:
-              type: object
-              description: the object that represents the RequestBody (username login)
-              properties:
-                Username:
-                  type: string
-                  example: Eren_Yeager
-                  description: The Username
-                  pattern: '^.*?$'
-                  minLength: 3
-                  maxLength: 30
+              $ref: '#/components/schemas/LoginRequest'
         required: true
       responses:
         '201':
@@ -327,6 +339,13 @@ paths:
                     example: "abcdef012345"
         '400':
           $ref: "#/components/responses/BadRequest"
+
+          
+        '401':
+          description: |
+            Unauthorized: Invalid username or password. 
+            For security reasons, the system does not specify if the username 
+            exists or if the password is incorrect. 
         '500':
           $ref: "#/components/responses/InternalServerError"           
   /users/:
