@@ -310,7 +310,7 @@ paths:
                   maxLength: 30
         required: true
       responses:
-        201:
+        '201':
           description: |
             Created : User log-in action successful
           content:
@@ -325,9 +325,9 @@ paths:
                     type: string
                     description: the identifier
                     example: "abcdef012345"
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"           
   /users/:
     get:
@@ -353,28 +353,28 @@ paths:
             pattern: '^.*?$'
 
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        401:
+        '401':
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
-        403: 
+        '403': 
           description : |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the profile. (has banned the user in the url or was banned by the user in the url).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
-        404: 
+        '404': 
           description: |
             Not Found : The user which username is passed in the URL query does not exist.
             
        
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
     post:
       tags:
@@ -394,21 +394,21 @@ paths:
               $ref: '#/components/schemas/Username'
       responses: 
        
-        201:
+        '201':
           description: User created successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
-        403: 
+        '403': 
           description: |
             Forbidden : The username passed in the RequestBody corresponds to an already existing profile.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The token was either not specified correctly or does not provide permission to create the profile.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/:
     parameters:
@@ -425,7 +425,7 @@ paths:
         More specifically,a user's photostream consists of recently uploaded photos (in reverse
         chronological order) of the users followed.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -443,10 +443,10 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/PhotoStreamComponent"
-        404:
+        '404':
           description: |
            Not Found : The user specified in the URL does not exist.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"  
     delete:
       tags:
@@ -458,14 +458,14 @@ paths:
       description: |
         Deletes the user with the specified username.
       responses:
-        204:
+        '204':
           description: Delete successfully performed.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        404:
+        '404':
           description: |
             NotFound : User with specified username not found in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"  
   /users/{Username}/username:
     parameters:
@@ -487,22 +487,22 @@ paths:
             schema:
               $ref: "#/components/schemas/Username"
       responses:
-        200:
+        '200':
           description: |
             OK : Username successfully updated.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Username"
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:  
+        '401':  
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation.
-        404:
+        '404':
           description: |
             NotFound : User not found.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/:
     parameters:
@@ -528,22 +528,22 @@ paths:
               minLength: 0
               maxLength: 99999999
       responses: 
-        201:
+        '201':
           description: | 
             Created : Photo uploaded successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Photo"
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The id specified in the authorization does not allow the upload operation to be performed.
-        404:
+        '404':
           description: |  
             Not Found : User with specified username not found in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/:
     parameters:
@@ -557,7 +557,7 @@ paths:
       description: |
         Gets the photo with the specified Id
       responses:
-        200: 
+        '200': 
           description: Request fullfilled.
           content:
             image/png:
@@ -566,24 +566,24 @@ paths:
                 format: binary
                 description: The Photo
             
-        400: 
+        '400': 
            $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The id specified in the authorization does not allow the operation to be performed (the id does not match with a registered user).
-        403:
+        '403':
           description: |
             Forbidden :  The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the photo. (has banned the user in the url or was banned by the user in the url).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
             
-        404:
+        '404':
           description: |
             Not Found : the request cannot be granted for one of the following reasons:
             - The user in the URL doesn't exist.
             - The photo in the URL does not exist.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"  
           
     delete:
@@ -596,18 +596,18 @@ paths:
       description: |
         Deletes the photo with the specified id from the system.
       responses:
-        204:
+        '204':
           description: |
             No Content : Photo deleted successfully.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The id passed is not allowed to delete this photo.
-        404:
+        '404':
           description: | 
             Not Found : Photo with specified Id not found.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/likes/:
     parameters:
@@ -624,30 +624,30 @@ paths:
         Adds a like to the list of likes of the specific photo,using the object in the requestBody. 
         The likes counter of the specific photo will also be increased by one.
       responses:
-        201:
+        '201':
           description: |
             Created : Like posted successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Like"
-        403:
+        '403':
           description: |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) that can't put the like on the photo. (has banned the user in the url or was banned by the user in the url).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
             - The id passed in the Authorization corresponds to a profile that already likes the photo.
-        404:
+        '404':
           description: |
             Not Found : the request cannot be granted for one of the following reasons:
 
             - The user in the URL doesn't exist.
             - The photo in the URL does not exist.
-        401: 
+        '401': 
           description: |
             Unauthorized : The user is not authorized to put a like on the photo.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
     get:
       tags:
@@ -657,7 +657,7 @@ paths:
       description: |
         Returns a collection of likes of a specific photo.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -675,7 +675,7 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/Username"
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"       
   /users/{Username}/photos/{PhotoId}/likes/{LikeId}:
     parameters:
@@ -692,18 +692,18 @@ paths:
       description: |
         Deletes the like with the specified id from the list of likes of a specific photo.
       responses:
-        204:
+        '204':
           description: |
             No Content : Like removed successfully.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unaturhoized : The user is not authorized to remove the like.
-        404:
+        '404':
           description: | 
             Not Found : Photo or username not found in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/photos/{PhotoId}/comments/:
     parameters:
@@ -726,22 +726,22 @@ paths:
             schema:
               $ref: "#/components/schemas/Comment"
       responses:
-        201:
+        '201':
           description: |
             Created : Comment posted successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Comment"
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        404:  
+        '404':  
           description: |
             Not Found : Username or Photo in the URL does not exists.
-        401:
+        '401':
           description: |
             Unauthorized : The user is not authorized to perform the operation.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
     get:
       tags:
@@ -751,7 +751,7 @@ paths:
       description: |
         Returns a collection of comments of a specific photo.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -769,10 +769,10 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/Comment"
-        404:
+        '404':
           description: |
             Not Found : The photo specified in the URL does not exist.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"  
   /users/{Username}/photos/{PhotoId}/comments/{CommentId}:
     parameters:
@@ -790,13 +790,13 @@ paths:
         Deletes the comment with the specified id from the list of comments of a specific photo.
         Only the author of the comment can delete his comment.
       responses:
-        204:
+        '204':
           description: Comment removed successfully.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        404:
+        '404':
           description: Comment with specified Id not found in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/following :
     parameters:
@@ -811,7 +811,7 @@ paths:
       description: |
         Returns the list of following of the profile specified in the URL.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -829,21 +829,21 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/Username"
-        401:
+        '401':
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
-        403: 
+        '403': 
           description : |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the profile. (has banned the user in the url or was banned by the user in the url).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
-        404: 
+        '404': 
           description: |
             Not Found : The user which username is passed in the URL query does not exist.
             
        
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/:
     parameters:
@@ -870,28 +870,28 @@ paths:
             schema:
               $ref: "#/components/schemas/FollowerId"
       responses: 
-        201:
+        '201':
           description: |
             Created : User followed successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/FollowerId"
-        403:
+        '403':
           description: |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
               - The user specified in the RequestBody does not exist
               - The user specified in the RequestBody matches the one in the URL (a user cannot follow himself)
               - The user specified in the RequestBody already follows the user specified in the URL
-        401:
+        '401':
           description: |
             Unauthorized : The id specified in the authorization does not allow the operation to be performed.
-        404:
+        '404':
           description : |
             NotFound : The user specified in the URL does not exists.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
     get:
       tags:
@@ -903,7 +903,7 @@ paths:
       description: |
         Returns the list of followers of the profile specified in the URL.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -921,21 +921,21 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/FollowerId"
-        401:
+        '401':
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
-        403: 
+        '403': 
           description : |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) that can't see the profile. (has banned the user in the url or was banned by the user in the url).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
-        404: 
+        '404': 
           description: |
             Not Found : The user which username is passed in the URL query does not exist.
             
        
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/followers/{FollowerId}:
     parameters:
@@ -954,18 +954,18 @@ paths:
         followers of a specific user(../users/{username}).
         A user can remove HIS name from the followers list of another user.
       responses:
-        204:
+        '204':
           description: |
             NoContent : Follower removed successfully.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation.
-        404:
+        '404':
           description: |
             Not Found : The user with specified username does not exist in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/:
     parameters:
@@ -989,19 +989,19 @@ paths:
             schema:
               $ref: "#/components/schemas/BannedId"
       responses: 
-        201:
+        '201':
           description: |
             Created : User banned successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/BannedId"
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        401:
+        '401':
           description: |
             Unauthorized : The id specified in the authorization does not allow the operation to be performed.
-        403 :
+        '403' :
           description : |
             Forbidden : 
             The request is formulated correctly, but cannot be granted for one of the following reasons:
@@ -1010,10 +1010,10 @@ paths:
             - The user specified in the RequestBody matches the one in the URL (a user cannot ban himself)
             - The user specified in the RequestBody  is already banned by the user specified in the URL
 
-        404:
+        '404':
           description: |
             Not Found : the user specified in the URL does not exists.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
     get:
       tags:
@@ -1025,7 +1025,7 @@ paths:
       description: |
         Returns the list of banned users of the profile specified in the URL.
       responses:
-        200: 
+        '200': 
           description: |
             OK : Request fullfilled.
           content: 
@@ -1043,21 +1043,21 @@ paths:
                     maxItems : 10000000
                     items:
                       $ref: "#/components/schemas/BannedId"  
-        401:
+        '401':
           description: |
             Unauthorized : The id passed does not authorize the user to perform the operation (the id does not match with a registered user).
-        403: 
+        '403': 
           description : |
             Forbidden : The request is formulated correctly, but cannot be granted for one of the following reasons:
 
             - The id passed in the Authorization corresponds to a User (with an existing profile) which username doesn't match the username in the URL (an user can only see his ban list).
             - The id passed in the Authorization corresponds to an registered user but with no existing profile.
-        404: 
+        '404': 
           description: |
             Not Found : The user which username is passed in the URL query does not exist.
             
        
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{Username}/bannedusers/{BannedId}:
     parameters:
@@ -1075,13 +1075,13 @@ paths:
         Deletes the user with the specified username from the list of banned users of a specific user.
         For example, if Alice unbans Eve, Eve will be able to see all of Alice's information again.
       responses:
-        204:
+        '204':
           description: Unban successfully performed.
-        400:
+        '400':
           $ref: "#/components/responses/BadRequest"
-        404:
+        '404':
           description: User with specified username not found in the system.
-        500:
+        '500':
           $ref: "#/components/responses/InternalServerError"
 
 
