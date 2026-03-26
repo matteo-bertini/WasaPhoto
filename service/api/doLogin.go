@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -48,15 +50,28 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 				return
 			} else {
 				// L'Username e la Password passati nel RequestBody sono conformi alle specifiche progettuali
-				id, err := rt.db.DoLogin(doLoginRequestBody.Username, doLoginRequestBody.Password)
+				id, err, created := rt.db.DoLogin(doLoginRequestBody.Username, doLoginRequestBody.Password)
 				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
-					return
+					if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+						w.WriteHeader(http.StatusUnauthorized)
+						ctx.Logger.WithError(err).Error("Credenziali non valide.")
+						return
+
+					} else {
+						w.WriteHeader(http.StatusInternalServerError)
+						ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
+						return
+					}
 				} else {
-					// Imposto l'header della risposta e scrivo lo status 201 Created
+					// Imposto l'header della risposta e scrivo lo status 201 Created se è stato creato un nuovo utente o 200 OK altrimenti
 					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(http.StatusCreated)
+					if *created == true {
+						w.WriteHeader(http.StatusCreated)
+
+					} else {
+						w.WriteHeader(http.StatusOK)
+
+					}
 
 					// Faccio l'encoding del ResponseBody per mandarlo nel json di risposta
 					var doLoginResponseBody doLoginResponseBody

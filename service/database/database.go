@@ -52,8 +52,8 @@ type Database_comment struct {
 type AppDatabase interface {
 
 	// DoLogin resitituisce l'id relativo all'username passato come argomento. //
-	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrò resituito quello esistente //
-	DoLogin(username string, password string) (*string, error)
+	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrà resituito quello esistente //
+	DoLogin(username string, password string) (*string, error, *bool)
 
 	// AddUser crea ed aggiunge il profilo dell'username //
 	AddUser(username string, id string) error

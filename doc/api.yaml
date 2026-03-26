@@ -323,7 +323,7 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
         required: true
       responses:
-        '201':
+        '200':
           description: |
             Created : User log-in action successful
           content:
@@ -333,8 +333,19 @@ paths:
                 description: an object
                 properties:
                   Identifier:
-                    # change here if you decide to use an integer
-                    # or any other type of identifier
+                    type: string
+                    description: the identifier
+                    example: "abcdef012345"
+        '201':
+          description: |
+            Created : User log-in action successful, a new user is created
+          content:
+            application/json:
+              schema:
+                type: object
+                description: an object
+                properties:
+                  Identifier:
                     type: string
                     description: the identifier
                     example: "abcdef012345"
