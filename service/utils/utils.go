@@ -52,3 +52,18 @@ func CheckUsername(username string) bool {
 		}
 	}
 }
+
+func CheckPassword(password string) bool {
+	// La password passata è composta solo da spazi bianchi quindi non è valida
+	if strings.TrimSpace(password) == "" {
+		return false
+	} else {
+		len := len(password)
+		if len < 8 {
+			return false
+		} else {
+			return true
+		}
+	}
+
+}

@@ -39,6 +39,7 @@ components:
               type: string
               format: password
               minLength: 8
+              pattern: '^.*?$'
               description: The user's secret password
               example: "Secret123!"
     Username:

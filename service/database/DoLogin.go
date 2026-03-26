@@ -2,10 +2,12 @@ package database
 
 import (
 	"github.com/segmentio/ksuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func (db *appdbimpl) DoLogin(username string) (*string, error) {
-	// Controllo che l'user con username specificato non sia già registrato
+func (db *appdbimpl) DoLogin(username string, password string) (*string, error) {
+
+	// Controllo che l'user con username e password specificati non sia già registrato
 
 	query1 := "SELECT id FROM authstrings WHERE username = ?"
 	rows, err := db.c.Query(query1, username)
@@ -23,8 +25,16 @@ func (db *appdbimpl) DoLogin(username string) (*string, error) {
 			} else {
 				// La query non ha dato nessun risultato,quindi devo creare una nuova entry
 				id := ksuid.New().String()
-				query2 := "INSERT INTO authstrings VALUES (?,?)"
-				_, err := db.c.Exec(query2, username, id)
+
+				// Faccio l'hashing della password
+				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+				// Si è verificato un errore nella generazione dell'hash
+				if err != nil {
+					return nil, err
+				}
+
+				query2 := "INSERT INTO authstrings VALUES (?,?,?)"
+				_, err = db.c.Exec(query2, username, string(hashedPassword), id)
 				if err != nil {
 					return nil, err
 				} else {
@@ -32,7 +42,7 @@ func (db *appdbimpl) DoLogin(username string) (*string, error) {
 				}
 
 			}
-			// Esiste una entry nella tabella con l'username specificato quindi estraggo l'Id
+			// Esiste una entry nella tabella con l'username specificato quindi controllo che la password sia corretta ed estraggo l'Id
 		} else {
 			var id string
 			err = rows.Scan(&id)

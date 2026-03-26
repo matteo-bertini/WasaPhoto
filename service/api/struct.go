@@ -15,6 +15,7 @@ type Photo struct {
 // doLogin operation //
 type doLoginRequestBody struct {
 	Username string `json:"Username"`
+	Password string `json:"Password"`
 }
 type doLoginResponseBody struct {
 	Identifier string `json:"Identifier"`

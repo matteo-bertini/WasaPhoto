@@ -33,22 +33,22 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 		}
 	} else { // Il RequestBody è stato decodficato
 
-		// C'è un errore nel RequestBody passato (nomi dei campi errati,campi non specificati,ecc)
-		if len(doLoginRequestBody.Username) == 0 {
+		// C'è un errore nel RequestBody passato (nomi dei campi errati,campi necessari non specificati,ecc)
+		if len(doLoginRequestBody.Username) == 0 || len(doLoginRequestBody.Password) == 0 {
 			w.WriteHeader(http.StatusBadRequest)
 			ctx.Logger.Error("Il json nel RequestBody presenta degli errori.")
 			return
 
 		} else { // Il RequestBody passato non presenta errori
 
-			// Controllo che l'Username passato nel RequestBody sia una stringa conforme alle specifiche
-			if !utils.CheckUsername(doLoginRequestBody.Username) {
+			// Controllo che l'Username e la Password passati nel RequestBody sia una stringa conforme alle specifiche
+			if !(utils.CheckUsername(doLoginRequestBody.Username) && utils.CheckPassword(doLoginRequestBody.Password)) {
 				w.WriteHeader(http.StatusBadRequest)
-				ctx.Logger.Error("L'Username passato nel RequestBody non è conforme alle specifiche.")
+				ctx.Logger.Error("L'Username e/o la Password passati nel RequestBody non sono conformi alle specifiche.")
 				return
 			} else {
-				// L'Username passato nel RequestBody è conforme alle specifiche progettuali
-				id, err := rt.db.DoLogin(doLoginRequestBody.Username)
+				// L'Username e la Password passati nel RequestBody sono conformi alle specifiche progettuali
+				id, err := rt.db.DoLogin(doLoginRequestBody.Username, doLoginRequestBody.Password)
 				if err != nil {
 					w.WriteHeader(http.StatusInternalServerError)
 					ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")

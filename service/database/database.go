@@ -53,7 +53,7 @@ type AppDatabase interface {
 
 	// DoLogin resitituisce l'id relativo all'username passato come argomento. //
 	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrò resituito quello esistente //
-	DoLogin(username string) (*string, error)
+	DoLogin(username string, password string) (*string, error)
 
 	// AddUser crea ed aggiunge il profilo dell'username //
 	AddUser(username string, id string) error
@@ -145,7 +145,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 
 		// Creazione della tabella authstrings
 		// authstrings memorizza per ogni username registrato l'id univoco che riconosce l'utente nel sistema e nelle richieste
-		sqlStmt := `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,id TEXT NOT NULL);`
+		sqlStmt := `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,hashedpassword TEXT NOT NULL,id TEXT NOT NULL);`
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
 			return nil, fmt.Errorf("errore nella creazione della tabella authstrings: %w", err)
