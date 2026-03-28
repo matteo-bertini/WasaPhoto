@@ -27,6 +27,7 @@ components:
           required:
             - Username
             - Password
+            - IsSignUp
           properties:
             Username:
               type: string
@@ -42,6 +43,11 @@ components:
               pattern: '^.*?$'
               description: The user's secret password
               example: "Secret123!"
+            IsSignUp:
+              type: boolean
+              example: false
+              description: Flag indicating whether the user is attempting a new registration (true) or a standard login (false).
+
     Username:
           type: object
           description: A string that uniquely identifies the user's profile on WasaPhoto.
@@ -325,7 +331,7 @@ paths:
       responses:
         '200':
           description: |
-            Created : User log-in action successful
+            Ok : User log-in action successful
           content:
             application/json:
               schema:
@@ -358,6 +364,9 @@ paths:
             Unauthorized: Invalid username or password. 
             For security reasons, the system does not specify if the username 
             exists or if the password is incorrect. 
+        '409':
+          description: |
+            Conflict: username already taken during signup
         '500':
           $ref: "#/components/responses/InternalServerError"           
   /users/:

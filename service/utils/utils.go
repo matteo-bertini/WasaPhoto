@@ -10,13 +10,17 @@ const Bearer_Authorization = "Bearer"
 
 // Errori
 
+// DoLogin //
+var ErrUserNotRegistered error = errors.New("User not registered yet.")
+var ErrUserAlreadyExists error = errors.New("User already exists.")
+var ErrInvalidCredentials = errors.New("invalid username or password")
+
 // CheckAuthorization //
 var ErrAuthorizationNotSpecified error = errors.New("Authorization non specificata nell'header.")
 var ErrBearerTokenNotSpecifiedWell error = errors.New("Bearer Token non specificato correttamente nel campo Authorization dell'header.")
 var ErrUnauthorized error = errors.New("L'id passato nel campo Authorization non è autorizzato ad effettuare l'operazione.")
 
 // AddUser //
-var ErrUserAlreadyExists error = errors.New("L'utente è già presente nel sistema quindi non è stato creato un nuovo profilo.")
 
 // FollowUser //
 var ErrFollowerAlreadyAdded error = errors.New("L'user ")

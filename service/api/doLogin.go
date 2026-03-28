@@ -8,92 +8,75 @@ import (
 	"io"
 	"net/http"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/julienschmidt/httprouter"
 )
 
 func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
-	// Controllo che la richiesta abbia specificato RequestBody ed in tal caso lo estraggo
-
-	var doLoginRequestBody doLoginRequestBody
-	err := json.NewDecoder(r.Body).Decode(&doLoginRequestBody)
+	// 1) Decode the request body.
+	var req doLoginRequestBody
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		// Non è stato specificato il RequestBody per la richiesta
+		// Handle empty body or decoding errors.
 		if errors.Is(err, io.EOF) {
-			ctx.Logger.WithError(err).Error("Non è stato specificato il RequestBody per la richiesta.")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-
+			ctx.Logger.WithError(err).Error("Missing request body.")
 		} else {
-			// Il RequestBody è stato passato,ma non è stato possibile decodificarlo
-			ctx.Logger.WithError(err).Error("Non è stato possibile decodificare il RequestBody.")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-
+			ctx.Logger.WithError(err).Error("Failed to decode request body.")
 		}
-	} else { // Il RequestBody è stato decodficato
-
-		// C'è un errore nel RequestBody passato (nomi dei campi errati,campi necessari non specificati,ecc)
-		if len(doLoginRequestBody.Username) == 0 || len(doLoginRequestBody.Password) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			ctx.Logger.Error("Il json nel RequestBody presenta degli errori.")
-			return
-
-		} else { // Il RequestBody passato non presenta errori
-
-			// Controllo che l'Username e la Password passati nel RequestBody sia una stringa conforme alle specifiche
-			if !(utils.CheckUsername(doLoginRequestBody.Username) && utils.CheckPassword(doLoginRequestBody.Password)) {
-				w.WriteHeader(http.StatusBadRequest)
-				ctx.Logger.Error("L'Username e/o la Password passati nel RequestBody non sono conformi alle specifiche.")
-				return
-			} else {
-				// L'Username e la Password passati nel RequestBody sono conformi alle specifiche progettuali
-				id, err, created := rt.db.DoLogin(doLoginRequestBody.Username, doLoginRequestBody.Password)
-				if err != nil {
-					if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-						w.WriteHeader(http.StatusUnauthorized)
-						ctx.Logger.WithError(err).Error("Credenziali non valide.")
-						return
-
-					} else {
-						w.WriteHeader(http.StatusInternalServerError)
-						ctx.Logger.WithError(err).Error("Si è verificato un errore nelle operazioni sul database.")
-						return
-					}
-				} else {
-					// Imposto l'header della risposta e scrivo lo status 201 Created se è stato creato un nuovo utente o 200 OK altrimenti
-					w.Header().Set("Content-Type", "application/json")
-					if *created == true {
-						w.WriteHeader(http.StatusCreated)
-
-					} else {
-						w.WriteHeader(http.StatusOK)
-
-					}
-
-					// Faccio l'encoding del ResponseBody per mandarlo nel json di risposta
-					var doLoginResponseBody doLoginResponseBody
-					doLoginResponseBody.Identifier = *id
-					err = json.NewEncoder(w).Encode(doLoginResponseBody)
-
-					// Si è verificato un errore nell'encoding della risposta
-					if err != nil {
-						w.WriteHeader(http.StatusInternalServerError)
-						ctx.Logger.WithError(err).Error("Si è verificato un errore nell'encoding della risposta.")
-						return
-					} else {
-						// Non si sono verificati errori,ritorno
-						return
-					}
-
-				}
-
-			}
-
-		}
-
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
+	// 2) Validate required fields.
+	if req.Username == "" || req.Password == "" || req.IsSignUp == nil {
+		ctx.Logger.Error("Invalid or missing fields in the JSON body.")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// 3) Check if username and password strings are valid according to specs.
+	if !utils.CheckUsername(req.Username) || !utils.CheckPassword(req.Password) {
+		ctx.Logger.Error("Username or Password does not meet the requirements.")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// 4) Execute the unified database logic.
+	id, err := rt.db.DoLogin(req.Username, req.Password, *req.IsSignUp)
+	if err != nil {
+		// Handle specific authentication errors.
+		if errors.Is(err, utils.ErrInvalidCredentials) {
+			ctx.Logger.WithError(err).Error("Invalid credentials provided.")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		if errors.Is(err, utils.ErrUserAlreadyExists) {
+			ctx.Logger.WithError(err).Error("User already exists.")
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+
+		// Handle generic database errors.
+		ctx.Logger.WithError(err).Error("Database operation failed.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 5) Set response headers and status code.
+	w.Header().Set("Content-Type", "application/json")
+	if *req.IsSignUp {
+		w.WriteHeader(http.StatusCreated)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	// 6) Encode and send the response body.
+	var response doLoginResponseBody
+	response.Identifier = *id
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to encode response JSON.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }

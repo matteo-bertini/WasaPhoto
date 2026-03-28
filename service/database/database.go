@@ -53,7 +53,7 @@ type AppDatabase interface {
 
 	// DoLogin resitituisce l'id relativo all'username passato come argomento. //
 	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrà resituito quello esistente //
-	DoLogin(username string, password string) (*string, error, *bool)
+	DoLogin(username string, password string, IsSignUp bool) (*string, error)
 
 	// AddUser crea ed aggiunge il profilo dell'username //
 	AddUser(username string, id string) error

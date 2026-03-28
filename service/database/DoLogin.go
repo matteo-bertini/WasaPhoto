@@ -1,72 +1,67 @@
 package database
 
 import (
+	"WasaPhoto/service/utils"
+	"database/sql"
+	"errors"
+
 	"github.com/segmentio/ksuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (db *appdbimpl) DoLogin(username string, password string) (*string, error, *bool) {
+func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*string, error) {
 
-	// Controllo che l'user con username e password specificati non sia già registrato
+	var id, hashedpassword string
 
-	query1 := "SELECT id,hashedpassword FROM authstrings WHERE username = ?"
-	rows, err := db.c.Query(query1, username)
+	// 1) Searching the user.
+	err := db.c.QueryRow("SELECT id,hashedpassword FROM authstrings WHERE username = ?", username).Scan(&id, &hashedpassword)
 
-	// Si è verificato un errore nell'esecuzione della query
-	if err != nil {
-		return nil, err, nil
-	} else {
-		// La query è stata eseguita correttamente, ma non è stato possibile preparare il risultato
-		if !rows.Next() {
-			err = rows.Err()
-			// Si è verificato un errore durante l'iterazione delle righe o nella loro chiusura
+	// 2) User not found.
+	if errors.Is(err, sql.ErrNoRows) {
+
+		// 2.1) User sign up.
+		if IsSignUp {
+			id = ksuid.New().String()
+			newhashedpassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 			if err != nil {
-				return nil, err, nil
-			} else {
-				// La query non ha dato nessun risultato,quindi devo creare una nuova entry
-				id := ksuid.New().String()
-
-				// Faccio l'hashing della password
-				hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-				// Si è verificato un errore nella generazione dell'hash
-				if err != nil {
-					return nil, err, nil
-				}
-
-				query2 := "INSERT INTO authstrings VALUES (?,?,?)"
-				_, err = db.c.Exec(query2, username, string(hashedPassword), id)
-				if err != nil {
-					return nil, err, nil
-				} else {
-					var created = true
-					return &id, nil, &created
-				}
+				return nil, err
+			}
+			// Insertion into database.
+			_, err = db.c.Exec("INSERT INTO authstrings (username,hashedpassword,id) VALUES (?,?,?)", username, string(newhashedpassword), id)
+			if err != nil {
+				return nil, err
 
 			}
-
-			// Esiste una entry nella tabella con l'username specificato quindi controllo che la password sia corretta ed estraggo l'Id
-		} else {
-			var id string
-			var hashedPassword string
-
-			err = rows.Scan(&id, &hashedPassword)
+			_, err = db.c.Exec("INSERT INTO users (username,followers,following,numberofphotos) VALUES (?,0,0,0)", username)
 			if err != nil {
-				return nil, err, nil
-			} else {
-				err = rows.Close()
-				if err != nil {
-					return nil, err, nil
-				} else {
-					err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-					if err != nil {
-						return nil, err, nil
-					}
-					var created = false
-					return &id, nil, &created
-				}
+				return nil, err
 			}
+
+			// TO ADD -> Other table creation
+			//  Successful sign up.
+			return &id, nil
 
 		}
+		// 2.2) Login attempt.
+		return nil, utils.ErrUserDoesNotExist
+
 	}
+	if err != nil {
+		// 3) Generic database error.
+		return nil, err
+
+	}
+	// 4) User found.
+	if IsSignUp {
+		// 4.1) Registration attempt.
+		return nil, utils.ErrUserAlreadyExists
+	}
+	// 4.2) Login attempt.
+	err = bcrypt.CompareHashAndPassword([]byte(hashedpassword), []byte(password))
+	if err != nil {
+		return nil, utils.ErrInvalidCredentials
+	}
+	// Successful login.
+	return &id, nil
 
 }
