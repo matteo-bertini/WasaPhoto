@@ -9,7 +9,7 @@ export default {
 		}
 	},
 	methods: {
-		async handleAuth() { // Questo metodo è quello chiamato dal @submit.prevent
+		async handleAuth() { //  metodo chiamato dal @submit.prevent
 			this.ErrorMessage = null;
 			
 			try {
@@ -115,7 +115,7 @@ export default {
   background-attachment: fixed;
   display: flex;
   flex-direction: column;
-  font-family: 'Poppins', sans-serif; /* Un font moderno e pulito */
+  font-family: 'Poppins', sans-serif; 
   color: white;
 }
 
@@ -134,7 +134,7 @@ export default {
 
 .camera-icon {
   font-size: 2.5rem;
-  color: #f0e6d2; /* Colore crema dell'icona originale */
+  color: #f0e6d2; 
 }
 
 .brand-name {
@@ -252,7 +252,6 @@ export default {
 }
 
 input:checked + .slider {
-  /* Colore del gradiente originale per lo stato 'active' */
   background-color: #a53b59; 
 }
 

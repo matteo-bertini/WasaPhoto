@@ -55,9 +55,6 @@ type AppDatabase interface {
 	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrà resituito quello esistente //
 	DoLogin(username string, password string, IsSignUp bool) (*string, error)
 
-	// AddUser crea ed aggiunge il profilo dell'username //
-	AddUser(username string, id string) error
-
 	// GetUserProfile gets a user profile searched via username //
 	GetUserProfile(username string) (*Database_user, error)
 
@@ -131,33 +128,79 @@ type appdbimpl struct {
 	c *sql.DB
 }
 
-// New returns a new instance of AppDatabase based on the SQLite connection `db`.
-// `db` is required - an error will be returned if `db` is `nil`.
+// New creates a new instance of AppDatabase and initializes the database schema.
+// It enforces referential integrity through foreign keys and sets up the
+// unified table structure for accounts, profiles, posts, and follows.
 func New(db *sql.DB) (AppDatabase, error) {
 	if db == nil {
 		return nil, errors.New("database is required when building a AppDatabase")
 	}
 
-	// Check if table exists. If not, the database is empty, and we need to create the structure
-	var tableName string
-	err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name='users';`).Scan(&tableName)
-	if errors.Is(err, sql.ErrNoRows) {
+	// Enable foreign key support in SQLite.
+	// This ensures that deleting an account automatically cleans up
+	// related profiles, posts, and follows (ON DELETE CASCADE).
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		return nil, fmt.Errorf("failed to enable foreign key support: %w", err)
+	}
 
-		// Creazione della tabella authstrings
-		// authstrings memorizza per ogni username registrato l'id univoco che riconosce l'utente nel sistema e nelle richieste
-		sqlStmt := `CREATE TABLE authstrings (username TEXT NOT NULL PRIMARY KEY,hashedpassword TEXT NOT NULL,id TEXT NOT NULL);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("errore nella creazione della tabella authstrings: %w", err)
-		}
-		// Creazione della tabella users
-		// users memorizza  il profilo per ogni username registrato in authstrings
-		sqlStmt = `CREATE TABLE users (username TEXT NOT NULL PRIMARY KEY,followers INTEGER NOT NULL,following INTEGER NOT NULL,numberofphotos INTEGER NOT NULL);`
-		_, err = db.Exec(sqlStmt)
-		if err != nil {
-			return nil, fmt.Errorf("error creating database structure: %w", err)
-		}
+	// Define the unified database schema.
 
+	// Table: accounts - Security and authentication.
+	accountsTable := `
+	CREATE TABLE IF NOT EXISTS accounts (
+		user_id        TEXT NOT NULL PRIMARY KEY,
+		username       TEXT NOT NULL UNIQUE,
+		password_hash  TEXT NOT NULL,
+		session_token  TEXT UNIQUE
+	);`
+
+	// Table: profiles - User metadata and denormalized counters.
+	profilesTable := `
+	CREATE TABLE IF NOT EXISTS profiles (
+		user_id        TEXT NOT NULL PRIMARY KEY,
+		bio            TEXT DEFAULT '',
+		num_followers  INTEGER DEFAULT 0,
+		num_following  INTEGER DEFAULT 0,
+		num_posts      INTEGER DEFAULT 0,
+		CONSTRAINT fk_profile_account 
+			FOREIGN KEY (user_id) 
+			REFERENCES accounts(user_id) 
+			ON DELETE CASCADE
+	);`
+
+	// Table: posts - Unified content storage.
+	postsTable := `
+	CREATE TABLE IF NOT EXISTS posts (
+		post_id      TEXT NOT NULL PRIMARY KEY,
+		author_id    TEXT NOT NULL,
+		image_path   TEXT NOT NULL,
+		caption      TEXT,
+		created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+		CONSTRAINT fk_post_author 
+			FOREIGN KEY (author_id) 
+			REFERENCES accounts(user_id) 
+			ON DELETE CASCADE
+	);`
+
+	// Table: follows - Social relationships (Follower -> Followed).
+	// Primary Key is a composite of both IDs to prevent duplicate follows.
+	followsTable := `
+	CREATE TABLE IF NOT EXISTS follows (
+		follower_id  TEXT NOT NULL,
+		followed_id  TEXT NOT NULL,
+		PRIMARY KEY (follower_id, followed_id),
+		CONSTRAINT fk_follower 
+			FOREIGN KEY (follower_id) REFERENCES accounts(user_id) ON DELETE CASCADE,
+		CONSTRAINT fk_followed 
+			FOREIGN KEY (followed_id) REFERENCES accounts(user_id) ON DELETE CASCADE
+	);`
+
+	// Execution block for all tables.
+	queries := []string{accountsTable, profilesTable, postsTable, followsTable}
+	for _, query := range queries {
+		if _, err := db.Exec(query); err != nil {
+			return nil, fmt.Errorf("failed to initialize database schema: %w", err)
+		}
 	}
 
 	return &appdbimpl{

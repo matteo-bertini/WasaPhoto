@@ -28,7 +28,7 @@ func (db *appdbimpl) CheckAuthorization(request *http.Request, username string) 
 				return utils.ErrBearerTokenNotSpecifiedWell
 			} else {
 				// Id specificato nel campo Authorization in modo corretto
-				query1 := "SELECT * FROM authstrings WHERE id = ? AND username = ?"
+				query1 := "SELECT * FROM accounts WHERE id = ? AND username = ?"
 				rows, err := db.c.Query(query1, id, username)
 				if err != nil {
 					// Si è verificato un errore nell'esecuzione della query
@@ -98,7 +98,7 @@ func (db *appdbimpl) CheckUserExistence(username string) error {
 
 // La funzione IdFromUsername restituisce l'Id dell'username passato
 func (db *appdbimpl) IdFromUsername(username string) (*string, error) {
-	query1 := "SELECT id FROM authstrings WHERE username = ?"
+	query1 := "SELECT id FROM accounts WHERE username = ?"
 	rows, err := db.c.Query(query1, username)
 	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {
@@ -135,7 +135,7 @@ func (db *appdbimpl) IdFromUsername(username string) (*string, error) {
 
 // La funzione UsernameFromId restituisce l'Id dell'username passato
 func (db *appdbimpl) UsernameFromId(id string) (*string, error) {
-	query1 := "SELECT username FROM authstrings WHERE id = ?"
+	query1 := "SELECT username FROM accounts WHERE id = ?"
 	rows, err := db.c.Query(query1, id)
 	// Si è verificato un errore nell'esecuzione della query
 	if err != nil {

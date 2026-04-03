@@ -416,40 +416,7 @@ paths:
        
         '500':
           $ref: "#/components/responses/InternalServerError"
-    post:
-      tags:
-        - user
-      security:
-        - bearerAuth: []
-      operationId: addUser
-      summary: Adds a user to WasaPhoto.
-      description: |
-        Adds a user to WasaPhoto,using the unique username specified in the object in the requestBody.
-        The User profile will be returned in the response,more specifically, the new profile will have 
-        no photos,no followers and no following.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Username'
-      responses: 
-       
-        '201':
-          description: User created successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        '403': 
-          description: |
-            Forbidden : The username passed in the RequestBody corresponds to an already existing profile.
-        '400':
-          $ref: "#/components/responses/BadRequest"
-        '401':
-          description: |
-            Unauthorized : The token was either not specified correctly or does not provide permission to create the profile.
-        '500':
-          $ref: "#/components/responses/InternalServerError"
+    
   /users/{Username}/:
     parameters:
       - $ref: "#/components/parameters/Username"

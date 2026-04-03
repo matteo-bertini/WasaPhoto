@@ -212,8 +212,8 @@ func (db *appdbimpl) DeleteUser(id string, username string) error {
 				if err != nil {
 					return err
 				} else {
-					// Rimuovo l'id dalla tabella authstrings
-					stmt := "DELETE FROM authstrings WHERE id = ?"
+					// Rimuovo l'id dalla tabella accounts
+					stmt := "DELETE FROM accounts WHERE id = ?"
 					_, err = db.c.Exec(stmt, id)
 					if err != nil {
 						return err

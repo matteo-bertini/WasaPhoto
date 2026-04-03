@@ -14,7 +14,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 	var id, hashedpassword string
 
 	// 1) Searching the user.
-	err := db.c.QueryRow("SELECT id,hashedpassword FROM authstrings WHERE username = ?", username).Scan(&id, &hashedpassword)
+	err := db.c.QueryRow("SELECT user_id, password_hash FROM accounts WHERE username = ?", username).Scan(&id, &hashedpassword)
 
 	// 2) User not found.
 	if errors.Is(err, sql.ErrNoRows) {
@@ -26,20 +26,43 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 			if err != nil {
 				return nil, err
 			}
+
+			// Start transaction for sign up.
+			tx, err := db.c.Begin()
+			if err != nil {
+				return nil, err
+			}
+
 			// Insertion into database.
-			_, err = db.c.Exec("INSERT INTO authstrings (username,hashedpassword,id) VALUES (?,?,?)", username, string(newhashedpassword), id)
+			_, err = tx.Exec("INSERT INTO accounts (user_id, username, password_hash) VALUES (?, ?, ?)", id, username, string(newhashedpassword))
 			if err != nil {
-				return nil, err
-
-			}
-			_, err = db.c.Exec("INSERT INTO users (username,followers,following,numberofphotos) VALUES (?,0,0,0)", username)
-			if err != nil {
+				_ = tx.Rollback()
 				return nil, err
 			}
 
-			// TO ADD -> Other table creation
+			// Profile creation into the profiles table.
+			_, err = tx.Exec("INSERT INTO profiles (user_id, num_followers, num_following, num_posts) VALUES (?, 0, 0, 0)", id)
+			if err != nil {
+				_ = tx.Rollback()
+				return nil, err
+			}
+
+			// Session token generation.
+			sessionToken := ksuid.New().String()
+			_, err = tx.Exec("UPDATE accounts SET session_token = ? WHERE user_id = ?", sessionToken, id)
+			if err != nil {
+				_ = tx.Rollback()
+				return nil, err
+			}
+
+			// Commit transaction.
+			err = tx.Commit()
+			if err != nil {
+				return nil, err
+			}
+
 			//  Successful sign up.
-			return &id, nil
+			return &sessionToken, nil
 
 		}
 		// 2.2) Login attempt.
@@ -61,7 +84,15 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 	if err != nil {
 		return nil, utils.ErrInvalidCredentials
 	}
+
+	// Generazione session_token per il login
+	sessionToken := ksuid.New().String()
+	_, err = db.c.Exec("UPDATE accounts SET session_token = ? WHERE user_id = ?", sessionToken, id)
+	if err != nil {
+		return nil, err
+	}
+
 	// Successful login.
-	return &id, nil
+	return &sessionToken, nil
 
 }
