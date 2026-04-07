@@ -6,8 +6,8 @@ info:
    upload your photos directly from your PC, and they will be visible to everyone following you.
   version: 1.0.0
 tags:
-  - name: login
-    description: Operations about login.
+  - name: authentication
+    description: Operations about login and logout.
   - name: user
     description: Operations about user.
   - name: photos
@@ -314,12 +314,12 @@ paths:
   /session:
     post:
       tags:
-        - login
+        - authentication
       summary: Logs in or registers the user
-      description: |
-        If the user does not exist, it will be created,
-        and an identifier is returned.
-        If the user exists, the user identifier is returned
+      description: | 
+        If the user does not exist, a new account and profile are created (Sign Up).
+        If the user exists, credentials are verified (Login).
+        In both cases, a temporary session token is returned.
       operationId: doLogin
       requestBody:
         description: User credentials for authentication
@@ -368,7 +368,23 @@ paths:
           description: |
             Conflict: username already taken during signup
         '500':
-          $ref: "#/components/responses/InternalServerError"           
+          $ref: "#/components/responses/InternalServerError"  
+    
+    delete:
+      tags:
+        - authentication
+      security:
+        - bearerAuth: [] 
+      operationId: doLogout
+      summary: Logout the current user
+      responses:
+        '204':
+          description: User successfully logged out (No Content)
+        '401':
+          description: Unauthorized - Invalid or missing token
+        '500':
+          description: Internal server error
+
   /users/:
     get:
       tags:

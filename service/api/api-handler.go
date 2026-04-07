@@ -11,6 +11,9 @@ func (rt *_router) Handler() http.Handler {
 	// doLogin //
 	rt.router.POST("/session", rt.wrap(rt.doLogin))
 
+	// doLogout //
+	rt.router.DELETE("/session", rt.wrap(rt.AuthMiddleware(rt.doLogout)))
+
 	// getUserProfile
 	rt.router.GET("/users/", rt.wrap(rt.getUserProfile))
 

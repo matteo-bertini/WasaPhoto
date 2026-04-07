@@ -33,14 +33,14 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 				return nil, err
 			}
 
-			// Insertion into database.
+			// Insertion into accounts table.
 			_, err = tx.Exec("INSERT INTO accounts (user_id, username, password_hash) VALUES (?, ?, ?)", id, username, string(newhashedpassword))
 			if err != nil {
 				_ = tx.Rollback()
 				return nil, err
 			}
 
-			// Profile creation into the profiles table.
+			// Insertion into profiles table.
 			_, err = tx.Exec("INSERT INTO profiles (user_id, num_followers, num_following, num_posts) VALUES (?, 0, 0, 0)", id)
 			if err != nil {
 				_ = tx.Rollback()
@@ -66,7 +66,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 
 		}
 		// 2.2) Login attempt.
-		return nil, utils.ErrUserDoesNotExist
+		return nil, utils.ErrInvalidCredentials
 
 	}
 	if err != nil {

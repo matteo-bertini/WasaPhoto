@@ -42,7 +42,7 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// 4) Execute the unified database logic.
-	id, err := rt.db.DoLogin(req.Username, req.Password, *req.IsSignUp)
+	sessionToken, err := rt.db.DoLogin(req.Username, req.Password, *req.IsSignUp)
 	if err != nil {
 		// Handle specific authentication errors.
 		if errors.Is(err, utils.ErrInvalidCredentials) {
@@ -71,12 +71,13 @@ func (rt *_router) doLogin(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 	// 6) Encode and send the response body.
-	var response doLoginResponseBody
-	response.Identifier = *id
-	err = json.NewEncoder(w).Encode(response)
+	var res doLoginResponseBody
+	res.SessionToken = *sessionToken
+	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		ctx.Logger.WithError(err).Error("Failed to encode response JSON.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 }

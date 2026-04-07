@@ -19,7 +19,7 @@ type doLoginRequestBody struct {
 	IsSignUp *bool  `json:"IsSignUp"`
 }
 type doLoginResponseBody struct {
-	Identifier string `json:"Identifier"`
+	SessionToken string `json:"SessionToken"`
 }
 
 // addUser operation //

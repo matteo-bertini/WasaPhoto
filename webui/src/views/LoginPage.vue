@@ -3,9 +3,9 @@ export default {
 	data() {
 		return {
 			ErrorMessage: null,
-			username: "",   // Uniformato al v-model del template
-			password: "",   // Aggiunta per il login
-			isSignup: false // Gestito dallo switch nel template
+			username: "",   
+			password: "",   
+			isSignup: false 
 		}
 	},
 	methods: {
@@ -13,7 +13,6 @@ export default {
 			this.ErrorMessage = null;
 			
 			try {
-				// Inviamo Username, Password e il flag per capire se è registrazione o login
 				let response = await this.$axios.post("/session", {
 					Username: this.username,
 					Password: this.password,
@@ -21,7 +20,7 @@ export default {
 				});
 
 				// Salvataggio dati sessione
-				localStorage.setItem("Authstring", response.data.Identifier);
+				localStorage.setItem("SessionToken", response.data.SessionToken);
 				localStorage.setItem("Username", this.username);
 
 				// Reindirizzamento al profilo dell'utente

@@ -55,6 +55,8 @@ type AppDatabase interface {
 	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrà resituito quello esistente //
 	DoLogin(username string, password string, IsSignUp bool) (*string, error)
 
+	DoLogout(userID string) error
+
 	// GetUserProfile gets a user profile searched via username //
 	GetUserProfile(username string) (*Database_user, error)
 
@@ -116,6 +118,7 @@ type AppDatabase interface {
 	Ping() error
 
 	// Funzioni ausiliarie definite in database_utilities
+	GetUserIDByToken(token string) (string, error)
 	CheckAuthorization(request *http.Request, username string) error
 	CheckUserExistence(username string) error
 	IdFromUsername(username string) (*string, error)

@@ -5,13 +5,15 @@ import (
 	"strings"
 )
 
-// Costanti //
+// Costants //
 const Bearer_Authorization = "Bearer"
 
-// Errori
+// Errors
+
+// GetUserIDByToken
+var ErrInvalidToken error = errors.New("Invalid sessionToken.")
 
 // DoLogin //
-var ErrUserNotRegistered error = errors.New("User not registered yet.")
 var ErrUserAlreadyExists error = errors.New("User already exists.")
 var ErrInvalidCredentials = errors.New("invalid username or password")
 
