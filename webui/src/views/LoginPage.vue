@@ -1,46 +1,69 @@
 <script>
+import ErrorMsg from '../components/ErrorMsg.vue';
+
 export default {
+  components: {
+    ErrorMsg
+  },
 	data() {
 		return {
-			ErrorMessage: null,
-			username: "",   
-			password: "",   
-			isSignup: false 
+			Username: "",   
+			Password: "",   
+			IsSignup: false,
+      errorMessage: null,
+      loading: false,
+      isSuccess: false
 		}
 	},
 	methods: {
 		async handleAuth() { //  metodo chiamato dal @submit.prevent
-			this.ErrorMessage = null;
+      this.loading = true;
+			this.errorMessage = null;
+      this.isSuccess = false;
 			
 			try {
 				let response = await this.$axios.post("/session", {
-					Username: this.username,
-					Password: this.password,
-					IsSignup: this.isSignup
+					Username: this.Username,
+					Password: this.Password,
+					IsSignup: this.IsSignup
 				});
 
-				// Salvataggio dati sessione
+				// Saving session data.
 				localStorage.setItem("SessionToken", response.data.SessionToken);
-				localStorage.setItem("Username", this.username);
+				localStorage.setItem("Username", this.Username);
 
-				// Reindirizzamento al profilo dell'utente
-				this.$router.push("/users/" + this.username + "/");
+        this.isSuccess = true;
+        this.loading = false;
+    
+        setTimeout(() => {
+          this.$router.push("/home");
+        }, 1200);
 
 			} catch (e) {
-				console.error("Errore durante l'autenticazione:", e);
-				
-				// Gestione errori specifica basata sugli status code del backend
-				if (e.response && e.response.status === 409) {
-					this.ErrorMessage = "Username già esistente!";
-				} else if (e.response && e.response.status === 401) {
-					this.ErrorMessage = "Credenziali non valide.";
-				} else {
-					this.ErrorMessage = "Errore del server. Riprova più tardi.";
-				}
-			}
+        this.loading = false;
+        this.isSuccess = false;
+        if (e.response) {
+          if (e.response.status === 409) {
+            this.errorMessage = "Username già esistente!";
+          } 
+          else if (e.response.status === 401) {
+            this.errorMessage = "Credenziali non valide.";
+          } 
+          else if (e.response.status === 400) {
+            this.errorMessage = "Dati non validi. Controlla i campi inseriti.";
+          } 
+          else {
+            this.errorMessage = "Si è verificato un errore sul server. Riprova.";
+          }
+        } 
+        else {
+          this.errorMessage = "Impossibile collegarsi al server. Controlla la tua connessione.";
+        }
+    }
+}
 		}
 	}
-}
+
 </script>
 
 <template>
@@ -57,14 +80,15 @@ export default {
       <div class="glass-card">
         
         <h2 class="card-title">{{ isSignup ? 'Registrazione' : 'Login' }}</h2>
+        <ErrorMsg :msg="errorMessage" />
 
         <form @submit.prevent="handleAuth">
           
           <div class="input-group">
             <input 
               type="text" 
-              v-model="username" 
-              placeholder="username" 
+              v-model="Username" 
+              placeholder="Username" 
               required
               class="glass-input"
             />
@@ -73,25 +97,37 @@ export default {
           <div class="input-group">
             <input 
               type="password" 
-              v-model="password" 
-              placeholder="password" 
+              v-model="Password" 
+              placeholder="Password" 
               required
               class="glass-input"
             />
           </div>
 
           <div class="switch-container">
-            <span :class="{ 'active-label': !isSignup }">Accedi</span>
+            <span :class="{ 'active-label': !IsSignup }">Accedi</span>
             <label class="switch">
-              <input type="checkbox" v-model="isSignup">
+              <input type="checkbox" v-model="IsSignup">
               <span class="slider round"></span>
             </label>
-            <span :class="{ 'active-label': isSignup }">Registrati</span>
+            <span :class="{ 'active-label': IsSignup }">Registrati</span>
           </div>
 
-          <button type="submit" class="gradient-button">
-            <i :class="isSignup ? 'fas fa-user-plus' : 'fas fa-sign-in-alt'"></i>
-            {{ isSignup ? 'CREA ACCOUNT' : 'ACCEDI' }}
+          <button type="submit" class="gradient-button" :disabled="loading || isSuccess" :class="{ 'btn-success': isSuccess }">
+            <template v-if="loading">
+              <i class="fas fa-circle-notch fa-spin"></i>
+              <span>VERIFICA...</span>
+            </template>
+            
+            <template v-else-if="isSuccess">
+              <i class="fas fa-check-circle anim-pop"></i>
+              <span>BENVENUTO!</span>
+            </template>
+
+            <template v-else>
+              <i :class="IsSignup ? 'fas fa-user-plus' : 'fas fa-sign-in-alt'"></i>
+              <span>{{ IsSignup ? 'CREA ACCOUNT' : 'ACCEDI' }}</span>
+            </template>
           </button>
         </form>
 
@@ -108,7 +144,7 @@ export default {
 <style scoped>
 .wasaphoto-bg {
   min-height: 100vh;
-  background-image: url('/path/to/my/camera-lens-bg.jpg'); 
+  background:radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -150,7 +186,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-bottom: 100px; /* Spazio per la stellina */
+  padding-bottom: 100px; 
 }
 
 .glass-card {
@@ -315,5 +351,37 @@ input:checked + .slider:before {
   right: 30px;
   font-size: 2rem;
   color: rgba(255, 255, 255, 0.3);
+
+}
+
+/* Feedback di Successo */
+.btn-success {
+  background: linear-gradient(135deg, #2ed573 0%, #7bed9f 100%) !important;
+  box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4) !important;
+}
+
+.anim-pop {
+  animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1.2); opacity: 1; }
+}
+
+/* Stato disabilitato per evitare click multipli */
+.gradient-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+  transform: none;
+}
+
+/* Rotazione icona loading */
+.fa-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 </style>

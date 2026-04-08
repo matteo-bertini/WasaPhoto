@@ -1,20 +1,51 @@
+<template>
+	<div class="error-container" v-if="msg">
+		<div class="error-glass">
+			<i class="fas fa-exclamation-circle error-icon"></i>
+			<span class="error-text">{{ msg }}</span>
+		</div>
+	</div>
+</template>
+
 <script>
 export default {
-	props: ["Title","Message"]
+	props: ['msg'] 
 }
 </script>
 
-<template>
-	<div class="alert alert-danger alert-dismissible fade show" role="alert">
-		<strong>
-			<i class="fa-solid fa-triangle-exclamation"></i>
-		</strong>
+<style scoped>
+.error-container {
+	margin-bottom: 20px;
+	width: 100%;
+}
 
+.error-glass {
+	background: rgba(255, 71, 87, 0.1); 
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border: 1px solid rgba(255, 71, 87, 0.3);
+	border-radius: 12px;
+	padding: 12px 15px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	
+	animation: fadeIn 0.3s ease-in;
+}
 
-		<strong>{{Title}}</strong> {{Message}}
-		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-	 </div>
-</template>
+.error-icon {
+	color: #ff4757;
+	font-size: 1.1rem;
+}
 
-<style>
+.error-text {
+	color: #ffeef0;
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(-5px); }
+	to { opacity: 1; transform: translateY(0); }
+}
 </style>
