@@ -36,7 +36,7 @@ export default {
         this.loading = false;
     
         setTimeout(() => {
-          this.$router.push("/home");
+          this.$router.push("/users/"+this.Username);
         }, 1200);
 
 			} catch (e) {

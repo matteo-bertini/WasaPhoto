@@ -1,465 +1,303 @@
-<script>
-export default {
-	
-	// Reactive State
-	data: function () {
-		return {
-			errormsg: null,
-			loading: false,
-			Username : "",
-			FollowersNumber : 0,
-			Followers : [],
-			FollowingNumber :0,
-			Following : [],
-			BannedUsers : [],
-			NumberOfPhotos: 0,
-			Photos : [],
-			ToSearch : "",
-			IsOwner : false,
-			IsFollowing : false,
-		}
-	},
-	
-	// Dichiarazione del watcher: quando L'Username nel path cambierà,verrà caricato il profilo corrispondente 
-	watch:{
-        currentPath(newUsername,oldUsername){
-            if (newUsername !== oldUsername){
-                this.LoadProfile();
-				return;
-            }
-        },
-    },
-
-	computed:{
-		currentPath(){
-            return this.$route.params.Username;
-        },
-	},
-
-	methods: {
-		
-		// Caricamento del profilo da mostrare
-		async LoadProfile(){
-
-			// Controllo se chi sta visualizzando il profilo ne è il proprietario,la pagina ne viene influenzata
-			if(this.$route.params.Username === `${localStorage.getItem("Username")}`){
-				this.IsOwner=true;
-			}
-			else{
-				this.IsOwner=false;
-			}
-
-			// Richieste http
-
-			// Impostazione del config per la richiesta getUserProfile
-			let getUserProfile_config = await {
-				headers: {Authorization: `Bearer ${localStorage.getItem("Authstring")}`},
-				params: {Username: this.$route.params.Username}}
-			try{
-				
-				// getUserProfile
-				let getUserProfile_response =  await this.$axios.get("/users/",getUserProfile_config);
-				this.Username=getUserProfile_response.data.Username;
-				this.FollowersNumber=getUserProfile_response.data.Followers;
-				this.FollowingNumber=getUserProfile_response.data.Following;
-				this.NumberOfPhotos=getUserProfile_response.data.NumberOfPhotos;
-				this.Photos = getUserProfile_response.data.UploadedPhotos.reverse();
-
-				// getFollowers
-				let getFollowers_config =  {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-					}
-				};
-				let getFollowers_response = await this.$axios.get("/users/"+this.Username+"/followers/",getFollowers_config);
-				this.Followers = getFollowers_response.data.Followers.map(x => x.FollowerId);
-
-				//getFollowing
-				let getFollowing_config =  {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-					}
-				};
-				let getFollowing_response = await this.$axios.get("/users/"+this.Username+"/following",getFollowing_config);
-				this.Following = getFollowing_response.data.Following.map(x => x.Username);
-
-				//getBanned
-				let getBanned_config =  {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-					}
-				};
-				let getBanned_response = await this.$axios.get("/users/"+`${localStorage.getItem("Username")}`+"/bannedusers/",getBanned_config);
-				this.BannedUsers = getBanned_response.data.BannedUsers.map(x => x.BannedId);
-
-				// Si sta visualizzando il profilo di un altro utente
-				if(this.IsOwner===false){
-
-					// IsFollowing
-					if(this.Followers.includes(`${localStorage.getItem("Username")}`)){
-						this.IsFollowing = true;
-					}
-					else{
-						this.IsFollowing = false;
-					}
-					return;
-				}
-				else{
-					return;
-				}
-			}catch(e){
-				if(e.response.status==403 || e.response.status==404){
-					this.$router.replace("/profilenotfound");
-					return;
-
-				}
-			
-			}
-		},
-		
-		// Click sul pulsante Follow/Unfollow
-		async FollowUnfollowButtonPressed(){
-			// Chi visualizza il profilo lo segue già
-			if(this.IsFollowing==true){
-				let unfollowUser_config = await {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-					}
-				};
-				try{
-					let unfollowUser_response = await this.$axios.delete("/users/"+this.Username+"/followers/"+`${localStorage.getItem("Username")}`,unfollowUser_config);
-				
-					// Aggiornamento del numero di followers e della lista di followers
-					this.FollowersNumber --;
-					this.Followers = this.Followers.filter(x=> x!==`${localStorage.getItem("Username")}`);
-
-					// Aggiornamento del pulsante
-					this.IsFollowing=false;
-					return;
-
-				}
-				catch(e){
-					//
-				}
-
-			}else{
-				let followUser_config = await {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-					}
-				};
-				let followUser_response = await this.$axios.post("/users/"+this.Username+"/followers/",{"FollowerId":`${localStorage.getItem("Username")}`},followUser_config);
-				
-				// Aggiornamento del numero di followers e della lista di followers
-				this.FollowersNumber++;
-				this.Followers.push(followUser_response.data.FollowerId);
-				this.IsFollowing=true;
-				return
-
-			}
-			
-
-		},
-		
-		// Click sul pulsante Ban
-		async BanButtonPressed(){
-			let banUser_config = await {
-				headers: {
-					Authorization: `Bearer ${localStorage.getItem("Authstring")}`
-				}
-			};
-			let banUser_response = await this.$axios.post("/users/"+`${localStorage.getItem("Username")}`+"/bannedusers/",{"BannedId":this.Username},banUser_config);
-			
-			//Ritorno al mio profilo
-			this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
-			return
-
-			
-		},
-		
-		// Click sul pulsante Settings
-		SettingsButtonPressed(){
-			this.$router.replace("/users/"+this.Username+"/settings");
-			return;
-		},
-		
-		// Click sul pulsante Upload Photo
-		async UploadPhoto() {
-			let input_file = document.getElementById('photo_uploader').files[0];
-			const reader = new FileReader();
-			reader.readAsArrayBuffer(input_file);
-			let config = {
-				headers: {
-					"Authorization": `Bearer ${localStorage.getItem("Authstring")}`,
-					"Content-Type" : "image/png"
-				
-				
-				}
-			
-			}
-		
-			reader.onload = async () => {
-				try {
-					let response = await this.$axios.post("/users/"+this.Username+"/photos/", reader.result,config)
-					this.NumberOfPhotos +=1;
-					this.Photos.unshift(response.data);
-					return;
-
-
-				}catch(e){
-					this.errormsg = e.toString();
-					return;
-
-				}
-               
-				
-			}
-		
-		},
-		
-		// Rimozione di una foto dalla visualizzazione
-		RemovePhotoFromList(photoid){
-			this.Photos = this.Photos.filter(photo => photo.PhotoId !== photoid);
-			this.NumberOfPhotos -=1;
-		},
-
-		// Ricerca di un profilo
-		async SearchProfile(){
-			
-			// Aggiorno l'URL e la pagina si aggiorna automaticamente con i dati giusti
-			this.$router.replace("/users/"+this.ToSearch+"/");
-			this.ToSearch="";
-			return;
-		},
-		
-		// Click sul pulsante MyStream
-		MyStreamButtonPressed(){
-			this.$router.replace("/users/"+this.Username+"/stream");
-			return;
-		},
-		BackButtonPressed(){
-			this.$router.replace("/users/"+localStorage.getItem("Username")+"/");
-			return;
-		},
-		FollowedUserClicked(Follow){
-			this.$router.replace("/users/"+Follow+"/");
-			return;
-
-		},
-		FollowerUserClicked(Follower){
-			this.$router.replace("/users/"+Follower+"/");
-			return;
-
-		}
-
-	},
-
-	// Eseguita appena il componente è stato montato
- 	async mounted()  {
-		await this.LoadProfile();
-		return;
-	},
-	
-	
-}
-
-
-</script>
-
 <template>
-	<div class="container-fluid" id="ProfilePageContainer" style=" display:flex; flex-direction: column; min-height: 100vh; min-width:100vw ;" >
-		
-		<!-- Titolo e barra di ricerca -->
-		<div style="display: flex; flex-direction: column; align-items: center; row-gap: 0.5em; margin-top: 2em;">
-			<!-- Titolo -->
-			<div style="font-size: 1rem;">
-				<i class="fa-solid fa-camera"> WasaPhoto </i>
-			</div>
-			
-			<div class="input-group mb-3" style="width: fit-content;">
-				<input v-model="ToSearch" type="text" class="form-control"  placeholder="Username">
-				<div class="input-group-append">
-				  <button @click= "SearchProfile" class="btn btn-dark" id="SearchButton" type="button">
-					<i class="fa-solid fa-search"></i>
-				  </button>
-				</div>
-			</div>
-		</div>
+  <div id="ProfilePageContainer">
+    <nav class="glass-nav">
+      <div class="nav-content">
+        <h1 class="brand" @click="$router.push('/home')">WASA<span>PHOTO</span></h1>
+        
+        <div class="search-container">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" v-model="searchQuery" placeholder="Search users..." @keyup.enter="handleSearch">
+        </div>
 
-		<!-- MyStream Button e Back Button-->
-		<div style="display: flex; flex-direction: row; justify-content: center; align-items: center; margin-top: 3em;">
-			<button v-if="IsOwner"  id="MyStreamButton" @click="MyStreamButtonPressed" class="btn  btn-dark">
-				<i class="fa-solid fa-images"> My Stream</i>
-			</button>
+        <div class="nav-actions">
+          <button @click="$router.push('/upload')" class="icon-btn" title="Upload"><i class="fa-solid fa-circle-plus"></i></button>
+          <button @click="goToMyProfile" class="icon-btn" title="My Profile"><i class="fa-solid fa-user"></i></button>
+          <button @click="$router.push('/settings')" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
+          <button @click="handleLogout" class="icon-btn logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+      </div>
+    </nav>
 
-			<button v-else id="ProfilePageBackButton" @click="BackButtonPressed" class="btn  btn-dark">
-				<i class="fa-solid fa-user"> Back</i>
-			</button>
-		</div>
-		
-		<!-- Upload Photo,Info Profilo e Settings -->
-		<div style="display: flex; flex-direction: row; justify-content:space-evenly; align-items: center; margin-top: 20px;">
-			
-			<!-- Se chi visualizza il profilo ne è il proprietario mostro il pulsante UploadPhoto -->
-			<div v-if="IsOwner">
-				<input type="file" id="photo_uploader" ref="photo_uploader" @change="UploadPhoto" accept=".png" hidden/>
-				<label for="photo_uploader" class="btn btn-dark" id="UploadPhotoButton" type="button" style="height: 2.5em; width:10em">
-					<i class="fa-solid fa-upload"> Upload</i>
-				</label>
-			</div>
-			<!-- Se chi visualizza il profilo NON ne è il proprietario mostro il pulsate Follow -->
-			<div v-else>
-				<button class="btn btn-dark" type="button" id="FollowUnfollowButton" @click="FollowUnfollowButtonPressed" style="height: 2.5em; width:10em">
-					<i class="fa-solid fa-plus" v-if = "IsFollowing == false" id="FollowIcon"> Follow</i>
-					<i class="fa-solid fa-minus" v-else id="UnfollowIcon"> Unfollow</i>
-				</button>
-			</div>
+    <main class="content-container">
+      <div v-if="loading" class="state-container">
+        <div class="loader"></div>
+        <p>Loading profile...</p>
+      </div>
 
-			
-			
-			<div class="card" style="width: fit-content; text-align: center;">
-				<div class="card-body">
-					<h5 class ="card-title" style="font-size: xx-large;">{{Username}}</h5>
-					<p class="card-text" style="font-size: medium;">
-						Post: {{NumberOfPhotos}} | 
-						<button id="FollowersButton" data-bs-toggle="modal" :data-bs-target="'#FollowersModal' +Username" style="border:none; background-color: rgba(255, 255, 255, 0);">
-							Followers: {{FollowersNumber}} 
-						</button>
-						<button id="FollowingButton" data-bs-toggle="modal" :data-bs-target="'#FollowingModal' +Username" style="border:none; background-color: rgba(255, 255, 255, 0);">
-							| Following: {{FollowingNumber}} 
-						</button>
-						
-					</p>
-				</div>
-			</div>
-			
-			<div>
-				<button v-if="IsOwner" id="SettingsButton" class="btn btn-dark" @click="SettingsButtonPressed" type="button" style="height: 2.5em; width:10em"> 
-					<i class="fa-solid fa-gear"> Settings</i>
-				</button>
-				<button v-else id="BanButton" class="btn" @click="BanButtonPressed" type="button" style="height: 2.5em; width:10em; background-color: darkred;"> 
-					<i class="fa-solid fa-ban"  style="color: rgb(255, 255, 255);"> Ban</i>
-				</button>
-				
-			</div>
-		</div>
-		
-		<!-- Etichetta Photos -->
-		<div style="display: flex; justify-content: center; margin-top: 15px;">
-			<h3>Photos</h3>	
-		</div>
+      <div v-else-if="errorMsg" class="state-container glass-card error-box">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <p>{{ errorMsg }}</p>
+        <button @click="$router.push('/home')" class="gradient-button">Back to Home</button>
+      </div>
 
-		<!-- Collezione delle foto del profilo -->
-		<div style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 15px; margin-top: 20px; justify-content: center;">
-			
-			
-			<Photo v-for="photo in Photos"
-			:key = "photo.PhotoId"
-			:owner = "Username"
-			:photoid = "photo.PhotoId"
-			:likesnumber = "photo.LikesNumber"
-			:commentsnumber = "photo.CommentsNumber"
-			:dateofupload = "photo.DateOfUpload"
-			@photo_deleted_from_database = "RemovePhotoFromList"/>
-		
-		</div>
+      <template v-else>
+        <section class="profile-card glass-card">
+          <div class="avatar-circle">
+            {{ userInitial }}
+          </div>
+          
+          <h2 class="profile-username">@{{ profileData.Username }}</h2>
+          
+          <p class="profile-bio">{{ profileData.Bio || 'No bio available.' }}</p>
+          
+          <div class="stats-row">
+            <div class="stat-item">
+              <span class="stat-value">{{ profileData.PostsCount }}</span>
+              <span class="stat-label">Posts</span>
+            </div>
+            <div class="stat-item clickable" @click="showFollowers">
+              <span class="stat-value">{{ profileData.FollowersCount }}</span>
+              <span class="stat-label">Followers</span>
+            </div>
+            <div class="stat-item clickable" @click="showFollowing">
+              <span class="stat-value">{{ profileData.FollowingCount }}</span>
+              <span class="stat-label">Following</span>
+            </div>
+          </div>
 
-		<!-- Followers Modal  -->
-		<div class="modal fade" :id="'FollowersModal'+Username" tabindex="-1">
-			<div class="modal-dialog modal-dialog-scrollable">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h1 class="modal-title fs-5" id="exampleModalLabel">Followers</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body" style="width: fit-content; height: fit-content;">
-						<div v-if="FollowersNumber==0">
-							The user has no followers
-						</div>
-						<div v-else>
-							<div data-bs-toggle="modal" :data-bs-target="'#FollowersModal'+Username" class="FollowerUser_div" v-for="Follower in Followers" :key="Follower" @click="FollowerUserClicked(Follower)">
-								{{Follower}}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+          <div v-if="!isOwner" class="profile-actions">
+            <button 
+              :class="['gradient-button', profileData.IsFollowing ? 'btn-unfollow' : '']" 
+              @click="toggleFollow">
+              {{ profileData.IsFollowing ? 'Unfollow' : 'Follow' }}
+            </button>
+            <button class="btn-ban" @click="handleBan" title="Ban User">
+              <i class="fa-solid fa-user-slash"></i>
+            </button>
+          </div>
+        </section>
 
-		<!-- Following Modal  -->
-		<div class="modal fade" :id="'FollowingModal'+Username" tabindex="-1">
-			<div class="modal-dialog modal-dialog-scrollable">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h1 class="modal-title fs-5" id="exampleModalLabel">Following</h1>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div class="modal-body" style="width: fit-content; height: fit-content;">
-						<div v-if="FollowingNumber==0">
-							The user does not follow anyone
-						</div>
-						<div v-else>
-							<div data-bs-toggle="modal" :data-bs-target="'#FollowingModal'+Username" class="FollowedUser_div" v-for="Follow in Following" :key="Follow" @click="FollowedUserClicked(Follow)">
-								{{Follow}}
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-	
-	</div>
-
+        <section class="posts-feed">
+          <h3 class="section-title">Latest Posts</h3>
+          <div v-if="profileData.UserPosts && profileData.UserPosts.length > 0" class="stream-list">
+            <div v-for="post in profileData.UserPosts" :key="post.PhotoId" class="post-card glass-card">
+              <img :src="'/images/' + post.PhotoId + '.jpg'" class="post-image" alt="Post">
+              
+              <div class="post-info">
+                <p v-if="post.Caption" class="post-caption">{{ post.Caption }}</p>
+                <div class="post-meta">
+                  <span :class="{'liked': post.IsLikedByMe}">
+                    <i class="fa-solid fa-heart"></i> {{ post.LikesNumber }}
+                  </span>
+                  <span><i class="fa-solid fa-comment"></i> {{ post.CommentsNumber }}</span>
+                  <button v-if="isOwner" class="btn-delete" @click="deletePost(post.PhotoId)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            <p>No posts to show yet.</p>
+          </div>
+        </section>
+      </template>
+    </main>
+  </div>
 </template>
 
-<style>
-	#ProfilePageContainer{
-		background: rgb(87,32,122);
-		background: -moz-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
-		background: -webkit-linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
-		background: linear-gradient(68deg, rgba(87,32,122,1) 15%, rgba(104,20,138,1) 50%, rgba(87,32,122,1) 85%);
-		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#57207a",endColorstr="#57207a",GradientType=1); 
+<script>
+export default {
+  data() {
+    return {
+      profileData: {
+        Username: "",
+        Bio: "",
+        FollowersCount: 0,
+        FollowingCount: 0,
+        PostsCount: 0,
+        IsFollowing: false,
+        IsBannedByMe: false,
+        UserPosts: []
+      },
+      searchQuery: "",
+      loading: false,
+      errorMsg: ""
+    };
+  },
+  computed: {
+    isOwner() {
+      // Comparison between route param and stored identity
+      return this.$route.params.Username === localStorage.getItem("Username");
+    },
+    userInitial() {
+      return this.profileData.Username ? this.profileData.Username.charAt(0).toUpperCase() : "?";
+    }
+  },
+  methods: {
+    async fetchProfile() {
+      this.loading = true;
+      this.errorMsg = "";
+      try {
+        const username = this.$route.params.Username;
+        const token = localStorage.getItem("SessionToken");
+        
+        // API call to our Go Backend
+        const response = await this.$axios.get(`/users/${username}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        this.profileData = response.data;
+      } catch (e) {
+        if (e.response && (e.response.status === 404 || e.response.status === 403)) {
+          this.errorMsg = "User not found or profile unavailable.";
+        } else {
+          this.errorMsg = "An error occurred while loading the profile.";
+        }
+        console.error("Fetch profile error:", e);
+      } finally {
+        this.loading = false;
+      }
+    },
+    async toggleFollow() {
+      const token = localStorage.getItem("SessionToken");
+      const myUsername = localStorage.getItem("Username");
+      const target = this.profileData.Username;
 
-	}
-	#SearchButton:hover{
-		transform: scale(1.1);
-	}
-	#MyStreamButton:hover{
-		transform: scale(1.1);
-	}
-	#UploadPhotoButton:hover{
-		transform: scale(1.1);
-	}
-	#SettingsButton:hover{
-		transform: scale(1.1);
-	}
-	#FollowUnfollowButton:hover{
-		transform: scale(1.1);	
-	}
-	#FollowersButton:hover{
-		transform: scale(1.1);
-	}
-	#FollowingButton:hover{
-		transform: scale(1.1);
-	}
-	#BanButton:hover{
-		transform: scale(1.1);
-	}
-	#ProfilePageBackButton:hover{
-		transform: scale(1.1);
-	}
-	.FollowedUser_div:hover{
-		transform: scale(1.1);
-		cursor: pointer;
-		color:#007bff;
+      try {
+        if (this.profileData.IsFollowing) {
+          await this.$axios.delete(`/users/${myUsername}/following/${target}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          this.profileData.FollowersCount--;
+        } else {
+          await this.$axios.put(`/users/${myUsername}/following/${target}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          this.profileData.FollowersCount++;
+        }
+        this.profileData.IsFollowing = !this.profileData.IsFollowing;
+      } catch (e) {
+        console.error("Toggle follow error:", e);
+      }
+    },
+    handleSearch() {
+      if (this.searchQuery.trim()) {
+        this.$router.push(`/users/${this.searchQuery.trim()}`);
+        this.searchQuery = "";
+      }
+    },
+    goToMyProfile() {
+      this.$router.push(`/users/${localStorage.getItem("Username")}`);
+    },
+    handleLogout() {
+      localStorage.clear();
+      this.$router.push('/login');
+    },
+    async deletePost(postId) {
+      // Placeholder for delete logic
+      if (confirm("Delete this post?")) {
+        console.log("Deleting post:", postId);
+      }
+    }
+  },
+  mounted() {
+    this.fetchProfile();
+  },
+  watch: {
+    // Detects when searching for a new user while already on a profile
+    '$route.params.Username': 'fetchProfile'
+  }
+};
+</script>
 
-	}
-	.FollowerUser_div:hover{
-		transform: scale(1.1);
-		cursor: pointer;
-		color:#007bff;
+<style scoped>
+#ProfilePageContainer {
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  color: white;
+  padding-top: 100px;
+  padding-bottom: 50px;
+}
 
-	}
-	
+/* NAVBAR */
+.glass-nav {
+  position: fixed; top: 0; left: 0; width: 100%; height: 75px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex; align-items: center; justify-content: center; z-index: 2000;
+}
+.nav-content { width: 90%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; }
+.brand { cursor: pointer; font-size: 1.5rem; }
+.brand span { color: #a53b59; font-weight: bold; }
+
+.search-container {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px; padding: 8px 15px; display: flex; align-items: center; gap: 10px; width: 300px;
+}
+.search-container input { background: transparent; border: none; color: white; outline: none; width: 100%; }
+
+.icon-btn { 
+  background: transparent; border: none; color: white; font-size: 1.4rem; 
+  cursor: pointer; margin-left: 15px; transition: 0.3s; 
+}
+.icon-btn:hover { color: #a53b59; transform: scale(1.1); }
+
+/* CARDS & CONTAINERS */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 25px;
+}
+
+.profile-card { max-width: 650px; margin: 0 auto; padding: 40px; text-align: center; }
+
+.avatar-circle {
+  width: 110px; height: 110px; border-radius: 50%;
+  background: linear-gradient(135deg, #a53b59 0%, #726fb4 100%);
+  margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+  font-size: 3rem; font-weight: bold; box-shadow: 0 0 20px rgba(165, 59, 89, 0.4);
+}
+
+.profile-bio { margin: 15px 0; opacity: 0.8; line-height: 1.4; }
+
+.stats-row { display: flex; justify-content: center; gap: 50px; margin: 25px 0; }
+.stat-item { display: flex; flex-direction: column; align-items: center; }
+.stat-value { font-size: 1.4rem; font-weight: 800; }
+.stat-label { font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; }
+
+/* BUTTONS */
+.gradient-button {
+  width: 100%; max-width: 180px; height: 42px;
+  background: linear-gradient(135deg, #a53b59 0%, #726fb4 100%);
+  border: none; border-radius: 12px; color: white; font-weight: 600;
+  cursor: pointer; transition: 0.3s;
+}
+.btn-unfollow { background: transparent; border: 2px solid #a53b59; }
+
+.btn-ban { 
+  background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.2);
+  padding: 10px 15px; border-radius: 12px; cursor: pointer; margin-left: 10px;
+}
+
+/* POSTS FEED */
+.posts-feed { max-width: 600px; margin: 50px auto; }
+.section-title { margin-bottom: 25px; font-weight: 300; opacity: 0.7; }
+.post-card { margin-bottom: 40px; padding: 15px; overflow: hidden; }
+.post-image { width: 100%; border-radius: 15px; display: block; }
+
+.post-info { padding: 15px 5px 5px; }
+.post-caption { text-align: left; font-size: 0.95rem; margin-bottom: 12px; color: #eee; }
+
+.post-meta { display: flex; gap: 20px; align-items: center; }
+.post-meta i { color: #a53b59; }
+.liked i { color: #ff4757; }
+
+.btn-delete { background: transparent; border: none; color: #ff4757; cursor: pointer; margin-left: auto; opacity: 0.6; }
+.btn-delete:hover { opacity: 1; }
+
+/* STATES */
+.state-container { text-align: center; padding: 100px 20px; }
+.error-box i { font-size: 3rem; color: #a53b59; margin-bottom: 20px; }
+.error-box p { margin-bottom: 25px; }
+
+.loader {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #a53b59;
+  border-radius: 50%; width: 40px; height: 40px;
+  animation: spin 1s linear infinite; margin: 0 auto 20px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>

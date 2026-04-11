@@ -1,334 +1,243 @@
-<script>
-	export default {
-		props: ["owner", 'photoid', "likesnumber", "commentsnumber", "dateofupload"],
-		emits: ["photo_deleted_from_database"],
-		// Reactive state
-		data() {
-			return {
-				errormsg: null,
-				loading: false,
-				PhotoUrl: "",
-				PhotoId: "",
-				PhotoOwner: "",
-				DateOfUpload: "",
-				Likes: [],
-				LikesNumber: 0,
-				Comments: [],
-				CommentsNumber: 0,
-				Liked: false,
-				CommentText: "",
-				IsOwner : false
-			}
-		},
-		methods: {
-
-			// Viene eseguito quando viene cliccato il bottone di eliminazione 
-			async deletePhoto() {
-				let config = {
-					headers: {
-						"Authorization": `Bearer ${localStorage.getItem("Authstring")}`
-					}
-
-
-				};
-				try {
-					this.$axios.delete("/users/" + this.owner + "/photos/" + this.photoid + "/", config);
-
-					// Notifico al componente padre che ho eliminato la foto,così la tolga dalla lista 
-					this.$emit("photo_deleted_from_database", this.photoid);
-					return;
-
-				} catch (e) {
-					if (e.response.status == 500) {
-						this.$emit("Internal Server Error");
-						return;
-
-
-					}
-
-				}
-
-			},
-			async commentPhoto() {
-				let config = {
-					headers: {
-						"Authorization": `Bearer ${localStorage.getItem("Authstring")}`
-					},
-
-				};
-				let data = { "CommentId": "", "CommentAuthor": `${localStorage.getItem("Username")}`, "CommentText": this.CommentText }
-				try {
-					let response1 = await this.$axios.post("/users/" + this.PhotoOwner + "/photos/" + this.PhotoId + "/comments/", data, config);
-					this.CommentsNumber++;
-					this.Comments.unshift(response1.data);
-
-					// Reset del form in cui scrivo il commento 
-					this.CommentText = "";
-
-					return;
-				} catch (e) {
-					//
-				}
-
-
-			},
-			async heartButtonClicked() {
-				if (this.Liked == false) {
-					let config = {
-						headers: {
-							"Authorization": `Bearer ${localStorage.getItem("Authstring")}`
-						},
-
-					};
-					try {
-						await this.$axios.post("/users/" + this.PhotoOwner + "/photos/" + this.PhotoId + "/likes/", {}, config);
-						this.LikesNumber++;
-						this.Liked = true;
-						this.Likes.unshift(`${localStorage.getItem("Username")}`);
-
-						// Cambio lo stile dell'icona per far vedere che ho messo like
-						document.getElementById("hearticon" + this.PhotoId).classList.replace("fa-regular", "fa-solid");
-						document.getElementById("heartbutton" + this.PhotoId).style.color = "#8b0000";
-						return;
-					} catch (e) {
-						//
-					}
-				} else {
-					let config = {
-						headers: {
-							"Authorization": `Bearer ${localStorage.getItem("Authstring")}`
-						},
-
-					};
-					try {
-						await this.$axios.delete("/users/" + this.PhotoOwner + "/photos/" + this.PhotoId + "/likes/" + `${localStorage.getItem("Authstring")}`, config);
-						this.LikesNumber--;
-						this.Liked = false;
-						this.Likes = this.Likes.filter(Like => Like !== `${localStorage.getItem("Username")}`);
-
-
-						// Cambio lo stile dell'icona per far vedere che ho tolto like
-						document.getElementById("hearticon" + this.PhotoId).classList.replace("fa-solid", "fa-regular");
-						document.getElementById("heartbutton"+this.PhotoId).style.color = "#000000";
-						return;
-					} catch (e) {
-						//
-					}
-
-				}
-			},
-			updateCommentList(CommentId) {
-				this.Comments = this.Comments.filter(Comment => Comment.CommentId !== CommentId);
-				this.CommentsNumber--;
-				return;
-
-			},
-			likePressed(Like) {
-				this.$router.replace("/users/"+Like+"/");
-				return;
-			},
-			photoOwnerPressed(){
-				this.$router.replace("/users/"+this.PhotoOwner+"/");
-				return;
-
-			}
-		},
-
-
-		// Funzione da eseguire appena montato il componente //
-		async mounted() {
-
-			// Verrà caricata la foto con tutte le sue informazioni relative aggiornate
-			this.PhotoUrl = __API_URL__ + "/users/" + this.owner + "/photos/" + this.photoid + "/";
-			this.PhotoOwner = this.owner;
-			this.PhotoId = this.photoid;
-			this.LikesNumber = this.likesnumber;
-			this.CommentsNumber = this.commentsnumber;
-			this.DateOfUpload = this.dateofupload;
-			this.IsOwner = (`${localStorage.getItem("Username")}`=== this.PhotoOwner );
-			try {
-				// Ottengo likes e commenti della foto
-				let response1 = await this.$axios.get("/users/" + this.PhotoOwner + "/photos/" + this.PhotoId + "/likes/");
-				let response2 = await this.$axios.get("/users/" + this.PhotoOwner + "/photos/" + this.PhotoId + "/comments/");
-				this.Likes = response1.data.Likes.map(x => x.Username);
-				this.Comments = response2.data.Comments;
-
-				// Rendering corretto del pulsante "Mi piace" 
-				if (this.Likes.includes(`${localStorage.getItem("Username")}`)) {
-					this.Liked = true;
-					document.getElementById("hearticon" + this.PhotoId).classList.replace("fa-regular", "fa-solid");
-					document.getElementById("heartbutton" + this.PhotoId).style.color = "#8b0000";
-					return;
-				} else {
-					this.Liked = false;
-					document.getElementById("hearticon" + this.PhotoId).classList.replace("fa-solid", "fa-regular");
-					document.getElementById("heartbutton" + this.PhotoId).style.color = "#000000";
-					return;
-
-				}
-
-
-			} catch (e) {
-				if (e.response.status == 500) {
-					console.log("Internal Server Error");
-					return;
-				} else {
-					console.log(e);
-					return;
-				}
-			}
-
-
-		}
-	}
-
-</script>
-
 <template>
-	<div class="card" style="width: 30em; height: 30em; display: flex; flex-direction: column;">
+  <div class="photo-card glass-morphism">
+    
+    <div class="card-top">
+      <div v-if="!IsOwner" class="user-info" @click="photoOwnerPressed">
+        <div class="avatar-purple">{{ PhotoOwner.charAt(0).toUpperCase() }}</div>
+        <span class="owner-name">@{{ PhotoOwner }}</span>
+      </div>
+      <div v-else class="delete-area">
+        <button class="icon-btn delete" @click="deletePhoto" title="Elimina foto">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
 
-		<!-- Titolo della card -->
-		<div cass="card-title" style="display: flex; flex-direction: row; width: 30em; height: 2em;">
-			
-			<!-- Owner della foto (solo se chi visualizza non è l'owner della foto) -->
-			<div class= "PhotoOwner_div" v-if="!IsOwner" @click="photoOwnerPressed" style="display: flex; flex-direction: row; justify-content: flex-start; align-items: center; margin-top: 0.7em; margin-left:0.9em; width: fit-content; height: 100%;">
-				<i class="fa-solid">{{PhotoOwner}}</i>
-			</div>
+    <div class="image-wrapper" @dblclick="heartButtonClicked">
+      <img :src="PhotoUrl" class="main-photo" alt="Photo" data-bs-toggle="modal" :data-bs-target="'#PhotoFullSizeModal'+PhotoId">
+    </div>
 
-			<!-- Pulsante di eliminazione foto (solo se chi visualizza è l'owner della foto) -->
-			<div v-else style="display: flex; flex-direction: row; justify-content: flex-end; width: 100%; height: 100%;">
-				<button class="btn"  :disabled = "IsOwner === false" id="deletephotobutton" @click="deletePhoto" type="button" style="border: none;">
-					<i class="fa-regular fa-trash-can"></i>
-				</button>
-			</div>
-		</div>
+    <div class="interaction-bar">
+      <div class="left-actions">
+        <button class="btn-action" :class="{ 'is-liked': Liked }" @click="heartButtonClicked">
+          <i :class="Liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+          <span class="stat-num" data-bs-toggle="modal" :data-bs-target="'#LikesModal'+PhotoId" @click.stop="loadLikesList">
+            {{ LikesNumber }}
+          </span>
+        </button>
 
-		
+        <button class="btn-action" data-bs-toggle="modal" :data-bs-target="'#CommentsModal'+PhotoId" @click="loadComments">
+          <i class="fa-regular fa-comment"></i>
+          <span class="stat-num">{{ CommentsNumber }}</span>
+        </button>
+      </div>
+      
+      <span class="upload-date">{{ formatDate(DateOfUpload) }}</span>
+    </div>
 
-		<!-- Foto -->
-		<div style="display: flex; flex-direction: row; justify-content: center; height: 70%; width: 100%; margin-top: 15px;">
-			<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto." data-bs-toggle="modal" :data-bs-target="'#PhotoFullSizeModal'+PhotoId" >
-		</div>
+    <div class="quick-comment">
+      <input type="text" v-model="CommentText" placeholder="Aggiungi un commento..." @keyup.enter="commentPhoto">
+      <button :disabled="CommentText.length == 0" @click="commentPhoto">Invia</button>
+    </div>
 
-		<!-- Pannello Inferiore -->
-		<div class="card-body" style="display:flex; flex-direction: column; align-items: center;">
-			<div style="display: flex; flex-direction: row; justify-content: center; margin-top: 0px; ">
+    <div class="modal fade" :id="'LikesModal'+PhotoId" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-morphism">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-white">Piace a</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="Likes.length === 0" class="text-muted">Ancora nessun like</div>
+            <ul class="list-unstyled">
+              <li v-for="user in Likes" :key="user" class="py-2 user-list-item" @click="goToUser(user)" data-bs-dismiss="modal">
+                <div class="avatar-purple-sm">{{ user.charAt(0).toUpperCase() }}</div> @{{ user }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
-				<div class="input-group mb-3"
-					style=" height: 20px;width: fit-content; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+    <div class="modal fade" :id="'CommentsModal'+PhotoId" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content glass-morphism">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-white">Commenti ({{ CommentsNumber }})</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="Comments.length === 0" class="text-muted">Ancora nessun commento</div>
+            <div v-for="c in Comments" :key="c.CommentId" class="comment-item">
+              <strong @click="goToUser(c.CommentAuthor)">@{{ c.CommentAuthor }}:</strong>
+              <p>{{ c.CommentText }}</p>
+              <hr class="op-1">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-					<!-- Numero di "Mi Piace" -->
-					<button class="btn" data-bs-toggle="modal" :data-bs-target="'#LikesModal' +PhotoId"
-						style="border:none; background-color: #ffffff; font-size: 20px;">{{LikesNumber}}</button>
+    <div class="modal fade" :id="'PhotoFullSizeModal'+PhotoId" tabindex="-1">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+          <div class="modal-body p-0 text-center">
+            <img :src="PhotoUrl" class="img-fluid rounded shadow-lg">
+          </div>
+        </div>
+      </div>
+    </div>
 
-					<!-- Pulsante Like -->
-					<button class="btn" :id="'heartbutton'+PhotoId" @click="heartButtonClicked" type="button"
-						style="border: none;">
-						<i class="fa-regular fa-heart" :id="'hearticon'+PhotoId"></i>
-					</button>
-
-					<!-- TextArea per inserimento commenti -->
-					<input type="text" id="'CommentTextArea'+PhotoId" v-model="CommentText" class="form-control"
-						placeholder="Comment..">
-					<div class="input-group-append">
-						<!-- Pulsante Commenta -->
-						<button class="btn" @click="commentPhoto" type="button" :disabled="CommentText.length==0"
-							style="border: none;">
-							<i class="fa-regular fa-comment"></i>
-						</button>
-					</div>
-
-					<!-- Numero di Commenti -->
-					<button class="btn" data-bs-toggle="modal" :data-bs-target="'#CommentsModal'+PhotoId"
-						style="border:none; background-color: white; font-size: 20px;">{{CommentsNumber}}</button>
-				</div>
-			</div>
-
-		</div>
-
-	</div>
-
-	<!-- LikesModal  -->
-	<div class="modal fade" :id="'LikesModal'+PhotoId" tabindex="-1">
-		<div class="modal-dialog modal-dialog-scrollable">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h1 class="modal-title fs-5" id="exampleModalLabel">Likes</h1>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body" style="width: fit-content; height: fit-content;">
-					<div v-if="this.Likes.length == 0">
-						<p>Ancora nessun mi piace</p>
-					</div>
-					<div v-else>
-						<Like data-bs-toggle="modal" :data-bs-target="'#LikesModal'+PhotoId" v-for="Like in Likes" :key ="Like" :LikeUsername="Like" @click="likePressed(Like)">
-							{{Like}}
-						</Like>
-					</div>
-					
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- CommentsModal  -->
-	<div class="modal fade" :id="'CommentsModal' + PhotoId" tabindex="-1">
-		<div class="modal-dialog modal-dialog-scrollable">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h1 class="modal-title fs-5" id="exampleModalLabel">Comments</h1>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body" style="width: fit-content; height: fit-content;">
-					<div>
-						<div v-if="this.Comments.length == 0">
-							<p>Ancora nessun commento</p>
-
-						</div>
-						<div v-else>
-							<div v-for="Comment in Comments" :key="Comment.CommentId">
-								<Comment :PhotoOwner="PhotoOwner" :PhotoId="PhotoId" :CommentId="Comment.CommentId"
-									:CommentAuthor="Comment.CommentAuthor" :CommentText="Comment.CommentText"
-									@commentdeleted="updateCommentList">
-								</Comment>
-								<hr />
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- PhotoFullSizeModal -->
-	<div class="modal fade" :id="'PhotoFullSizeModal' + PhotoId" tabindex="-1">
-		<div class="modal-dialog modal-dialog-scrollable modal-xl" >
-			<div class="modal-content" style="display:flex; flex-direction:column; align-items: center;">
-				<div class="modal-header" style="display: flex; flex-direction: row; justify-content: flex-end; width: 100%;">
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body" style="display:flex; flex-direction:row; align-items:center; width: fit-content; height: fit-content;">
-					<img :src="PhotoUrl" class="card-img-top" alt="Impossibile caricare la foto.">
-				</div>
-			</div>
-		</div>
-	</div>
-
+  </div>
 </template>
 
-<style>
-	#deletephotobutton:hover {
-		color: #8b0000;
-		transform: scale(1.3)
-	}
-	.btn:hover{
-		transform: scale(1.2);
-		
-	}
-	.PhotoOwner_div:hover{
-		transform: scale(1.1);
-		color:#007bff;
-		cursor: pointer;
-	}
-	
+<script>
+export default {
+  name: 'PhotoComponent',
+  props: ["owner", "photoid", "likesnumber", "commentsnumber", "dateofupload", "islikedbyme"],
+  emits: ["photo_deleted_from_database"],
+  
+  data() {
+    return {
+      PhotoUrl: "",
+      PhotoId: "",
+      PhotoOwner: "",
+      LikesNumber: 0,
+      CommentsNumber: 0,
+      Liked: false,
+      Likes: [],
+      Comments: [],
+      CommentText: "",
+      IsOwner: false
+    }
+  },
+
+  methods: {
+    formatDate(date) {
+      if(!date) return "";
+      return new Date(date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+    },
+
+    async heartButtonClicked() {
+      const loggedUser = localStorage.getItem("Username");
+      const token = localStorage.getItem("SessionToken");
+      const previousState = this.Liked;
+
+      this.Liked = !this.Liked;
+      this.LikesNumber += this.Liked ? 1 : -1;
+
+      try {
+        const config = { headers: { "Authorization": `Bearer ${token}` } };
+        if (!previousState) {
+          await this.$axios.post(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/likes/`, {}, config);
+        } else {
+          await this.$axios.delete(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/likes/${loggedUser}`, config);
+        }
+      } catch (e) {
+        this.Liked = previousState;
+        this.LikesNumber += this.Liked ? 1 : -1;
+        console.error("Like Action Failed", e);
+      }
+    },
+
+    async loadComments() {
+      try {
+        const res = await this.$axios.get(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/comments/`);
+        this.Comments = res.data.Comments || [];
+      } catch (e) { console.error("Comments fetch error", e); }
+    },
+
+    async loadLikesList() {
+      try {
+        const res = await this.$axios.get(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/likes/`);
+        this.Likes = res.data.Likes ? res.data.Likes.map(l => l.Username) : [];
+      } catch (e) { console.error("Likes fetch error", e); }
+    },
+
+    async commentPhoto() {
+      const config = { headers: { "Authorization": `Bearer ${localStorage.getItem("Authstring")}` } };
+      const payload = { 
+        CommentAuthor: localStorage.getItem("Username"), 
+        CommentText: this.CommentText 
+      };
+      try {
+        const res = await this.$axios.post(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/comments/`, payload, config);
+        this.Comments.unshift(res.data);
+        this.CommentsNumber++;
+        this.CommentText = "";
+      } catch (e) { console.error("Comment post error", e); }
+    },
+
+    async deletePhoto() {
+      if (!confirm("Eliminare definitivamente questa foto?")) return;
+      const config = { headers: { "Authorization": `Bearer ${localStorage.getItem("Authstring")}` } };
+      try {
+        await this.$axios.delete(`/users/${this.PhotoOwner}/photos/${this.PhotoId}/`, config);
+        this.$emit("photo_deleted_from_database", this.PhotoId);
+      } catch (e) { console.error("Delete failed", e); }
+    },
+
+    photoOwnerPressed() { this.$router.push(`/users/${this.PhotoOwner}/`); },
+    goToUser(user) { this.$router.push(`/users/${user}/`); }
+  },
+
+  mounted() {
+    this.PhotoId = this.photoid;
+    this.PhotoOwner = this.owner;
+    this.LikesNumber = parseInt(this.likesnumber || 0);
+    this.CommentsNumber = parseInt(this.commentsnumber || 0);
+    this.Liked = this.islikedbyme;
+    this.IsOwner = (localStorage.getItem("Username") === this.PhotoOwner);
+    
+    // URL dinamico basato sulla configurazione axios
+    const base = this.$axios.defaults.baseURL || "http://localhost:3000";
+    this.PhotoUrl = `${base}/users/${this.owner}/photos/${this.photoid}/`;
+  }
+}
+</script>
+
+<style scoped>
+.glass-morphism {
+  background: rgba(45, 20, 60, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(180, 100, 255, 0.2);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.photo-card { width: 100%; max-width: 500px; color: white; transition: 0.3s; }
+.card-top { padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+.user-info { display: flex; align-items: center; cursor: pointer; gap: 10px; }
+.avatar-purple {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, #8e2de2, #4a00e0);
+  display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;
+}
+
+.image-wrapper { width: 100%; background: #000; display: flex; justify-content: center; overflow: hidden; }
+.main-photo { max-width: 100%; height: auto; cursor: zoom-in; transition: transform 0.4s; }
+.main-photo:hover { transform: scale(1.02); }
+
+.interaction-bar { padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; }
+.btn-action { background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer; transition: 0.2s; padding: 0 8px; }
+.btn-action:hover { transform: scale(1.1); }
+.is-liked { color: #ff2d55; text-shadow: 0 0 10px rgba(255, 45, 85, 0.5); }
+.stat-num { font-size: 0.9rem; margin-left: 6px; font-weight: 300; }
+.upload-date { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+
+.quick-comment {
+  border-top: 1px solid rgba(180, 100, 255, 0.1);
+  padding: 12px 18px; display: flex; gap: 10px;
+}
+.quick-comment input {
+  background: rgba(255,255,255,0.05); border: none; border-radius: 20px;
+  padding: 5px 15px; color: white; flex-grow: 1; font-size: 0.9rem;
+}
+.quick-comment button { background: none; border: none; color: #b464ff; font-weight: bold; cursor: pointer; }
+.icon-btn.delete:hover { color: #ff4757; }
+.user-list-item { display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 8px; padding: 5px; }
+.user-list-item:hover { background: rgba(255,255,255,0.1); }
+.avatar-purple-sm { width: 24px; height: 24px; border-radius: 50%; background: #8e2de2; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+.op-1 { opacity: 0.1; color: white; }
 </style>

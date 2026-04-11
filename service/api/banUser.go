@@ -1,17 +1,6 @@
 package api
 
-import (
-	"WasaPhoto/service/api/reqcontext"
-	"WasaPhoto/service/utils"
-	"encoding/json"
-	"errors"
-	"io"
-	"net/http"
-	"strings"
-
-	"github.com/julienschmidt/httprouter"
-)
-
+/*
 func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// Estrazione dell'username dall' URL e controllo dell'esistenza
 	urlusername := strings.Split(r.URL.Path, "/")[2]
@@ -156,3 +145,4 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	}
 
 }
+*/

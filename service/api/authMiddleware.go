@@ -2,6 +2,7 @@ package api
 
 import (
 	"WasaPhoto/service/api/reqcontext"
+	"WasaPhoto/service/models"
 	"net/http"
 	"strings"
 
@@ -14,7 +15,7 @@ func (rt *_router) AuthMiddleware(fn httpRouterHandler) httpRouterHandler {
 		// 1. Get the token from the header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			ctx.Logger.Error("No valid Bearer token provided")
+			ctx.Logger.WithError(models.ErrUnauthorized).Error("AuthMiddleware: no valid Bearer token provided")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -23,7 +24,7 @@ func (rt *_router) AuthMiddleware(fn httpRouterHandler) httpRouterHandler {
 		// 2. Ask the database who owns this token
 		userID, err := rt.db.GetUserIDByToken(token)
 		if err != nil {
-			ctx.Logger.WithError(err).Error("Invalid or expired token")
+			ctx.Logger.WithError(err).Error("AuthMiddleware: invalid or expired token")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

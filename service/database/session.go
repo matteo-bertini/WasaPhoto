@@ -1,7 +1,7 @@
 package database
 
 import (
-	"WasaPhoto/service/utils"
+	"WasaPhoto/service/models"
 	"database/sql"
 	"errors"
 
@@ -41,7 +41,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 			}
 
 			// Insertion into profiles table.
-			_, err = tx.Exec("INSERT INTO profiles (user_id, num_followers, num_following, num_posts) VALUES (?, 0, 0, 0)", id)
+			_, err = tx.Exec("INSERT INTO profiles (user_id, bio, avatar_path) VALUES (?,'','')", id)
 			if err != nil {
 				_ = tx.Rollback()
 				return nil, err
@@ -66,7 +66,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 
 		}
 		// 2.2) Login attempt.
-		return nil, utils.ErrInvalidCredentials
+		return nil, models.ErrInvalidCredentials
 
 	}
 	if err != nil {
@@ -77,12 +77,12 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 	// 4) User found.
 	if IsSignUp {
 		// 4.1) Registration attempt.
-		return nil, utils.ErrUserAlreadyExists
+		return nil, models.ErrUserAlreadyExists
 	}
 	// 4.2) Login attempt.
 	err = bcrypt.CompareHashAndPassword([]byte(hashedpassword), []byte(password))
 	if err != nil {
-		return nil, utils.ErrInvalidCredentials
+		return nil, models.ErrInvalidCredentials
 	}
 
 	// Generazione session_token per il login
@@ -95,4 +95,13 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 	// Successful login.
 	return &sessionToken, nil
 
+}
+
+// DoLogout clears the session_token for a specific user, effectively logging them out.
+func (db *appdbimpl) DoLogout(userID string) error {
+	// We nullify the token so future GetUserIDByToken calls for this token will fail
+	query := `UPDATE accounts SET session_token = NULL WHERE user_id = ?`
+
+	_, err := db.c.Exec(query, userID)
+	return err
 }

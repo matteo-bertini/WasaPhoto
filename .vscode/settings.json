@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "openapi:v3": "file:///home/matteo/Scrivania/WasaPhoto/doc/api.yaml"
+    }
+}

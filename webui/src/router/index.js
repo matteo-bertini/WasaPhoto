@@ -11,10 +11,10 @@ const router = createRouter({
 	routes: [
 		{path: '/',redirect: '/login'},
 		{path: '/login', component: LoginPage},
-		{path: "/users/:Username/",component: ProfilePage},
-		{path: "/users/:Username/settings",component: SettingsPage},
-		{path: "/home" ,component: HomePage},
-		{path: "/profilenotfound" ,component: ProfileNotFoundPage},
+		{path: "/users/:Username",component: ProfilePage},
+		//{path: "/users/:Username/settings",component: SettingsPage},
+		//{path: "/home" ,component: HomePage},
+		//{path: "/profilenotfound" ,component: ProfileNotFoundPage},
 		{path: "/:catchAll(.*)",component: NotFoundPage}
 
 	]

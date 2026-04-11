@@ -1,10 +1,10 @@
 package database
 
 import (
+	"WasaPhoto/service/models"
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 )
 
 type Database_photostream_component struct {
@@ -50,81 +50,16 @@ type Database_comment struct {
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
-
-	// DoLogin resitituisce l'id relativo all'username passato come argomento. //
-	// se l'username non è registrato verrà creato e restituito un nuovo id,altrimenti verrà resituito quello esistente //
 	DoLogin(username string, password string, IsSignUp bool) (*string, error)
-
 	DoLogout(userID string) error
+	GetUserProfile(targetUsername string, requestingUserID string) (UserProfile models.UserProfile, err error)
 
-	// GetUserProfile gets a user profile searched via username //
-	GetUserProfile(username string) (*Database_user, error)
-
-	// GetMyStream //
-	GetMyStream(id string) (*[]Database_photostream_component, error)
-
-	// Deleteuser elimina completamente un utente dal sistema //
-	DeleteUser(id string, username string) error
-
-	// SetMyUsername modifica l'username dell'user con username passato come argomento //
-	SetMyUsername(old_username string, new_username string) error
-
-	// GetFollowers //
-	GetFollowers(id string) (*[]Database_follower, error)
-
-	// GetFollowing //
-	GetFollowing(id string) (*[]Database_following, error)
-
-	// GetBanned //
-	GetBanned(id string) (*[]Database_banned, error)
-
-	// FollowUser //
-	FollowUser(to_add_username string, to_add_id string, username string, id string) error
-
-	// UnfollowUser //
-	UnfollowUser(username string, id string, to_del string, to_del_id string) error
-
-	// BanUser //
-	BanUser(username string, id string, to_ban_username string, to_ban_id string) error
-
-	// UnbanUser //
-	UnbanUser(id string, to_del_id string) error
-
-	// UploadPhoto //
-	UploadPhoto(photo Database_photo, id string) error
-
-	// DeletePhoto //
-	DeletePhoto(userid string, photoid string) error
-
-	// GetLikes //
-	GetLikes(photoid string) (*[]Database_like, error)
-
-	// LikePhoto //
-	LikePhoto(userid string, photoid string, likeid string) error
-
-	// UnlikePhoto //
-	UnlikePhoto(userid string, photoid string, likeid string) error
-
-	// GetComments //
-	GetComments(photoid string) (*[]Database_comment, error)
-
-	// CommentPhoto //
-	CommentPhoto(userid string, photoid string, commentid string, commentauthor string, commenttext string) error
-
-	// UncommentPhoto //
-	UncommentPhoto(userid string, photoid string, commentid string, commentauthor string) error
+	// helpers
+	GetUserIDByToken(token string) (string, error)
+	GetIDByUsername(username string) (string, error)
 
 	// Ping checks whether the database is available or not (in that case, an error will be returned)
 	Ping() error
-
-	// Funzioni ausiliarie definite in database_utilities
-	GetUserIDByToken(token string) (string, error)
-	CheckAuthorization(request *http.Request, username string) error
-	CheckUserExistence(username string) error
-	IdFromUsername(username string) (*string, error)
-	UsernameFromId(id string) (*string, error)
-	IsAllowed(id1 string, id2 string) error
-	CheckPhotoExistence(user_id string, photoid string) error
 }
 
 type appdbimpl struct {
@@ -162,9 +97,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	CREATE TABLE IF NOT EXISTS profiles (
 		user_id        TEXT NOT NULL PRIMARY KEY,
 		bio            TEXT DEFAULT '',
-		num_followers  INTEGER DEFAULT 0,
-		num_following  INTEGER DEFAULT 0,
-		num_posts      INTEGER DEFAULT 0,
+		avatar_path TEXT,
 		CONSTRAINT fk_profile_account 
 			FOREIGN KEY (user_id) 
 			REFERENCES accounts(user_id) 
@@ -197,9 +130,43 @@ func New(db *sql.DB) (AppDatabase, error) {
 		CONSTRAINT fk_followed 
 			FOREIGN KEY (followed_id) REFERENCES accounts(user_id) ON DELETE CASCADE
 	);`
+	likesTable := `
+    CREATE TABLE IF NOT EXISTS likes (
+        post_id    INTEGER NOT NULL,
+        user_id    TEXT NOT NULL,
+        PRIMARY KEY (post_id, user_id),
+        CONSTRAINT fk_post_liked 
+            FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+        CONSTRAINT fk_user_liker 
+            FOREIGN KEY (user_id) REFERENCES accounts(user_id) ON DELETE CASCADE
+    );`
+
+	commentsTable := `
+    CREATE TABLE IF NOT EXISTS comments (
+        comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id    INTEGER NOT NULL,
+        author_id  TEXT NOT NULL,
+        content    TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_post_commented 
+            FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+        CONSTRAINT fk_comment_author 
+            FOREIGN KEY (author_id) REFERENCES accounts(user_id) ON DELETE CASCADE
+    );`
+
+	bansTable := `
+    CREATE TABLE IF NOT EXISTS bans (
+        banner_id  TEXT NOT NULL,
+        banned_id  TEXT NOT NULL,
+        PRIMARY KEY (banner_id, banned_id),
+        CONSTRAINT fk_banner 
+            FOREIGN KEY (banner_id) REFERENCES accounts(user_id) ON DELETE CASCADE,
+        CONSTRAINT fk_banned 
+            FOREIGN KEY (banned_id) REFERENCES accounts(user_id) ON DELETE CASCADE
+    );`
 
 	// Execution block for all tables.
-	queries := []string{accountsTable, profilesTable, postsTable, followsTable}
+	queries := []string{accountsTable, profilesTable, postsTable, followsTable, likesTable, commentsTable, bansTable}
 	for _, query := range queries {
 		if _, err := db.Exec(query); err != nil {
 			return nil, fmt.Errorf("failed to initialize database schema: %w", err)
