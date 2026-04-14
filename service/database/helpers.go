@@ -27,11 +27,11 @@ func (db *appdbimpl) GetUserIDByToken(token string) (string, error) {
 // GetIDByUsername retrieves the UserID for a given username.
 func (db *appdbimpl) GetIDByUsername(username string) (string, error) {
 	var id string
-	query := `SELECT id FROM users WHERE username = ?`
+	query := `SELECT user_id FROM accounts WHERE username = ?`
 	err := db.c.QueryRow(query, username).Scan(&id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", models.ErrUserDoesNotExist
+			return "", models.ErrUserNotFound
 		}
 		return "", err
 	}

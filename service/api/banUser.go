@@ -7,7 +7,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 	err := rt.db.CheckUserExistence(urlusername)
 	if err != nil {
 		// L'user non esiste
-		if errors.Is(err, utils.ErrUserDoesNotExist) {
+		if errors.Is(err, utils.ErrUserNotFound) {
 			w.WriteHeader(http.StatusNotFound)
 			ctx.Logger.WithError(err).Error("L'user specificato nell' URL non esiste.")
 			return
@@ -56,7 +56,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 				err := rt.db.CheckUserExistence(banUserRequestBody.BannedId)
 				if err != nil {
 					// L'user non esiste
-					if errors.Is(err, utils.ErrUserDoesNotExist) {
+					if errors.Is(err, utils.ErrUserNotFound) {
 						w.WriteHeader(http.StatusForbidden)
 						ctx.Logger.WithError(err).Error("L'user specificato nel RequestBody non esiste.")
 						return
@@ -98,7 +98,7 @@ func (rt *_router) banUser(w http.ResponseWriter, r *http.Request, ps httprouter
 						} else {
 							to_ban_id, err := rt.db.IdFromUsername(banUserRequestBody.BannedId)
 							if err != nil {
-								if errors.Is(err, utils.ErrUserDoesNotExist) {
+								if errors.Is(err, utils.ErrUserNotFound) {
 									w.WriteHeader(http.StatusForbidden)
 									ctx.Logger.WithError(err).Error("L'user specificato nel RequestBody non è registrato.")
 									return

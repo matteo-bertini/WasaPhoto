@@ -50,10 +50,19 @@ type Database_comment struct {
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
+
+	// session
 	DoLogin(username string, password string, IsSignUp bool) (*string, error)
 	DoLogout(userID string) error
+
+	// user
 	GetUserProfile(targetUsername string, requestingUserID string) (UserProfile models.UserProfile, err error)
 
+	// social
+	FollowUser(followerID, targetID string) error
+	UnfollowUser(followerID, targetID string) error
+	BanUser(bannerID string, bannedID string) error
+	UnbanUser(bannerID string, bannedID string) error
 	// helpers
 	GetUserIDByToken(token string) (string, error)
 	GetIDByUsername(username string) (string, error)

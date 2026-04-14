@@ -14,7 +14,7 @@ import (
 func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	// 1. Extract the Target Username from the URL path
-	targetUsername := ps.ByName("Username")
+	targetUsername := ps.ByName("username")
 
 	// 2. Retrieve the Requester's ID from the context (populated by the Auth Middleware)
 	// We assume the middleware stores the ID as a string under the key "userID"
@@ -27,12 +27,13 @@ func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request,
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// User does not exist
-			ctx.Logger.WithError(models.ErrUserDoesNotExist).Error("GetUserProfileHandler: failed to fetch profile")
+			ctx.Logger.WithError(models.ErrUserNotFound).Error("GetUserProfileHandler: failed to fetch profile")
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		if err.Error() == "forbidden: user is banned" {
+		if errors.Is(err, models.ErrProfileAccessForbidden) {
 			// Handle banning relationship between the two users
+			ctx.Logger.WithError(models.ErrProfileAccessForbidden).Error("GetUserProfileHandler: failed to fetch profile")
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

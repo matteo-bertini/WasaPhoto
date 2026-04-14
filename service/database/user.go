@@ -42,14 +42,14 @@ func (db *appdbimpl) GetUserProfile(targetUsername string, requestingUserID stri
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.UserProfile{}, err
+			return models.UserProfile{}, models.ErrUserNotFound
 		}
 		return models.UserProfile{}, err
 	}
 
 	// 2. Security Check: if the target user has banned the requester, return a custom error.
 	// The API handler will map this specific error to a 403 Forbidden response.
-	if hasBannedMe {
+	if hasBannedMe || userProfile.IsBannedByMe {
 		return models.UserProfile{}, models.ErrProfileAccessForbidden
 	}
 
