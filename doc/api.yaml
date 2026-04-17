@@ -12,6 +12,8 @@ tags:
     description: User identity and social statistics
   - name: Social
     description: Following and banning logic
+  - name: Posts
+    description: Image uploading and posts management
 servers:
   - url: http://localhost:3000
 components:
@@ -492,47 +494,54 @@ paths:
             NotFound : User not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
-  /users/{username}/photos/:
+  /users/{username}/posts:
     parameters:
       - $ref: "#/components/parameters/username"
     post:
       tags:
-        - photos
-      security:
-        - bearerAuth : []
-      operationId: uploadPhoto
-      summary: Uploads a Photo
+        - Posts
+      summary: Uploads a new post
       description: |
-        Uploads a photo using the object in the request body.
-        The server will create a new unique ID, the client can find it
-        in the response.
-      requestBody: 
+        Creates a new post containing an image and an optional caption.
+        The 'username' in the path must match the identity of the authenticated user.
+        The image is sent as a binary part of a multipart/form-data request.
+      operationId: uploadPost
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
         content:
-          image/png:
+          multipart/form-data:
             schema:
-              type: string
-              format: binary
-              description: the Photo 
-              minLength: 0
-              maxLength: 99999999
-      responses: 
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "The image file to upload (supported formats: JPEG, PNG.)"
+                caption:
+                  type: string
+                  description: An optional description for the post.
+                  maxLength: 500
+              required:
+                - file
+      responses:
         '201':
-          description: | 
-            Created : Photo uploaded successfully.
+          description: Post created successfully. Returns the new post metadata.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Post"
         '400':
-          $ref: "#/components/responses/BadRequest"
+          description: Bad Request. Possible causes include invalid file format, file too large, or missing mandatory fields.
         '401':
-          description: |
-            Unauthorized : The id specified in the authorization does not allow the upload operation to be performed.
+          description: Unauthorized. Invalid or missing session token.
+        '403':
+          description: Forbidden. The authenticated user is not allowed to post as the specified username.
         '404':
-          description: |  
-            Not Found : User with specified username not found in the system.
+          description: User not found.
         '500':
-          $ref: "#/components/responses/InternalServerError"
+          description: Internal Server Error.
   /users/{username}/photos/{PhotoId}/:
     parameters:
       - $ref: "#/components/parameters/username"

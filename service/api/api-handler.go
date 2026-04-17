@@ -20,6 +20,9 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/users/:username/bans/:target_username", rt.wrap(rt.AuthMiddleware(rt.BanUserHandler)))
 	rt.router.DELETE("/users/:username/bans/:target_username", rt.wrap(rt.AuthMiddleware(rt.UnbanUserHandler)))
 
+	// Image uploading and posts management
+	rt.router.POST("/users/:username/posts", rt.wrap(rt.AuthMiddleware(rt.UploadPostHandler)))
+
 	// deleteUser //
 	//rt.router.DELETE("/users/:Username/", rt.wrap(rt.deleteUser))
 

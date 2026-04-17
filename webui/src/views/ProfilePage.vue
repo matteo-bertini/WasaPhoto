@@ -10,7 +10,7 @@
         </div>
 
         <div class="nav-actions">
-          <button @click="$router.push('/upload')" class="icon-btn" title="Upload"><i class="fa-solid fa-circle-plus"></i></button>
+          <button @click="openUploadModal" class="icon-btn" title="Upload"><i class="fa-solid fa-circle-plus"></i></button>
           <button @click="goToMyProfile" class="icon-btn" title="My Profile"><i class="fa-solid fa-user"></i></button>
           <button @click="$router.push('/settings')" class="icon-btn" title="Settings"><i class="fa-solid fa-gear"></i></button>
           <button @click="handleLogout" class="icon-btn logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
@@ -45,11 +45,11 @@
               <span class="stat-value">{{ profileData.PostsCount }}</span>
               <span class="stat-label">Posts</span>
             </div>
-            <div class="stat-item clickable" @click="showFollowers">
+            <div class="stat-item clickable">
               <span class="stat-value">{{ profileData.FollowersCount }}</span>
               <span class="stat-label">Followers</span>
             </div>
-            <div class="stat-item clickable" @click="showFollowing">
+            <div class="stat-item clickable">
               <span class="stat-value">{{ profileData.FollowingCount }}</span>
               <span class="stat-label">Following</span>
             </div>
@@ -61,8 +61,13 @@
               @click="toggleFollow">
               {{ profileData.IsFollowing ? 'Unfollow' : 'Follow' }}
             </button>
-            <button class="btn-ban" @click="handleBan" title="Ban User">
-              <i class="fa-solid fa-user-slash"></i>
+            
+            <button 
+              :class="['btn-ban', profileData.IsBannedByMe ? 'active-ban' : '']" 
+              @click="toggleBan" 
+              :title="profileData.IsBannedByMe ? 'Unban User' : 'Ban User'">
+              <i class="fa-solid" :class="profileData.IsBannedByMe ? 'fa-user-check' : 'fa-user-slash'"></i>
+              {{ profileData.IsBannedByMe ? ' Unban' : '' }}
             </button>
           </div>
         </section>
@@ -70,8 +75,8 @@
         <section class="posts-feed">
           <h3 class="section-title">Latest Posts</h3>
           <div v-if="profileData.UserPosts && profileData.UserPosts.length > 0" class="stream-list">
-            <div v-for="post in profileData.UserPosts" :key="post.PhotoId" class="post-card glass-card">
-              <img :src="'/images/' + post.PhotoId + '.jpg'" class="post-image" alt="Post">
+            <div v-for="post in profileData.UserPosts" :key="post.PostId" class="post-card glass-card">
+              <img :src="'/api/images/' + post.PostId" class="post-image" alt="Post">
               
               <div class="post-info">
                 <p v-if="post.Caption" class="post-caption">{{ post.Caption }}</p>
@@ -80,7 +85,7 @@
                     <i class="fa-solid fa-heart"></i> {{ post.LikesNumber }}
                   </span>
                   <span><i class="fa-solid fa-comment"></i> {{ post.CommentsNumber }}</span>
-                  <button v-if="isOwner" class="btn-delete" @click="deletePost(post.PhotoId)">
+                  <button v-if="isOwner" class="btn-delete" @click="deletePost(post.PostId)">
                     <i class="fa-solid fa-trash"></i>
                   </button>
                 </div>
@@ -93,6 +98,31 @@
         </section>
       </template>
     </main>
+
+    <div v-if="showUploadModal" class="modal-overlay" @click.self="closeUploadModal">
+      <div class="glass-card upload-modal">
+        <h3>Create New Post</h3>
+        
+        <div class="upload-zone" @click="$refs.fileInput.click()">
+          <template v-if="!uploadPreview">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>Click to select a photo</p>
+          </template>
+          <img v-else :src="uploadPreview" class="preview-img">
+        </div>
+        
+        <input type="file" ref="fileInput" @change="handleFileSelect" accept="image/jpeg,image/png" hidden>
+        
+        <textarea v-model="uploadCaption" placeholder="Write a caption..." rows="3"></textarea>
+        
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="closeUploadModal">Cancel</button>
+          <button class="gradient-button" @click="submitUpload" :disabled="!selectedFile || uploadLoading">
+            {{ uploadLoading ? 'Uploading...' : 'Share Post' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -112,12 +142,18 @@ export default {
       },
       searchQuery: "",
       loading: false,
-      errorMsg: ""
+      errorMsg: "",
+      
+      // Upload States
+      showUploadModal: false,
+      uploadLoading: false,
+      selectedFile: null,
+      uploadPreview: null,
+      uploadCaption: ""
     };
   },
   computed: {
     isOwner() {
-      // Comparison between route param and stored identity
       return this.$route.params.Username === localStorage.getItem("Username");
     },
     userInitial() {
@@ -129,26 +165,84 @@ export default {
       this.loading = true;
       this.errorMsg = "";
       try {
-        const username = this.$route.params.Username;
+        const targetUsername = this.$route.params.Username;
         const token = localStorage.getItem("SessionToken");
         
-        // API call to our Go Backend
-        const response = await this.$axios.get(`/users/${username}`, {
+        const response = await this.$axios.get(`/users/${targetUsername}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
         this.profileData = response.data;
       } catch (e) {
-        if (e.response && (e.response.status === 404 || e.response.status === 403)) {
-          this.errorMsg = "User not found or profile unavailable.";
+        if (e.response && e.response.status === 404) {
+          this.errorMsg = "User not found.";
+        } else if (e.response && e.response.status === 403) {
+          this.errorMsg = "You are banned or cannot view this profile.";
         } else {
           this.errorMsg = "An error occurred while loading the profile.";
         }
-        console.error("Fetch profile error:", e);
       } finally {
         this.loading = false;
       }
     },
+
+    // --- Upload Methods ---
+    openUploadModal() {
+      if (!this.isOwner) {
+        alert("You can only upload posts to your own profile.");
+        return;
+      }
+      this.showUploadModal = true;
+    },
+    closeUploadModal() {
+      this.showUploadModal = false;
+      this.resetUpload();
+    },
+    resetUpload() {
+      this.selectedFile = null;
+      this.uploadPreview = null;
+      this.uploadCaption = "";
+    },
+    handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.selectedFile = file;
+        this.uploadPreview = URL.createObjectURL(file);
+      }
+    },
+    async submitUpload() {
+      if (!this.selectedFile) return;
+      
+      this.uploadLoading = true;
+      const token = localStorage.getItem("SessionToken");
+      const username = localStorage.getItem("Username");
+
+      const formData = new FormData();
+      formData.append("file", this.selectedFile);
+      formData.append("caption", this.uploadCaption);
+
+      try {
+        const response = await this.$axios.post(`/users/${username}/posts`, formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        // Add the new post to the grid immediately
+        this.profileData.UserPosts.unshift(response.data);
+        this.profileData.PostsCount++;
+        
+        this.closeUploadModal();
+      } catch (e) {
+        console.error("Upload error:", e);
+        alert("Failed to upload post.");
+      } finally {
+        this.uploadLoading = false;
+      }
+    },
+
+    // --- Other Methods ---
     async toggleFollow() {
       const token = localStorage.getItem("SessionToken");
       const myUsername = localStorage.getItem("Username");
@@ -156,12 +250,12 @@ export default {
 
       try {
         if (this.profileData.IsFollowing) {
-          await this.$axios.delete(`/users/${myUsername}/following/${target}`, {
+          await this.$axios.delete(`/users/${target}/followers/${myUsername}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           this.profileData.FollowersCount--;
         } else {
-          await this.$axios.put(`/users/${myUsername}/following/${target}`, {}, {
+          await this.$axios.put(`/users/${target}/followers/${myUsername}`, {}, {
             headers: { Authorization: `Bearer ${token}` }
           });
           this.profileData.FollowersCount++;
@@ -171,6 +265,30 @@ export default {
         console.error("Toggle follow error:", e);
       }
     },
+
+    async toggleBan() {
+      const token = localStorage.getItem("SessionToken");
+      const myUsername = localStorage.getItem("Username");
+      const target = this.profileData.Username;
+
+      try {
+        if (this.profileData.IsBannedByMe) {
+          await this.$axios.delete(`/users/${myUsername}/bans/${target}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          this.profileData.IsBannedByMe = false;
+        } else {
+          await this.$axios.put(`/users/${myUsername}/bans/${target}`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          this.profileData.IsBannedByMe = true;
+          this.profileData.IsFollowing = false;
+        }
+      } catch (e) {
+        console.error("Toggle ban error:", e);
+      }
+    },
+
     handleSearch() {
       if (this.searchQuery.trim()) {
         this.$router.push(`/users/${this.searchQuery.trim()}`);
@@ -185,9 +303,17 @@ export default {
       this.$router.push('/login');
     },
     async deletePost(postId) {
-      // Placeholder for delete logic
       if (confirm("Delete this post?")) {
-        console.log("Deleting post:", postId);
+        try {
+          const token = localStorage.getItem("SessionToken");
+          await this.$axios.delete(`/posts/${postId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          this.profileData.UserPosts = this.profileData.UserPosts.filter(p => p.PostId !== postId);
+          this.profileData.PostsCount--;
+        } catch (e) {
+          console.error("Delete post error:", e);
+        }
       }
     }
   },
@@ -195,7 +321,6 @@ export default {
     this.fetchProfile();
   },
   watch: {
-    // Detects when searching for a new user while already on a profile
     '$route.params.Username': 'fetchProfile'
   }
 };
@@ -210,7 +335,7 @@ export default {
   padding-bottom: 50px;
 }
 
-/* NAVBAR */
+/* Nav Styles */
 .glass-nav {
   position: fixed; top: 0; left: 0; width: 100%; height: 75px;
   background: rgba(255, 255, 255, 0.05);
@@ -234,7 +359,7 @@ export default {
 }
 .icon-btn:hover { color: #a53b59; transform: scale(1.1); }
 
-/* CARDS & CONTAINERS */
+/* Card & Content Styles */
 .glass-card {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
@@ -258,25 +383,26 @@ export default {
 .stat-value { font-size: 1.4rem; font-weight: 800; }
 .stat-label { font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; }
 
-/* BUTTONS */
 .gradient-button {
-  width: 100%; max-width: 180px; height: 42px;
   background: linear-gradient(135deg, #a53b59 0%, #726fb4 100%);
   border: none; border-radius: 12px; color: white; font-weight: 600;
-  cursor: pointer; transition: 0.3s;
+  cursor: pointer; transition: 0.3s; padding: 10px 25px;
 }
-.btn-unfollow { background: transparent; border: 2px solid #a53b59; }
+.gradient-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-unfollow { background: transparent !important; border: 2px solid #a53b59 !important; }
 
 .btn-ban { 
   background: rgba(255, 71, 87, 0.1); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.2);
-  padding: 10px 15px; border-radius: 12px; cursor: pointer; margin-left: 10px;
+  padding: 10px 15px; border-radius: 12px; cursor: pointer; margin-left: 10px; transition: 0.3s;
 }
+.active-ban { background: #ff4757; color: white; }
 
-/* POSTS FEED */
+/* Posts Feed */
 .posts-feed { max-width: 600px; margin: 50px auto; }
 .section-title { margin-bottom: 25px; font-weight: 300; opacity: 0.7; }
 .post-card { margin-bottom: 40px; padding: 15px; overflow: hidden; }
-.post-image { width: 100%; border-radius: 15px; display: block; }
+.post-image { width: 100%; border-radius: 15px; display: block; min-height: 200px; background: #222; }
 
 .post-info { padding: 15px 5px 5px; }
 .post-caption { text-align: left; font-size: 0.95rem; margin-bottom: 12px; color: #eee; }
@@ -286,13 +412,32 @@ export default {
 .liked i { color: #ff4757; }
 
 .btn-delete { background: transparent; border: none; color: #ff4757; cursor: pointer; margin-left: auto; opacity: 0.6; }
-.btn-delete:hover { opacity: 1; }
 
-/* STATES */
+/* Modal Styles */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center; z-index: 3000;
+}
+.upload-modal { width: 90%; max-width: 500px; padding: 30px; }
+.upload-zone {
+  border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 20px;
+  padding: 40px; margin: 20px 0; text-align: center; cursor: pointer; transition: 0.3s;
+}
+.upload-zone:hover { border-color: #a53b59; background: rgba(165, 59, 89, 0.05); }
+.upload-zone i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; color: #a53b59; }
+.preview-img { width: 100%; border-radius: 15px; max-height: 300px; object-fit: cover; }
+
+textarea {
+  width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px; color: white; padding: 12px; margin-bottom: 20px; outline: none; font-family: inherit;
+}
+
+.modal-actions { display: flex; gap: 15px; justify-content: flex-end; align-items: center; }
+.btn-cancel { background: transparent; border: none; color: white; cursor: pointer; opacity: 0.6; }
+
+/* State & Loaders */
 .state-container { text-align: center; padding: 100px 20px; }
-.error-box i { font-size: 3rem; color: #a53b59; margin-bottom: 20px; }
-.error-box p { margin-bottom: 25px; }
-
 .loader {
   border: 4px solid rgba(255, 255, 255, 0.1);
   border-top: 4px solid #a53b59;

@@ -63,6 +63,9 @@ type AppDatabase interface {
 	UnfollowUser(followerID, targetID string) error
 	BanUser(bannerID string, bannedID string) error
 	UnbanUser(bannerID string, bannedID string) error
+
+	// posts
+	UploadPost(post models.Post) error
 	// helpers
 	GetUserIDByToken(token string) (string, error)
 	GetIDByUsername(username string) (string, error)
@@ -118,7 +121,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 	CREATE TABLE IF NOT EXISTS posts (
 		post_id      TEXT NOT NULL PRIMARY KEY,
 		author_id    TEXT NOT NULL,
-		image_path   TEXT NOT NULL,
 		caption      TEXT,
 		created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
 		CONSTRAINT fk_post_author 
