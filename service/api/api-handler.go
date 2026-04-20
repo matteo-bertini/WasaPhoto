@@ -22,7 +22,20 @@ func (rt *_router) Handler() http.Handler {
 
 	// Image uploading and posts management
 	rt.router.POST("/users/:username/posts", rt.wrap(rt.AuthMiddleware(rt.UploadPostHandler)))
+	rt.router.GET("/users/:username/posts/:postId", rt.wrap(rt.GetPhotoHandler))
+	rt.router.PUT("/users/:username/posts/:postId/likes/:actor_username", rt.wrap(rt.AuthMiddleware(rt.LikePostHandler)))
+	rt.router.DELETE("/users/:username/posts/:postId/likes/:actor_username", rt.wrap(rt.AuthMiddleware(rt.UnlikePostHandler)))
+	rt.router.GET("/users/:username/posts/:postId/likes", rt.wrap(rt.AuthMiddleware(rt.GetLikesHandler)))
 
+	// Comment Routes
+	// Registra un nuovo commento: POST /users/:username/posts/:postId/comments
+	rt.router.POST("/users/:username/posts/:postId/comments", rt.wrap(rt.AuthMiddleware(rt.AddCommentHandler)))
+
+	// Recupera la lista dei commenti: GET /users/:username/posts/:postId/comments
+	rt.router.GET("/users/:username/posts/:postId/comments", rt.wrap(rt.AuthMiddleware(rt.GetCommentsHandler)))
+
+	// Elimina un commento specifico: DELETE /users/:username/posts/:postId/comments/:commentId
+	rt.router.DELETE("/users/:username/posts/:postId/comments/:commentId", rt.wrap(rt.AuthMiddleware(rt.DeleteCommentHandler)))
 	// deleteUser //
 	//rt.router.DELETE("/users/:Username/", rt.wrap(rt.deleteUser))
 
@@ -34,9 +47,6 @@ func (rt *_router) Handler() http.Handler {
 
 	// getBanned //
 	//rt.router.GET("/users/:Username/bannedusers/", rt.wrap(rt.getBanned))
-
-	// uploadPhoto //
-	//rt.router.POST("/users/:Username/photos/", rt.wrap(rt.uploadPhoto))
 
 	// getPhoto //
 	/*rt.router.GET("/users/:Username/photos/:PhotoId/", rt.wrap(rt.getPhoto))

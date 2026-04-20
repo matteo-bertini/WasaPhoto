@@ -81,3 +81,25 @@ func (db *appdbimpl) UnbanUser(bannerID string, bannedID string) error {
 	_, err := db.c.Exec("DELETE FROM bans WHERE banner_id = ? AND banned_id = ?", bannerID, bannedID)
 	return err
 }
+
+// CheckBanStatus verifies if a ban exists between the requester and the target user.
+// Returns true if access should be denied (403).
+func (db *appdbimpl) CheckBanStatus(requesterID string, targetUsername string) (bool, error) {
+	var count int
+
+	// We check if requesterID banned targetUsername OR targetUsername banned requesterID.
+	// We use a subquery to get the target's ID from their username.
+	query := `
+		SELECT COUNT(*) 
+		FROM bans 
+		WHERE (banner_id = ? AND banned_id = (SELECT user_id FROM accounts WHERE username = ?))
+		   OR (banner_id = (SELECT user_id FROM accounts WHERE username = ?) AND banned_id = ?)`
+
+	err := db.c.QueryRow(query, requesterID, targetUsername, targetUsername, requesterID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	// If count > 0, the relationship is "Forbidden"
+	return count > 0, nil
+}

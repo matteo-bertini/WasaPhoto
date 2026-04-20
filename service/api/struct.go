@@ -7,21 +7,6 @@ type setMyUsernameRequestBody struct {
 	Username string `json:"Username"`
 }
 
-// getFollowers operation //
-type getFollowersResponseBody struct {
-	Followers []database.Database_follower `json:"Followers"`
-}
-
-// getFollowing operation //
-type getFollowingResponseBody struct {
-	Following []database.Database_following `json:"Following"`
-}
-
-// getBanned operation //
-type getBannedResponseBody struct {
-	BannedUsers []database.Database_banned `json:"BannedUsers"`
-}
-
 // followUser operation //
 // In questo caso il RequestBody è uguale al ResponseBody in caso di successo //
 type followUserRequestBody struct {
@@ -33,22 +18,6 @@ type followUserRequestBody struct {
 
 type banUserRequestBody struct {
 	BannedId string `json:"BannedId"`
-}
-
-// getComments Operation //
-type getLikesResponseBody struct {
-	Likes []database.Database_like `json:"Likes"`
-}
-
-// likePhoto Operation //
-// In questo caso il RequestBody è uguale al ResponseBody in caso di successo //
-type likePhotoResponseBody struct {
-	LikeId string `json:"LikeId"`
-}
-
-// getComments Operation //
-type getCommentsResponseBody struct {
-	Comments []database.Database_comment `json:"Comments"`
 }
 
 // commentPhoto Operation //

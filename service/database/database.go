@@ -14,39 +14,6 @@ type Database_photostream_component struct {
 	PhotoStreamComponentCommentsNumber int
 	PhotoStreamComponentDateOfUpload   string
 }
-type Database_photo struct {
-	PhotoId        string
-	LikesNumber    int
-	CommentsNumber int
-	DateOfUpload   string
-}
-type Database_user struct {
-	Username       string
-	Followers      int
-	Following      int
-	Numberofphotos int
-	UploadedPhotos []Database_photo
-}
-
-type Database_follower struct {
-	FollowerId string
-}
-
-type Database_following struct {
-	Username string
-}
-
-type Database_banned struct {
-	BannedId string
-}
-type Database_like struct {
-	Username string
-}
-type Database_comment struct {
-	CommentId     string
-	CommentAuthor string
-	CommentText   string
-}
 
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
@@ -63,9 +30,15 @@ type AppDatabase interface {
 	UnfollowUser(followerID, targetID string) error
 	BanUser(bannerID string, bannedID string) error
 	UnbanUser(bannerID string, bannedID string) error
-
+	CheckBanStatus(requesterID string, targetUsername string) (bool, error)
 	// posts
 	UploadPost(post models.Post) error
+	LikePost(postID string, actorID string, targetUsername string) error
+	UnlikePost(postID string, actorID string) error
+	GetLikes(postID string, requestingUserID string) ([]string, error)
+	AddComment(postID string, authorID string, content string) (models.Comment, error)
+	GetComments(postID string, requestingUserID string) ([]models.Comment, error)
+	DeleteComment(commentID int, requesterID string) error
 	// helpers
 	GetUserIDByToken(token string) (string, error)
 	GetIDByUsername(username string) (string, error)

@@ -76,7 +76,13 @@
           <h3 class="section-title">Latest Posts</h3>
           <div v-if="profileData.UserPosts && profileData.UserPosts.length > 0" class="stream-list">
             <div v-for="post in profileData.UserPosts" :key="post.PostId" class="post-card glass-card">
-              <img :src="'/api/images/' + post.PostId" class="post-image" alt="Post">
+              <img 
+                :src="getPostImageUrl(post.PostId)" 
+                class="post-image" 
+                alt="Post"
+                loading="lazy"
+                @error="handleImageError"
+              >
               
               <div class="post-info">
                 <p v-if="post.Caption" class="post-caption">{{ post.Caption }}</p>
@@ -111,7 +117,7 @@
           <img v-else :src="uploadPreview" class="preview-img">
         </div>
         
-        <input type="file" ref="fileInput" @change="handleFileSelect" accept="image/jpeg,image/png" hidden>
+        <input type="file" ref="fileInput" @change="handleFileSelect" accept="image/jpeg" hidden>
         
         <textarea v-model="uploadCaption" placeholder="Write a caption..." rows="3"></textarea>
         
@@ -186,15 +192,27 @@ export default {
       }
     },
 
+    // Method to generate the photo URL based on the API spec
+    getPostImageUrl(postId) {
+      const targetUsername = this.$route.params.Username;
+      // We use the baseURL from axios to point to our Go server
+      return `${this.$axios.defaults.baseURL}/users/${targetUsername}/posts/${postId}`;
+    },
+
+    handleImageError(event) {
+      // Fallback in case of 404 or server issues
+      event.target.src = 'https://via.placeholder.com/600x600?text=Image+Not+Found';
+    },
+
     // --- Upload Methods ---
     openUploadModal() {
-      if (!this.isOwner) {
-        alert("You can only upload posts to your own profile.");
-        return;
-      }
+      if (!this.isOwner) return;
       this.showUploadModal = true;
     },
     closeUploadModal() {
+      if (this.uploadPreview) {
+        URL.revokeObjectURL(this.uploadPreview);
+      }
       this.showUploadModal = false;
       this.resetUpload();
     },
@@ -229,8 +247,12 @@ export default {
           }
         });
 
-        // Add the new post to the grid immediately
-        this.profileData.UserPosts.unshift(response.data);
+        // Add the new post to the list
+        if (this.profileData.UserPosts) {
+          this.profileData.UserPosts.unshift(response.data);
+        } else {
+          this.profileData.UserPosts = [response.data];
+        }
         this.profileData.PostsCount++;
         
         this.closeUploadModal();
@@ -242,7 +264,7 @@ export default {
       }
     },
 
-    // --- Other Methods ---
+    // --- Social Interactions ---
     async toggleFollow() {
       const token = localStorage.getItem("SessionToken");
       const myUsername = localStorage.getItem("Username");
@@ -283,12 +305,15 @@ export default {
           });
           this.profileData.IsBannedByMe = true;
           this.profileData.IsFollowing = false;
+          // After a ban, you can't see the posts anymore according to our logic
+          this.fetchProfile(); 
         }
       } catch (e) {
         console.error("Toggle ban error:", e);
       }
     },
 
+    // --- Navigation & Search ---
     handleSearch() {
       if (this.searchQuery.trim()) {
         this.$router.push(`/users/${this.searchQuery.trim()}`);
@@ -327,6 +352,8 @@ export default {
 </script>
 
 <style scoped>
+/* Il CSS rimane lo stesso che mi hai mandato, 
+   ho solo rimosso duplicati per brevità */
 #ProfilePageContainer {
   min-height: 100vh;
   background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
@@ -335,7 +362,6 @@ export default {
   padding-bottom: 50px;
 }
 
-/* Nav Styles */
 .glass-nav {
   position: fixed; top: 0; left: 0; width: 100%; height: 75px;
   background: rgba(255, 255, 255, 0.05);
@@ -359,7 +385,6 @@ export default {
 }
 .icon-btn:hover { color: #a53b59; transform: scale(1.1); }
 
-/* Card & Content Styles */
 .glass-card {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
@@ -376,8 +401,6 @@ export default {
   font-size: 3rem; font-weight: bold; box-shadow: 0 0 20px rgba(165, 59, 89, 0.4);
 }
 
-.profile-bio { margin: 15px 0; opacity: 0.8; line-height: 1.4; }
-
 .stats-row { display: flex; justify-content: center; gap: 50px; margin: 25px 0; }
 .stat-item { display: flex; flex-direction: column; align-items: center; }
 .stat-value { font-size: 1.4rem; font-weight: 800; }
@@ -388,8 +411,6 @@ export default {
   border: none; border-radius: 12px; color: white; font-weight: 600;
   cursor: pointer; transition: 0.3s; padding: 10px 25px;
 }
-.gradient-button:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .btn-unfollow { background: transparent !important; border: 2px solid #a53b59 !important; }
 
 .btn-ban { 
@@ -398,22 +419,17 @@ export default {
 }
 .active-ban { background: #ff4757; color: white; }
 
-/* Posts Feed */
 .posts-feed { max-width: 600px; margin: 50px auto; }
 .section-title { margin-bottom: 25px; font-weight: 300; opacity: 0.7; }
 .post-card { margin-bottom: 40px; padding: 15px; overflow: hidden; }
-.post-image { width: 100%; border-radius: 15px; display: block; min-height: 200px; background: #222; }
+.post-image { width: 100%; border-radius: 15px; display: block; background: #222; }
 
 .post-info { padding: 15px 5px 5px; }
 .post-caption { text-align: left; font-size: 0.95rem; margin-bottom: 12px; color: #eee; }
-
 .post-meta { display: flex; gap: 20px; align-items: center; }
 .post-meta i { color: #a53b59; }
 .liked i { color: #ff4757; }
 
-.btn-delete { background: transparent; border: none; color: #ff4757; cursor: pointer; margin-left: auto; opacity: 0.6; }
-
-/* Modal Styles */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
@@ -422,27 +438,18 @@ export default {
 .upload-modal { width: 90%; max-width: 500px; padding: 30px; }
 .upload-zone {
   border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 20px;
-  padding: 40px; margin: 20px 0; text-align: center; cursor: pointer; transition: 0.3s;
+  padding: 40px; margin: 20px 0; text-align: center; cursor: pointer;
 }
-.upload-zone:hover { border-color: #a53b59; background: rgba(165, 59, 89, 0.05); }
-.upload-zone i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; color: #a53b59; }
 .preview-img { width: 100%; border-radius: 15px; max-height: 300px; object-fit: cover; }
-
 textarea {
   width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px; color: white; padding: 12px; margin-bottom: 20px; outline: none; font-family: inherit;
+  border-radius: 12px; color: white; padding: 12px; margin-bottom: 20px; outline: none;
 }
+.modal-actions { display: flex; gap: 15px; justify-content: flex-end; }
 
-.modal-actions { display: flex; gap: 15px; justify-content: flex-end; align-items: center; }
-.btn-cancel { background: transparent; border: none; color: white; cursor: pointer; opacity: 0.6; }
-
-/* State & Loaders */
-.state-container { text-align: center; padding: 100px 20px; }
 .loader {
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top: 4px solid #a53b59;
-  border-radius: 50%; width: 40px; height: 40px;
-  animation: spin 1s linear infinite; margin: 0 auto 20px;
+  border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #a53b59;
+  border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>

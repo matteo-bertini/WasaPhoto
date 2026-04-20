@@ -29,6 +29,14 @@ type Post struct {
 	DateOfUpload   time.Time `json:"DateOfUpload"`
 	IsLikedByMe    bool      `json:"IsLikedByMe"`
 }
+type Comment struct {
+	CommentID      int       `json:"commentId"`
+	PostID         string    `json:"postId"`
+	AuthorID       string    `json:"authorId"`
+	AuthorUsername string    `json:"authorUsername"`
+	Content        string    `json:"content"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
 
 // doLogin operation //
 type DoLoginRequestBody struct {
