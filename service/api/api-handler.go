@@ -13,7 +13,8 @@ func (rt *_router) Handler() http.Handler {
 
 	// User management
 	rt.router.GET("/users/:username", rt.wrap(rt.AuthMiddleware(rt.GetUserProfileHandler)))
-
+	rt.router.DELETE("/users/:username", rt.wrap(rt.AuthMiddleware(rt.DeleteUserHandler)))
+	rt.router.PUT("/users/:username", rt.wrap(rt.AuthMiddleware(rt.UpdateUsernameHandler)))
 	// Social relationships management
 	rt.router.PUT("/users/:username/followers/:actor_username", rt.wrap(rt.AuthMiddleware(rt.FollowUserHandler)))
 	rt.router.DELETE("/users/:username/followers/:actor_username", rt.wrap(rt.AuthMiddleware(rt.UnfollowUserHandler)))

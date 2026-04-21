@@ -79,18 +79,19 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	}
 	postID := id.String()
 
-	// 7. Ensure the upload directory exists
-	if _, err := os.Stat(UploadDir); os.IsNotExist(err) {
-		err = os.MkdirAll(UploadDir, os.ModePerm)
-		if err != nil {
-			ctx.Logger.WithError(err).WithField("path", UploadDir).Error("UploadPostHandler: failed to create upload directory")
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	// 7. Define and ensure the user-specific upload directory exists
+	// Instead of a flat directory, we use UploadDir/userID/
+	userUploadDir := filepath.Join(UploadDir, ctx.UserID)
+
+	// os.MkdirAll is efficient: it creates the path if it doesn't exist, otherwise does nothing
+	if err := os.MkdirAll(userUploadDir, 0755); err != nil {
+		ctx.Logger.WithError(err).WithField("path", userUploadDir).Error("UploadPostHandler: failed to create user directory")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	// 8. Create physical file on disk
-	filePath := filepath.Join(UploadDir, postID+".jpg")
+	// 8. Create physical file on disk inside the user's folder
+	filePath := filepath.Join(userUploadDir, postID+".jpg")
 	dst, err := os.Create(filePath)
 	if err != nil {
 		ctx.Logger.WithError(err).WithField("filePath", filePath).Error("UploadPostHandler: failed to create file on disk")
@@ -106,8 +107,8 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	// 10. Prepare the Post object using  specific struct
-	// The image is implicitly at UploadDir/postID.jpg
+	// 10. Prepare the Post object
+	// Note: We don't need to store the path in DB because it's always UploadDir/authorID/postID.jpg
 	newPost := models.Post{
 		PostId:         postID,
 		Username:       pathUsername,
@@ -119,11 +120,10 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	// 11. Execute DB insertion
-	// Your SQL query should NOT include image_path if you removed it from the table
 	err = rt.db.UploadPost(newPost)
 	if err != nil {
 		ctx.Logger.WithError(err).WithField("postID", postID).Error("UploadPostHandler: failed to insert post in DB")
-		// Rollback: delete the file since the DB record failed
+		// Rollback: delete the file from the user's directory if DB fails
 		_ = os.Remove(filePath)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -141,21 +141,37 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 }
 
 // GetPhoto retrieves the photo file if the requester is not banned.
+// GetPhotoHandler retrieves the image from the user-specific directory using the username in the path.
 func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
-	// 1. Extract parameters
+	// 1. Extract parameters from the path
+	pathUsername := ps.ByName("username")
 	postID := ps.ByName("postId")
 
-	// 3. File existence check (Physical)
-	filePath := filepath.Join(UploadDir, postID+".jpg")
+	// 2. Translate username to userID to find the correct folder
+	// We use your existing GetIDByUsername function
+	authorID, err := rt.db.GetIDByUsername(pathUsername)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		ctx.Logger.WithError(err).Error("GetPhoto: database error")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Build the correct path: UploadDir/authorID/postID.jpg
+	// This matches the structure we used in UploadPost and DeleteUser
+	filePath := filepath.Join(UploadDir, authorID, postID+".jpg")
+
+	// 4. Physical existence check
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		// YAML: 404 Not Found - The photo does not exist on disk
-		ctx.Logger.WithField("postID", postID).Warn("GetPhoto: image file not found")
+		ctx.Logger.WithField("filePath", filePath).Warn("GetPhoto: image file not found on disk")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	// 4. Success: Serve the binary data
-	// YAML: 200 OK - Content-Type: image/jpeg
+	// 5. Success: Serve the binary data
 	w.Header().Set("Content-Type", "image/jpeg")
 	http.ServeFile(w, r, filePath)
 }

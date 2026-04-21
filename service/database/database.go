@@ -24,6 +24,8 @@ type AppDatabase interface {
 
 	// user
 	GetUserProfile(targetUsername string, requestingUserID string) (UserProfile models.UserProfile, err error)
+	DeleteUser(userID string) error
+	UpdateUsername(userID string, newUsername string) error
 
 	// social
 	FollowUser(followerID, targetID string) error

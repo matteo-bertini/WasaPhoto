@@ -4,6 +4,7 @@ import (
 	"WasaPhoto/service/models"
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 func (db *appdbimpl) GetUserProfile(targetUsername string, requestingUserID string) (userProfile models.UserProfile, err error) {
@@ -94,4 +95,62 @@ func (db *appdbimpl) GetUserProfile(targetUsername string, requestingUserID stri
 	}
 
 	return userProfile, nil
+}
+
+// UpdateUsername updates the username for a specific user ID.
+// It returns models.ErrUsernameTaken if the new username is already in use.
+func (db *appdbimpl) UpdateUsername(userID string, newUsername string) error {
+	// 1. Execute the update query on the accounts table.
+	// We only need to change the 'username' column where 'user_id' matches.
+	query := `UPDATE accounts SET username = ? WHERE user_id = ?`
+
+	res, err := db.c.Exec(query, newUsername, userID)
+	if err != nil {
+		// 2. Check if the error is a UNIQUE constraint violation (SQLite specific check)
+		// This happens if another user already has the newUsername.
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return models.ErrUsernameTaken
+		}
+		// Return any other generic database error
+		return err
+	}
+
+	// 3. Verify that a row was actually updated
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		// If no rows were changed, it means the userID doesn't exist
+		return models.ErrUserNotFound
+	}
+
+	return nil
+}
+
+// DeleteUser removes a user account from the database.
+// Due to the ON DELETE CASCADE constraints defined in the schema,
+// deleting the account will automatically remove all associated:
+// profiles, posts, comments, likes, follows, and bans.
+func (db *appdbimpl) DeleteUser(userID string) error {
+	// Execute the DELETE statement on the accounts table
+	res, err := db.c.Exec("DELETE FROM accounts WHERE user_id = ?", userID)
+	if err != nil {
+		// Return the database error to the handler
+		return err
+	}
+
+	// Check if any row was actually deleted
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	// If no rows were affected, it means the user_id didn't exist
+	if affected == 0 {
+		return models.ErrUserNotFound
+	}
+
+	return nil
 }

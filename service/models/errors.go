@@ -12,6 +12,7 @@ var (
 	ErrSelfFollow                = errors.New("users cannot follow themselves")
 	ErrSelfBan                   = errors.New("users cannot ban themselves")
 	ErrResourceNotFound          = errors.New("resource not found")
+	ErrUsernameTaken             = errors.New("username taken")
 )
 
 // GetUserIDByToken

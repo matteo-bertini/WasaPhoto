@@ -314,6 +314,8 @@ paths:
 
   
   /users/{username}:
+    parameters: 
+      - $ref: "#/components/parameters/username"
     get:
       tags:
         - Profile
@@ -324,15 +326,6 @@ paths:
       description: |
         Returns the profile details, statistics, and photos of the specified user.
         If the requester is banned by the owner (or vice versa), it returns a 403 Forbidden.
-      parameters:
-        - name: username
-          in: path
-          required: true
-          description: The username of the profile to retrieve.
-          schema:
-            type: string
-            minLength: 3
-            maxLength: 30
       responses:
         '200':
           description: Profile retrieved successfully.
@@ -348,26 +341,49 @@ paths:
           description: Not Found - User does not exist.
         '500':
           $ref: "#/components/responses/InternalServerError"
-  /users/{username}/:
-    parameters:
-      - $ref: "#/components/parameters/username"
+    put:
+      tags:
+        - Profile
+      summary: Update username
+      operationId: updateUsername
+      description: Changes the username for the authenticated user.
+      parameters:
+        - $ref: "#/components/parameters/username"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/username"
+      responses:
+        '204':
+          description: Username updated successfully.
+        '400':
+          description: Invalid username format.
+        '403':
+          description: Forbidden - You can only change your own username.
+        '409':
+          description: Conflict - Username already taken.
+        '500':
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
-        - user
-      security:
-        - bearerAuth : []
+        - Profile
       operationId: deleteUser
-      summary: Delete a user.
+      summary: Delete user account
       description: |
-        Deletes the user with the specified username.
+        Permanently deletes the user's account and all associated data (posts, likes, comments, relationships).
+        This action is irreversible. The requester must be the owner of the account.
       responses:
         '204':
           description: Delete successfully performed.
-        '400':
-          $ref: "#/components/responses/BadRequest"
+        '401':
+          description: Unauthorized - Token missing or invalid.
+        '403':
+          description: Forbidden - You can only delete your own account.
         '404':
           description: |
-            NotFound : User with specified username not found in the system.
+           User not found.
         '500':
           $ref: "#/components/responses/InternalServerError"  
   /users/{username}/stream:
@@ -404,43 +420,6 @@ paths:
           description: Forbidden - Non puoi vedere lo stream di questo utente (es. ban)
         '404':
           description: Utente non trovato
-  /users/{username}/username:
-    parameters:
-      - $ref: "#/components/parameters/username"
-    put:
-      tags:
-        - user
-      security:
-        - bearerAuth : []
-      operationId: setMyusername
-      summary: Modify the username of the given user.
-      description: |
-        Modifies an existing user by replacing the old username 
-        with the new username contained in the request body.
-        The new username will be returned in the response.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/username"
-      responses:
-        '200':
-          description: |
-            OK : username successfully updated.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/username"
-        '400':
-          $ref: "#/components/responses/BadRequest"
-        '401':  
-          description: |
-            Unauthorized : The id passed does not authorize the user to perform the operation.
-        '404':
-          description: |
-            NotFound : User not found.
-        '500':
-          $ref: "#/components/responses/InternalServerError"
   /users/{username}/posts:
     parameters:
       - $ref: "#/components/parameters/username"
