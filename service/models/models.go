@@ -5,8 +5,18 @@ import (
 	"time"
 )
 
-// CheckUsername controlla che l'Username passato sia una stringa conforme alle specifiche dichiarate
-// La funzione ritorna true quando l'Username passato è valido,false altrimenti.
+// DoLoginRequestBody represents the 'LoginRequest' schema defined in the OpenAPI specification.
+type DoLoginRequestBody struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	IsSignUp *bool  `json:"isSignUp"`
+}
+
+// DoLoginResponseBody represents the 'LoginResponse' schema defined in the OpenAPI specification.
+type DoLoginResponseBody struct {
+	SessionToken string `json:"sessionToken"`
+}
+
 // UserProfile represents the full profile data returned to the frontend
 type UserProfile struct {
 	Username       string `json:"Username"`
@@ -38,16 +48,6 @@ type Comment struct {
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
-// doLogin operation //
-type DoLoginRequestBody struct {
-	Username string `json:"Username"`
-	Password string `json:"Password"`
-	IsSignUp *bool  `json:"IsSignUp"`
-}
-type DoLoginResponseBody struct {
-	SessionToken string `json:"SessionToken"`
-}
-
 func CheckUsername(username string) bool {
 
 	// L'Username passato è composto solo da spazi bianchi quindi non è valido
@@ -69,7 +69,7 @@ func CheckPassword(password string) bool {
 		return false
 	} else {
 		len := len(password)
-		if len < 8 {
+		if len < 8 || len > 72 {
 			return false
 		} else {
 			return true

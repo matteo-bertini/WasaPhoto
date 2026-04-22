@@ -12,7 +12,6 @@ func (db *appdbimpl) GetUserIDByToken(token string) (string, error) {
 	var userID string
 	// Check if the token exists in the accounts table
 	query := `SELECT user_id FROM accounts WHERE session_token = ?`
-
 	err := db.c.QueryRow(query, token).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

@@ -1,5 +1,5 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
-import LoginPage from '../views/LoginPage.vue'
+import LoginPage from '../views/LoginView.vue'
 import ProfilePage from "../views/ProfilePage.vue"
 import NotFoundPage from "../views/NotFoundPage.vue"
 import ProfileNotFoundPage from "../views/ProfileNotFoundPage.vue"

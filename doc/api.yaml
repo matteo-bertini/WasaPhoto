@@ -5,8 +5,10 @@ info:
    Keep in touch with your friends by sharing photos of special moments, thanks to WASAPhoto! You can
    upload your photos directly from your PC, and they will be visible to everyone following you.
   version: 1.0.0
+security:
+  - BearerAuth: []
 tags:
-  - name: Account
+  - name: Authentication
     description: Authentication and session management
   - name: Profile
     description: User identity and social statistics
@@ -16,42 +18,53 @@ tags:
     description: Image uploading and posts management
 servers:
   - url: http://localhost:3000
-  
+
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
   schemas:
     LoginRequest:
           type: object
-          description: The request body containing the user credentials (username and Password) required to authenticate an existing user or create a new account.
+          description: The request body containing the user credentials (username and password) required to authenticate an existing user or create a new account.
           title: LoginRequest
           required:
             - username
-            - Password
-            - IsSignUp
+            - password
+            - isSignUp
           properties:
             username:
               type: string
               minLength: 3
               maxLength: 30
-              pattern: '^.*?$'
+              pattern: '^[a-zA-Z0-9_]{3,30}$'
               description: The unique identifier for the user.
-              example: Eren_Yeager
-            Password:
+              example: eyeager
+            password:
               type: string
               format: password
               minLength: 8
-              pattern: '^.*?$'
+              maxLength: 72
+              pattern: '^[a-zA-Z0-9!@#$%^&*()_+=-]{8,30}$'
               description: The user's secret password
               example: "Secret123!"
-            IsSignUp:
+            isSignUp:
               type: boolean
               example: false
               description: Flag indicating whether the user is attempting a new registration (true) or a standard login (false).
 
-    username:
+    LoginResponse:
+      type: object
+      title: LoginResponse
+      description: The response body containing the session token.
+      properties:
+        sessionToken:
+          type: string
+          description: The unique identifier for the session.
+          example: 3Cf7kQ6YcFR3H4evd65CIWlb7e
+
+    Username:
           type: object
           description: A string that uniquely identifies the user's profile on WasaPhoto.
           title: username
@@ -60,9 +73,9 @@ components:
               type: string
               minLength: 3
               maxLength: 30
-              pattern: '^.*?$'
+              pattern: '^[a-zA-Z0-9_]{3,30}$'
               description: The username 
-              example: Eren_Yeager
+              example: eyeager
     
     Post:
       type: object
@@ -72,7 +85,7 @@ components:
           example: "inenfnficnive"
         username:
           type: string
-          example: "Eren_Yeager"
+          example: "eyeager"
         Caption:
           type: string
           example: "A beautiful sunset"
@@ -92,13 +105,13 @@ components:
           type: string
           minLength: 3
           maxLength: 30
-          pattern: '^.*?$'
-          example: "Eren_Yeager"
+          pattern: '^[a-zA-Z0-9_]{3,30}$'
+          example: "eyeager"
           description: The username 
         Bio:
           type: string
           pattern: '^.*?$'
-          example: "Hi I'm Eren_Yeager and I'm the Founding Titan :) "
+          example: "Hi I'm eyeager and I'm the Founding Titan :) "
           description: The username 
         FollowersCount:
           type: integer
@@ -125,7 +138,7 @@ components:
         username:
           type: string
           description: "Owner of the photo"
-          example: "Eren_Yeager"
+          example: "eyeager"
         LikesNumber:
           type: integer
           example: 15
@@ -175,8 +188,8 @@ components:
         type: string
         minLength: 3
         maxLength: 30
-        pattern: '^.*?$'
-        example: Eren_Yeager
+        pattern: '^[a-zA-Z0-9_]{3,30}$'
+        example: eyeager
     target_username:
       name: target_username
       in: path
@@ -186,8 +199,8 @@ components:
         type: string
         minLength: 3
         maxLength: 30
-        pattern: '^.*?$'
-        example: Eren_Yeager
+        pattern: '^[a-zA-Z0-9_]{3,30}$'
+        example: eyeager
     actor_username:
       name: actor_username
       in: path
@@ -197,8 +210,8 @@ components:
         type: string
         minLength: 3
         maxLength: 30
-        pattern: '^.*?$'
-        example: Eren_Yeager
+        pattern: '^[a-zA-Z0-9_]{3,30}$'
+        example: eyeager
     postId:
       name: postId
       in: path
@@ -241,13 +254,14 @@ paths:
   /session:
     post:
       tags:
-        - Account
+        - Authentication
       summary: Logs in or registers the user
       description: | 
         If the user does not exist, a new account and profile are created (Sign Up).
         If the user exists, credentials are verified (Login).
         In both cases, a temporary session token is returned.
       operationId: doLogin
+      security: []
       requestBody:
         description: User credentials for authentication
         content:
@@ -262,30 +276,16 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                description: an object
-                properties:
-                  Identifier:
-                    type: string
-                    description: the identifier
-                    example: "abcdef012345"
+                $ref: '#/components/schemas/LoginResponse'
         '201':
           description: |
             Created : User log-in action successful, a new user is created
           content:
             application/json:
               schema:
-                type: object
-                description: an object
-                properties:
-                  Identifier:
-                    type: string
-                    description: the identifier
-                    example: "abcdef012345"
+                $ref: '#/components/schemas/LoginResponse'
         '400':
           $ref: "#/components/responses/BadRequest"
-
-          
         '401':
           description: |
             Unauthorized: Invalid username or password. 
@@ -299,9 +299,8 @@ paths:
     
     delete:
       tags:
-        - Account
-      security:
-        - bearerAuth: [] 
+        - Authentication
+
       operationId: doLogout
       summary: Logout the current user
       responses:
@@ -319,8 +318,6 @@ paths:
     get:
       tags:
         - Profile
-      security:
-        - bearerAuth : []
       operationId: getUserProfile
       summary: Get user profile data
       description: |
@@ -354,7 +351,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/username"
+              $ref: "#/components/schemas/Username"
       responses:
         '204':
           description: Username updated successfully.
@@ -394,8 +391,6 @@ paths:
     get:
       tags:
         - user
-      security:
-        - bearerAuth : []
       operationId: getMyStream
       summary: Ottiene lo stream personalizzato
       description: |
@@ -432,8 +427,6 @@ paths:
         The 'username' in the path must match the identity of the authenticated user.
         The image is sent as a binary part of a multipart/form-data request.
       operationId: uploadPost
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -503,8 +496,6 @@ paths:
     delete:
       tags:
         - photos
-      security:
-        - bearerAuth : []
       operationId: deletePhoto
       summary: Deletes a photo from the user uploaded photos.
       description: |

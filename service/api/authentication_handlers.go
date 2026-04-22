@@ -44,7 +44,7 @@ func (rt *_router) LoginHandler(w http.ResponseWriter, r *http.Request, ps httpr
 	}
 
 	// 4) Execute the unified database logic.
-	sessionToken, err := rt.db.DoLogin(req.Username, req.Password, *req.IsSignUp)
+	sessionToken, err := rt.db.AuthenticateUser(req.Username, req.Password, *req.IsSignUp)
 	if err != nil {
 		// Handle specific authentication errors.
 		if errors.Is(err, models.ErrInvalidCredentials) {

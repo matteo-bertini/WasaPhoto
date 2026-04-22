@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*string, error) {
+func (db *appdbimpl) AuthenticateUser(username string, password string, isSignUp bool) (*string, error) {
 
 	var id, hashedpassword string
 
@@ -20,7 +20,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 	if errors.Is(err, sql.ErrNoRows) {
 
 		// 2.1) User sign up.
-		if IsSignUp {
+		if isSignUp {
 			id = ksuid.New().String()
 			newhashedpassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 			if err != nil {
@@ -75,7 +75,7 @@ func (db *appdbimpl) DoLogin(username string, password string, IsSignUp bool) (*
 
 	}
 	// 4) User found.
-	if IsSignUp {
+	if isSignUp {
 		// 4.1) Registration attempt.
 		return nil, models.ErrUserAlreadyExists
 	}

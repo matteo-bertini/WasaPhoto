@@ -5,65 +5,92 @@ export default {
   components: {
     ErrorMsg
   },
-	data() {
-		return {
-			Username: "",   
-			Password: "",   
-			IsSignup: false,
+  data() {
+    return {
+      // User input fields
+      Username: "",   
+      Password: "",   
+      IsSignup: false,
+      
+      // UI State management
       errorMessage: null,
+      passwordVisible: false,
       loading: false,
       isSuccess: false
-		}
-	},
-	methods: {
-		async handleAuth() { //  metodo chiamato dal @submit.prevent
+    }
+  },
+  computed: {
+    usernameError() {
+      return !(this.Username.length >= 3 && this.Username.length <= 30);
+    },
+    passwordError() {
+      return !(this.Password.length >= 8 && this.Password.length <= 30);
+    },
+    isFormInvalid() {
+      return this.Username.length < 3 || this.Username.length > 30 || this.Password.length < 8 || this.Password.length >30;
+    }
+  },
+  methods: {
+    /**
+     * Handles the authentication process (Login or Signup).
+     * Invoked by the @submit.prevent event on the form.
+     */
+    async handleAuth() {
+      // Reset UI state before starting the request
       this.loading = true;
-			this.errorMessage = null;
+      this.errorMessage = null;
       this.isSuccess = false;
-			
-			try {
-				let response = await this.$axios.post("/session", {
-					Username: this.Username,
-					Password: this.Password,
-					IsSignup: this.IsSignup
-				});
+      
+      try {
+        // API call to the backend session endpoint
+        let response = await this.$axios.post("/session", {
+          username: this.Username, 
+          password: this.Password,
+          isSignUp: this.IsSignup
+        });
 
-				// Saving session data.
-				localStorage.setItem("SessionToken", response.data.SessionToken);
-				localStorage.setItem("Username", this.Username);
+        /* Session Persistence:
+           Store the token and username in localStorage for subsequent 
+           authenticated requests 
+        */
+        localStorage.setItem("SessionToken", response.data.sessionToken);
+        localStorage.setItem("Username", this.Username);
 
         this.isSuccess = true;
         this.loading = false;
     
+        // Graceful redirect after a short delay to allow the user to see the success state
         setTimeout(() => {
-          this.$router.push("/users/"+this.Username);
-        }, 1200);
+          this.$router.push("/users/" + this.Username);
+        },800);
 
-			} catch (e) {
+      } catch (e) {
         this.loading = false;
         this.isSuccess = false;
-        if (e.response) {
-          if (e.response.status === 409) {
-            this.errorMessage = "Username già esistente!";
-          } 
-          else if (e.response.status === 401) {
-            this.errorMessage = "Credenziali non valide.";
-          } 
-          else if (e.response.status === 400) {
-            this.errorMessage = "Dati non validi. Controlla i campi inseriti.";
-          } 
-          else {
-            this.errorMessage = "Si è verificato un errore sul server. Riprova.";
-          }
-        } 
-        else {
-          this.errorMessage = "Impossibile collegarsi al server. Controlla la tua connessione.";
-        }
-    }
-}
-		}
-	}
 
+        // Error handling based on HTTP status codes defined in OpenAPI specs
+        if (e.response) {
+          switch (e.response.status) {
+            case 409:
+              this.errorMessage = "Username già esistente!";
+              break;
+            case 401:
+              this.errorMessage = "Credenziali non valide.";
+              break;
+            case 400:
+              this.errorMessage = "Richiesta non valida. Controlla i dati inseriti.";
+              break;
+            default:
+              this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";
+          }
+        } else {
+          // Handling network or connectivity issues
+          this.errorMessage = "Impossibile connettersi al server. Controlla la tua connessione.";
+        }
+      }
+    }
+  }
+}
 </script>
 
 <template>
@@ -77,9 +104,11 @@ export default {
     </header>
 
     <div class="glass-card-container">
+      
       <div class="glass-card">
         
-        <h2 class="card-title">{{ isSignup ? 'Registrazione' : 'Login' }}</h2>
+        <h2 class="card-title">{{ IsSignup ? 'Registrazione' : 'Login' }}</h2>
+        
         <ErrorMsg :msg="errorMessage" />
 
         <form @submit.prevent="handleAuth">
@@ -88,21 +117,31 @@ export default {
             <input 
               type="text" 
               v-model="Username" 
+              maxlength="30"
               placeholder="Username" 
               required
               class="glass-input"
             />
+            
           </div>
+          <p v-if="usernameError" class="input-hint">Username 3-30 caratteri</p>
 
           <div class="input-group">
-            <input 
-              type="password" 
+            <div class="password-wrapper">
+              <input 
+              :type="passwordVisible ? 'password' : 'text'"
               v-model="Password" 
+              maxlength="72"
               placeholder="Password" 
               required
               class="glass-input"
-            />
+              />
+              <span class="password-toggle" @click="passwordVisible = !passwordVisible">
+                <i :class="passwordVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </span>
+            </div>
           </div>
+          <p v-if="passwordError" class="input-hint">Minimo 8 caratteri</p>
 
           <div class="switch-container">
             <span :class="{ 'active-label': !IsSignup }">Accedi</span>
@@ -113,7 +152,8 @@ export default {
             <span :class="{ 'active-label': IsSignup }">Registrati</span>
           </div>
 
-          <button type="submit" class="gradient-button" :disabled="loading || isSuccess" :class="{ 'btn-success': isSuccess }">
+          <button type="submit" class="gradient-button" :disabled="loading || isSuccess || isFormInvalid" :class="{ 'btn-success': isSuccess,'btn-invalid': isFormInvalid && !loading && !isSuccess }">
+            
             <template v-if="loading">
               <i class="fas fa-circle-notch fa-spin"></i>
               <span>VERIFICA...</span>
@@ -128,23 +168,24 @@ export default {
               <i :class="IsSignup ? 'fas fa-user-plus' : 'fas fa-sign-in-alt'"></i>
               <span>{{ IsSignup ? 'CREA ACCOUNT' : 'ACCEDI' }}</span>
             </template>
+
           </button>
+
         </form>
 
-        <div class="card-footer">
-          <a href="#" class="forgot-password">Password dimenticata?</a>
-        </div>
+
       </div>
     </div>
 
-    <i class="fas fa-star decorative-star"></i>
   </div>
 </template>
 
 <style scoped>
+
+/* --- BASE LAYOUT --- */
 .wasaphoto-bg {
   min-height: 100vh;
-  background:radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -153,7 +194,6 @@ export default {
   font-family: 'Poppins', sans-serif; 
   color: white;
 }
-
 
 .main-header {
   padding: 40px 0;
@@ -169,7 +209,7 @@ export default {
 
 .camera-icon {
   font-size: 2.5rem;
-  color: #f0e6d2; 
+  color: white; 
 }
 
 .brand-name {
@@ -180,7 +220,7 @@ export default {
   color: white;
 }
 
-
+/* --- CARD STRUCTURE --- */
 .glass-card-container {
   flex-grow: 1;
   display: flex;
@@ -190,20 +230,12 @@ export default {
 }
 
 .glass-card {
-  /* Trasparenza e Sfumatura sfondo */
   background: rgba(255, 255, 255, 0.05);
-  
-  /* SFOCATURA DELLO SFONDO (Backdrop Filter) - Fondamentale! */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  
-  /* Bordo sottile e luminoso per definire la forma */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  
-
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  
   width: 100%;
   max-width: 400px;
   padding: 40px;
@@ -217,9 +249,12 @@ export default {
   color: white;
 }
 
-/* 4. INPUT STILIZZATI */
+/* --- INPUTS --- */
 .input-group {
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; 
 }
 
 .glass-input {
@@ -244,6 +279,40 @@ export default {
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
+.input-hint {
+    margin-left: 15px; 
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6); 
+    text-align: left;
+}
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px; 
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.3s ease;
+  z-index: 10;
+  padding: 5px; 
+}
+
+.password-toggle:hover {
+  color: white;
+}
+
+
+.password-wrapper .glass-input {
+  padding-right: 45px;
+}
+
+/* --- TOGGLE SWITCH --- */
 .switch-container {
   display: flex;
   align-items: center;
@@ -286,22 +355,12 @@ export default {
   transition: .4s;
 }
 
-input:checked + .slider {
-  background-color: #a53b59; 
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #a53b59;
-}
-
-input:checked + .slider:before {
-  transform: translateX(24px);
-}
-
+input:checked + .slider { background-color: #a53b59; }
+input:checked + .slider:before { transform: translateX(24px); }
 .slider.round { border-radius: 34px; }
 .slider.round:before { border-radius: 50%; }
 
-
+/* --- BUTTONS & STATES --- */
 .gradient-button {
   width: 100%;
   padding: 15px;
@@ -312,54 +371,46 @@ input:checked + .slider:before {
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
 }
 
-.gradient-button:hover {
+.gradient-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(165, 59, 89, 0.4);
 }
 
-.gradient-button:active {
+.gradient-button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-/* 7. FOOTER CARD E DECORAZIONI */
-.card-footer {
-  margin-top: 25px;
+.gradient-button:disabled {
+  cursor: not-allowed;
+  transition: none; 
 }
 
-.forgot-password {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.85rem;
-  text-decoration: none;
-  transition: color 0.3s ease;
+
+.gradient-button.btn-invalid:disabled {
+  background: #535353 !important;
+  filter: grayscale(1) !important;
+  opacity: 0.5 !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
-.forgot-password:hover {
-  color: white;
-  text-decoration: underline;
+
+.gradient-button.btn-success:disabled {
+  background: #28a745 !important;
+  filter: grayscale(0) !important;
+  opacity: 1 !important;
+  box-shadow: 0 5px 15px rgba(47, 171, 57, 0.4) !important;
+  transform: none !important;
 }
 
-.decorative-star {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  font-size: 2rem;
-  color: rgba(255, 255, 255, 0.3);
-
-}
-
-/* Feedback di Successo */
-.btn-success {
-  background: linear-gradient(135deg, #2ed573 0%, #7bed9f 100%) !important;
-  box-shadow: 0 5px 15px rgba(46, 213, 115, 0.4) !important;
-}
-
+/* --- ANIMATIONS --- */
 .anim-pop {
   animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -369,14 +420,6 @@ input:checked + .slider:before {
   100% { transform: scale(1.2); opacity: 1; }
 }
 
-/* Stato disabilitato per evitare click multipli */
-.gradient-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.8;
-  transform: none;
-}
-
-/* Rotazione icona loading */
 .fa-spin {
   animation: spin 1s linear infinite;
 }

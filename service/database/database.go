@@ -18,8 +18,8 @@ type Database_photostream_component struct {
 // AppDatabase is the high level interface for the DB
 type AppDatabase interface {
 
-	// session
-	DoLogin(username string, password string, IsSignUp bool) (*string, error)
+	// Authentication
+	AuthenticateUser(username string, password string, isSignUp bool) (*string, error)
 	DoLogout(userID string) error
 
 	// user
