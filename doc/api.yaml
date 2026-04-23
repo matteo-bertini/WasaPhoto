@@ -76,28 +76,6 @@ components:
               pattern: '^[a-zA-Z0-9_]{3,30}$'
               description: The username 
               example: eyeager
-    
-    Post:
-      type: object
-      properties:
-        PostId:
-          type: string
-          example: "inenfnficnive"
-        username:
-          type: string
-          example: "eyeager"
-        Caption:
-          type: string
-          example: "A beautiful sunset"
-        LikesNumber:
-          type: integer
-        CommentsNumber:
-          type: integer
-        DateOfUpload:
-          type: string
-          format: date-time
-        IsLikedByMe:
-          type: boolean
     UserProfile:
       type: object
       properties:
@@ -107,54 +85,63 @@ components:
           maxLength: 30
           pattern: '^[a-zA-Z0-9_]{3,30}$'
           example: "eyeager"
-          description: The username 
-        Bio:
+          description: "Unique identifier for the user" 
+        bio:
           type: string
-          pattern: '^.*?$'
+          maxLength: 160
+          description: "A brief biography or status of the user"
           example: "Hi I'm eyeager and I'm the Founding Titan :) "
-          description: The username 
-        FollowersCount:
+        followersCount:
           type: integer
-        FollowingCount:
+          example: 105
+        followingCount:
           type: integer
-        PostsCount:
+          example: 102
+        postsCount:
           type: integer
-        IsFollowing:
+          example: 12
+        isFollowing:
           type: boolean
-        IsBannedByMe:
+          description: "True if the authenticated user follows this profile"
+        isBannedByMe:
           type: boolean
-        UserPosts: 
+          description: "True if the authenticated user has blocked this profile"
+        userPosts: 
           type: array
           items:
             $ref: "#/components/schemas/Post"
-    PhotoStreamComponent:
+    Post:
       type: object
-      title: PhotoStream component
-      description: A single component in the photostream with pre-calculated stats.
       properties:
-        postId: 
+        postId:
           type: string
-          example: "152164"
+          example: "7b259fbu74ncp6cuiiein"
         username:
           type: string
-          description: "Owner of the photo"
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_]{3,30}$'
           example: "eyeager"
-        LikesNumber:
+          description: "Unique identifier for the user" 
+        caption:
+          type: string
+          maxLength: 2200
+          description: "The text description accompanying the post"
+          example: "A beautiful sunset"
+        likesNumber:
           type: integer
-          example: 15
-        CommentsNumber:
+          example: 42
+        commentsNumber:
           type: integer
-          example: 3
-        DateOfUpload:
+          example: 2
+        dateOfUpload:
           type: string
           format: date-time
-          example: 2018-03-20T09:12:28Z
-        IsLikedByMe:
+        isLikedByMe:
           type: boolean
-          description: "Indicates if the logged-in user has already liked this photo"
-          example: true
+          description: "True if the authenticated user liked this post"
     
-  
+   
     CommentContent:
       type: object
       required:
@@ -321,7 +308,7 @@ paths:
       operationId: getUserProfile
       summary: Get user profile data
       description: |
-        Returns the profile details, statistics, and photos of the specified user.
+        Returns the profile details, statistics, and posts of the specified user.
         If the requester is banned by the owner (or vice versa), it returns a 403 Forbidden.
       responses:
         '200':
@@ -383,38 +370,7 @@ paths:
            User not found.
         '500':
           $ref: "#/components/responses/InternalServerError"  
-  /users/{username}/stream:
-    parameters:
-      - $ref: "#/components/parameters/username"
-      - $ref: "#/components/parameters/Limit"
-      - $ref: "#/components/parameters/Offset"
-    get:
-      tags:
-        - user
-      operationId: getMyStream
-      summary: Ottiene lo stream personalizzato
-      description: |
-        Restituisce le foto caricate dagli utenti seguiti in ordine cronologico inverso.
-        Supporta la paginazione tramite limit e offset.
-      responses:
-        '200': 
-          description: OK
-          content: 
-            application/json:
-              schema:
-                type: object
-                properties:
-                  PhotoStream:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/PhotoStreamComponent"
-                  TotalResults:
-                    type: integer
-                    description: Numero totale di post disponibili nello stream
-        '403':
-          description: Forbidden - Non puoi vedere lo stream di questo utente (es. ban)
-        '404':
-          description: Utente non trovato
+  
   /users/{username}/posts:
     parameters:
       - $ref: "#/components/parameters/username"
@@ -602,40 +558,36 @@ paths:
   
   
   
-  /users/{username}/followers/{actor_username}:
+  /users/{username}/followers:
     parameters:
       - $ref: "#/components/parameters/username"
-      - $ref: "#/components/parameters/actor_username"
     put:
       tags:
         - Social
       summary: Follow a user
       description: |
-        Creates a follow relationship between the actor and the target user.
-        The actor_username must match the authenticated user's identity.
+        Creates a follow relationship between the authenticated user and the target user.
+        The system must verify that no bans exist between the two parties.
       operationId: followUser
       responses:
         '204':
           description: User followed successfully.
         '401':
-          description: Unauthorized (invalid or missing session token).
+          description: Unauthorized - Invalid or missing token.
         '403':
-          description: Forbidden (e.g. a ban exists).
+          description: Forbidden - Cannot follow yourself or a ban is active.
         '404':
-          description: Target user or actor user not found.
+          description: Target user not found.
         '500':
-          description: Internal server error.
+          $ref: "#/components/responses/InternalServerError"
 
     delete:
       tags:
         - Social
       summary: Unfollow a user
       description: |
-        Removes the follow relationship between the actor and the target user.
+        Removes the follow relationship between the authenticated user and the target user.
       operationId: unfollowUser
-      parameters:
-        - $ref: '#/components/parameters/target_username'
-        - $ref: '#/components/parameters/actor_username'
       responses:
         '204':
           description: User unfollowed successfully.
@@ -644,40 +596,37 @@ paths:
         '403':
           description: Forbidden .
         '404':
-          description: Target user or actor user not found.
+          description: Target user not found.
         '500':
-          description: Internal server error.
+          $ref: "#/components/responses/InternalServerError"
   
-  /users/{username}/bans/{target_username}:
+  /users/{username}/banned:
     parameters:
-      - $ref: "#/components/parameters/target_username"
       - $ref: "#/components/parameters/username"
     put:
       tags:
         - Social
-      summary: Bans a user
-      description: |
-        Creates a ban relationship between the actor and the target user.
-        The actor_username must match the authenticated user's identity.
+      summary: Ban a user
+      description: Creates a ban relationship. The authenticated user (from token) blocks the target {username}.
+        This action automatically removes any existing follow relationship between the two users.
       operationId: banUser
       responses:
         '204':
-          description: User banned successfully.
+          description: User banned successfully or already banned.
         '401':
-          description: Unauthorized (invalid or missing session token).
+          description: Unauthorized - Token missing or invalid.
         '403':
-          description: Forbidden (e.g. a ban exists).
+          description: Forbidden - You cannot ban yourself.
         '404':
-          description: Target user or actor user not found.
+          description: Target user not found.
         '500':
-          description: Internal server error.
-
+          $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
         - Social
-      summary: Unbans a user
+      summary: Unban a user
       description: |
-        Removes the ban relationship between the actor and the target user.
+        Removes the ban relationship for the target {username}.
       operationId: unbanUser
       responses:
         '204':
@@ -687,9 +636,9 @@ paths:
         '403':
           description: Forbidden.
         '404':
-          description: Target user or actor user not found.
+          description: Target user not found.
         '500':
-          description: Internal server error.
+          $ref: "#/components/responses/InternalServerError"
       
   /users/{username}/posts/{postId}/comments:
     parameters:
