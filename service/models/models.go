@@ -19,25 +19,25 @@ type DoLoginResponseBody struct {
 
 // UserProfile represents the full profile data returned to the frontend
 type UserProfile struct {
-	Username       string `json:"Username"`
-	Bio            string `json:"Bio"`
-	FollowersCount int    `json:"FollowersCount"`
-	FollowingCount int    `json:"FollowingCount"`
-	PostsCount     int    `json:"PostsCount"`
-	IsFollowing    bool   `json:"IsFollowing"`
-	IsBannedByMe   bool   `json:"IsBannedByMe"`
-	UserPosts      []Post `json:"UserPosts"`
+	Username       string `json:"username"`
+	Bio            string `json:"bio"`
+	FollowersCount int    `json:"followersCount"`
+	FollowingCount int    `json:"followingCount"`
+	PostsCount     int    `json:"postsCount"`
+	IsFollowing    bool   `json:"isFollowing"`
+	IsBannedByMe   bool   `json:"isBannedByMe"`
+	UserPosts      []Post `json:"userPosts"`
 }
 
 // Post represents a single post entry
 type Post struct {
-	PostId         string    `json:"PostId"`
-	Username       string    `json:"Username"`
-	Caption        string    `json:"Caption"`
-	LikesNumber    int       `json:"LikesNumber"`
-	CommentsNumber int       `json:"CommentsNumber"`
-	DateOfUpload   time.Time `json:"DateOfUpload"`
-	IsLikedByMe    bool      `json:"IsLikedByMe"`
+	PostId         string    `json:"postId"`
+	Username       string    `json:"username"`
+	Caption        string    `json:"caption"`
+	LikesNumber    int       `json:"likesNumber"`
+	CommentsNumber int       `json:"commentsNumber"`
+	DateOfUpload   time.Time `json:"dateOfUpload"`
+	IsLikedByMe    bool      `json:"isLikedByMe"`
 }
 type Comment struct {
 	CommentID      int       `json:"commentId"`

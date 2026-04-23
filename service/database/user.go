@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// GetUserProfile fetches aggregated profile metadata, social statistics, and relationship statuses.
+// It utilizes optimized subqueries to retrieve follower/following counts and interaction flags
+// (is_following, is_banned) in a single operation.
+// The method enforces privacy constraints by returning ErrProfileAccessForbidden if a ban relationship
+// exists between the requester and the target.
+// If authorized, it returns a chronologically ordered list of posts with enriched interaction data.
 func (db *appdbimpl) GetUserProfile(targetUsername string, requestingUserID string) (userProfile models.UserProfile, err error) {
 
 	// 1. Get Profile Metadata, Stats, and Relationship status

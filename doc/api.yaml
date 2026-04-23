@@ -10,7 +10,7 @@ security:
 tags:
   - name: Authentication
     description: Authentication and session management
-  - name: Profile
+  - name: User
     description: User identity and social statistics
   - name: Social
     description: Following and banning logic
@@ -282,7 +282,7 @@ paths:
       - $ref: "#/components/parameters/username"
     get:
       tags:
-        - Profile
+        - User
       operationId: getUserProfile
       summary: Get user profile data
       description: |
@@ -305,7 +305,7 @@ paths:
           $ref: "#/components/responses/InternalServerError"
     put:
       tags:
-        - Profile
+        - User
       summary: Update username
       operationId: updateUsername
       description: Changes the username for the authenticated user.
@@ -330,7 +330,7 @@ paths:
           $ref: "#/components/responses/InternalServerError"
     delete:
       tags:
-        - Profile
+        - User
       operationId: deleteUser
       summary: Delete user account
       description: |
@@ -494,8 +494,6 @@ paths:
           description: Like removed successfully (even if it didn't exist).
         '401':
           description: Unauthorized.
-        '404':
-          description: Post not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
   /users/{username}/followers:
@@ -533,14 +531,12 @@ paths:
           description: User unfollowed successfully.
         '401':
           description: Unauthorized.
-        '403':
-          description: Forbidden .
         '404':
           description: Target user not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
   
-  /users/{username}/banned:
+  /users/{username}/ban:
     parameters:
       - $ref: "#/components/parameters/username"
     put:
@@ -573,8 +569,6 @@ paths:
           description: User unbanned successfully.
         '401':
           description: Unauthorized.
-        '403':
-          description: Forbidden.
         '404':
           description: Target user not found.
         '500':

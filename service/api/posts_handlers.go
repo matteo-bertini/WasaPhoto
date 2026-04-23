@@ -176,22 +176,13 @@ func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps ht
 	http.ServeFile(w, r, filePath)
 }
 
-// LikePostHandler: PUT /users/{username}/posts/{postId}/likes/{actor_username}
+// LikePostHandler: PUT /users/{username}/posts/{postId}/likes
 func (rt *_router) LikePostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
-	actorUsername := ps.ByName("actor_username")
 	targetUsername := ps.ByName("username")
 	authUserID := ctx.UserID
 
-	// Impersonation check: the actor in the path must be the authenticated user.
-	actorID, err := rt.db.GetIDByUsername(actorUsername)
-	if errors.Is(err, models.ErrUserNotFound) || actorID != authUserID {
-		ctx.Logger.Warn("LikePostHandler: unauthorized actor or impersonation attempt")
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-
-	err = rt.db.LikePost(postID, authUserID, targetUsername)
+	err := rt.db.LikePost(postID, authUserID, targetUsername)
 	if err != nil {
 		if errors.Is(err, models.ErrResourceNotFound) {
 			ctx.Logger.WithField("postID", postID).Warn("LikePostHandler: post or owner not found")
@@ -208,29 +199,19 @@ func (rt *_router) LikePostHandler(w http.ResponseWriter, r *http.Request, ps ht
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// UnlikePostHandler: DELETE /users/{username}/posts/{postId}/likes/{actor_username}
+// UnlikePostHandler: DELETE /users/{username}/posts/{postId}/likes
 func (rt *_router) UnlikePostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
-	actorUsername := ps.ByName("actor_username")
 	authUserID := ctx.UserID
 
-	actorID, err := rt.db.GetIDByUsername(actorUsername)
-	if errors.Is(err, models.ErrUserNotFound) || actorID != authUserID {
-		ctx.Logger.Warn("UnlikePostHandler: unauthorized removal attempt")
-		w.WriteHeader(http.StatusForbidden)
+	err := rt.db.UnlikePost(postID, authUserID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("UnlikePostHandler: database error")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	err = rt.db.UnlikePost(postID, authUserID)
-	if errors.Is(err, models.ErrResourceNotFound) {
-		ctx.Logger.Warn("UnlikePostHandler: like record not found")
-		w.WriteHeader(http.StatusNotFound)
-	} else if err != nil {
-		ctx.Logger.WithError(err).Error("UnlikePostHandler: database error")
-		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusNoContent)
-	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // GetLikesHandler: GET /users/{username}/posts/{postId}/likes

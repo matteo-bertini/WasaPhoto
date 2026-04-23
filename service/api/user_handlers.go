@@ -3,7 +3,6 @@ package api
 import (
 	"WasaPhoto/service/api/reqcontext"
 	"WasaPhoto/service/models"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// GetUserProfileHandler processes the request to retrieve a user's full profile.
+// It extracts the target username from the URI and the requester's identity from the request context.
 func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 
 	// 1. Extract the Target Username from the URL path
@@ -29,9 +30,9 @@ func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request,
 	// and gathers profile stats + post list in an optimized way.
 	profile, err := rt.db.GetUserProfile(targetUsername, requestingUserID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrUserNotFound) {
 			// User does not exist
-			ctx.Logger.WithError(models.ErrUserNotFound).Error("GetUserProfileHandler: failed to fetch profile")
+			ctx.Logger.WithError(err).Error("GetUserProfileHandler: failed to fetch profile")
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}

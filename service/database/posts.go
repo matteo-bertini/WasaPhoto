@@ -31,52 +31,70 @@ func (db *appdbimpl) UploadPost(post models.Post) error {
 	return nil
 }
 
-// LikePost adds a like record if the post exists, belongs to the targetUsername, and no ban is active.
+// LikePost executes the entire validation and insertion logic in a single database round-trip.
+// It returns specific domain errors for bans or missing resources, while remaining idempotent.
 func (db *appdbimpl) LikePost(postID string, actorID string, targetUsername string) error {
-	// Atomic insert: checking for post existence, target ownership, and double-sided ban.
+	// We use a CTE (Common Table Expression) to gather all necessary facts in one go.
 	query := `
-		INSERT INTO likes (post_id, user_id)
-		SELECT ?, ?
-		WHERE EXISTS (
-			SELECT 1 FROM posts p 
+		WITH constants AS (
+			SELECT ? AS post_id, ? AS actor_id, ? AS target_username
+		),
+		post_info AS (
+			-- Verify if the post exists and belongs to the target username
+			SELECT p.author_id 
+			FROM posts p 
 			JOIN accounts a ON p.author_id = a.user_id
-			WHERE p.post_id = ? AND a.username = ?
-		)
-		AND NOT EXISTS (
+			WHERE p.post_id = (SELECT post_id FROM constants) 
+			  AND a.username = (SELECT target_username FROM constants)
+		),
+		ban_check AS (
+			-- Check for bidirectional bans between actor and author
 			SELECT 1 FROM bans 
-			WHERE (banner_id = ? AND banned_id = (SELECT author_id FROM posts WHERE post_id = ?))
-			   OR (banner_id = (SELECT author_id FROM posts WHERE post_id = ?) AND banned_id = ?)
-		);`
+			WHERE (banner_id = (SELECT actor_id FROM constants) AND banned_id = (SELECT author_id FROM post_info))
+			   OR (banner_id = (SELECT author_id FROM post_info) AND banned_id = (SELECT actor_id FROM constants))
+		),
+		insertion AS (
+			-- Try to insert if post exists and no ban is found
+			INSERT INTO likes (post_id, user_id)
+			SELECT post_id, actor_id FROM constants
+			WHERE EXISTS (SELECT 1 FROM post_info) 
+			  AND NOT EXISTS (SELECT 1 FROM ban_check)
+			ON CONFLICT DO NOTHING
+			RETURNING 1
+		)
+		-- Final report: tells the Go code exactly what happened
+		SELECT 
+			CASE 
+				WHEN NOT EXISTS (SELECT 1 FROM post_info) THEN 'not_found'
+				WHEN EXISTS (SELECT 1 FROM ban_check) THEN 'forbidden'
+				ELSE 'ok'
+			END AS status`
 
-	res, err := db.c.Exec(query, postID, actorID, postID, targetUsername, actorID, postID, postID, actorID)
+	var status string
+	err := db.c.QueryRow(query, postID, actorID, targetUsername).Scan(&status)
 	if err != nil {
-		return err
+		return err // Real DB error (e.g. connection lost)
 	}
 
-	affected, _ := res.RowsAffected()
-	if affected == 0 {
-		// Differentiate between 404 (post/user not found) and 403 (forbidden by ban)
-		var exists bool
-		checkQuery := `SELECT EXISTS(SELECT 1 FROM posts p JOIN accounts a ON p.author_id = a.user_id WHERE p.post_id = ? AND a.username = ?)`
-		_ = db.c.QueryRow(checkQuery, postID, targetUsername).Scan(&exists)
-		if !exists {
-			return models.ErrResourceNotFound
-		}
+	// Simple switch to map the DB status to your models/errors
+	switch status {
+	case "not_found":
+		return models.ErrResourceNotFound
+	case "forbidden":
 		return models.ErrForbiddenAction
+	case "ok":
+		return nil // Success or already liked (idempotent)
+	default:
+		return nil
 	}
-	return nil
 }
 
-// UnlikePost removes a like and returns ErrNotFound if the record didn't exist.
+// UnlikePost removes a like record. It is idempotent: if the like
+// doesn't exist, it returns nil to signify the desired state is reached.
 func (db *appdbimpl) UnlikePost(postID string, actorID string) error {
-	res, err := db.c.Exec("DELETE FROM likes WHERE post_id = ? AND user_id = ?", postID, actorID)
-	if err != nil {
-		return err
-	}
-	if aff, _ := res.RowsAffected(); aff == 0 {
-		return models.ErrResourceNotFound
-	}
-	return nil
+	_, err := db.c.Exec("DELETE FROM likes WHERE post_id = ? AND user_id = ?", postID, actorID)
+	return err
+
 }
 
 // GetLikes retrieves the list of usernames who liked a specific post.

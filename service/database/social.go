@@ -5,32 +5,51 @@ import (
 )
 
 // FollowUser creates a follow relationship if no bans exist and it's not a self-follow.
+// It ensures idempotency and enforces ban restrictions in a single atomic database trip.
 func (db *appdbimpl) FollowUser(followerID, targetID string) error {
 	if followerID == targetID {
 		return models.ErrSelfFollow
 	}
 
-	// The query inserts only if a ban record does not exist between these two users.
+	// This single query performs the following:
+	// 1. Checks for an existing ban.
+	// 2. If no ban exists, attempts to insert the follow record.
+	// 3. If the record exists, 'ON CONFLICT' prevents an error (idempotency).
+	// 4. Returns 'banned' if the WHERE clause failed due to a ban, 'inserted' otherwise.
 	query := `
-		INSERT INTO follows (follower_id, followed_id)
-		SELECT ?, ?
-		WHERE NOT EXISTS (
-			SELECT 1 FROM bans 
-			WHERE (banner_id = ? AND banned_id = ?) 
-			   OR (banner_id = ? AND banned_id = ?)
-		)`
+		WITH check_ban AS (
+			SELECT EXISTS (
+				SELECT 1 FROM bans 
+				WHERE (banner_id = $1 AND banned_id = $2) 
+				   OR (banner_id = $2 AND banned_id = $1)
+			) AS is_banned
+		),
+		insertion AS (
+			INSERT INTO follows (follower_id, followed_id)
+			SELECT $1, $2
+			WHERE NOT (SELECT is_banned FROM check_ban)
+			ON CONFLICT (follower_id, followed_id) DO NOTHING
+			RETURNING 1
+		)
+		SELECT 
+			CASE 
+				WHEN (SELECT is_banned FROM check_ban) THEN 'banned'
+				ELSE 'ok'
+			END AS result`
 
-	result, err := db.c.Exec(query, followerID, targetID, followerID, targetID, targetID, followerID)
+	var result string
+	err := db.c.QueryRow(query, followerID, targetID).Scan(&result)
 	if err != nil {
-		return err // General DB error
+		return err // Real database error
 	}
 
-	rows, _ := result.RowsAffected()
-	if rows == 0 {
-		// If no rows were affected, it means the WHERE NOT EXISTS failed (a ban exists)
+	if result == "banned" {
+		// This will be mapped to 403 Forbidden in the handler
 		return models.ErrForbiddenAction
 	}
 
+	// If result is 'ok', it means either a new row was inserted
+	// or it already existed (idempotency).
 	return nil
 }
 
