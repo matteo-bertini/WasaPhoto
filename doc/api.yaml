@@ -154,7 +154,8 @@ components:
       type: object
       properties:
         commentId:
-          type: integer
+          type: string
+          example: "5drbgc8fbu74ncp6crihf4nvv"
         postId:
           type: string
         authorUsername:
@@ -177,28 +178,6 @@ components:
         maxLength: 30
         pattern: '^[a-zA-Z0-9_]{3,30}$'
         example: eyeager
-    target_username:
-      name: target_username
-      in: path
-      required: true
-      description: The user receiving the action
-      schema:
-        type: string
-        minLength: 3
-        maxLength: 30
-        pattern: '^[a-zA-Z0-9_]{3,30}$'
-        example: eyeager
-    actor_username:
-      name: actor_username
-      in: path
-      required: true
-      description: The user who performs the action
-      schema:
-        type: string
-        minLength: 3
-        maxLength: 30
-        pattern: '^[a-zA-Z0-9_]{3,30}$'
-        example: eyeager
     postId:
       name: postId
       in: path
@@ -206,14 +185,13 @@ components:
       description: The unique identifier of the post
       schema:
         type: string
-    
     commentId:
       name: commentId
       in: path
       required: true
       schema:
-        type: integer
-      description: The unique ID of the comment.
+        type: string 
+      description: The unique identifier of the comment.
     Limit:
       name: limit
       in: query
@@ -397,7 +375,7 @@ paths:
                 caption:
                   type: string
                   description: An optional description for the post.
-                  maxLength: 500
+                  maxLength: 2200
               required:
                 - file
       responses:
@@ -424,102 +402,44 @@ paths:
     get:
       tags:
         - Posts
-      operationId: getPhoto
-      summary: Gets the photo of the post with the specified Id
-      description: |
-        Retrieves the binary image file associated with a specific post.
-        Access is restricted if a ban relationship exists between the requester and the owner.
+      operationId: getPostPhoto
       security: []
+      summary: Retrieves the binary image of a post
       responses:
-        '200': 
+        '200':
           description: Photo retrieved successfully.
-         
           content:
             image/jpeg:
               schema:
                 type: string
                 format: binary
-                description: The binary image data
-          
-            
         '404':
-          description: |
-            Not Found:
-            - The user specified in the URL does not exist.
-            - The post (photo) specified in the URL does not exist on the server.
-  
-          
-    delete:
-      tags:
-        - photos
-      operationId: deletePhoto
-      summary: Deletes a photo from the user uploaded photos.
-      description: |
-        Deletes the photo with the specified id from the system.
-      responses:
-        '204':
-          description: |
-            No Content : Photo deleted successfully.
-        '400':
-          $ref: "#/components/responses/BadRequest"
-        '401':
-          description: |
-            Unauthorized : The id passed is not allowed to delete this photo.
-        '404':
-          description: | 
-            Not Found : Photo with specified Id not found.
-        '500':
-          $ref: "#/components/responses/InternalServerError"
-  /users/{username}/posts/{postId}/likes/{actor_username}:
-    parameters:
-       - $ref: "#/components/parameters/username"
-       - $ref: "#/components/parameters/postId"
-       - $ref: "#/components/parameters/actor_username"
-    put:
-      tags:
-        - Likes
-      summary: Add a like to a post
-      operationId: likePost
-      description: |
-        Creates a like relationship. This operation is idempotent.
-        It fails with 403 if a ban exists between the actor and the target.
-      responses:
-        '204':
-          description: Like added successfully.
-        '400':
-          $ref: "#/components/responses/BadRequest"
-        '401':
-          description: Unauthorized - Invalid or missing session token.
-        '403':
-          description: Forbidden - Action blocked by a ban relationship.
-        '404':
-          description: Post or user not found.
+          description: Photo not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
 
     delete:
       tags:
-        - Likes
-      summary: Remove a like from a post
-      operationId: unlikePost
-      description: |
-        Deletes an existing like. 
-        Returns 404 if the like does not exist.
+        - Posts
+      operationId: deletePost
+      summary: Deletes a post
       responses:
         '204':
-          description: Like removed successfully.
-        '400':
-          $ref: "#/components/responses/BadRequest"
+          description: Deleted.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - You are not the owner.
         '404':
-          description: Like not found or post not found.
+          description: Post not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
+          
 
   /users/{username}/posts/{postId}/likes:
     parameters:
-     - $ref: "#/components/parameters/username"
-     - $ref: "#/components/parameters/postId"
-     - $ref: "#/components/parameters/actor_username"
+      - $ref: "#/components/parameters/username"
+      - $ref: "#/components/parameters/postId"
     get:
       tags:
         - Likes
@@ -527,7 +447,7 @@ paths:
       operationId: getLikes
       description: |
         Returns a list of usernames who liked the post.
-        Access is forbidden if the requester is banned by the post owner.
+        Forbidden if a ban relationship exists between the requester and the post owner.
       responses:
         '200':
           description: A list of usernames.
@@ -536,28 +456,48 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
-                  example: "john_doe"
+                  $ref: "#/components/schemas/Username"
+                  
         '403':
-          description: Forbidden - You cannot view these likes due to a ban.
+          description: Forbidden - Access denied due to ban.
+        '404':
+          description: Post not found or username mismatch.
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      tags:
+        - Likes
+      summary: Add a like to a post
+      operationId: likePost
+      description: |
+        Creates a like relationship. Idempotent operation.
+        The actor identity is derived from the JWT.
+      responses:
+        '204':
+          description: Like added successfully.
+        '401':
+          description: Unauthorized - Invalid token.
+        '403':
+          description: Forbidden - Ban exists between actor and post owner.
         '404':
           description: Post not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+    delete:
+      tags:
+        - Likes
+      summary: Remove a like from a post
+      operationId: unlikePost
+      description: Deletes an existing like.
+      responses:
+        '204':
+          description: Like removed successfully (even if it didn't exist).
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Post not found.
+        '500':
+          $ref: "#/components/responses/InternalServerError"
   /users/{username}/followers:
     parameters:
       - $ref: "#/components/parameters/username"
@@ -644,7 +584,27 @@ paths:
     parameters:
       - $ref: "#/components/parameters/username"
       - $ref: "#/components/parameters/postId"
-    
+    get:
+      tags:
+        - Comments
+      summary: Get all comments of a post
+      operationId: getComments
+      description: Returns a list of comments. Access is blocked if a ban exists.
+      responses:
+        '200':
+          description: A list of comments.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+        '403':
+          description: Forbidden - Access blocked by a ban.
+        '404':
+          description: Post not found.
+        '500':
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Comments
@@ -672,28 +632,6 @@ paths:
           description: Forbidden - Action blocked by a ban relationship.
         '404':
           description: Post or user not found.
-        '500':
-          $ref: "#/components/responses/InternalServerError"
-
-    get:
-      tags:
-        - Comments
-      summary: Get all comments of a post
-      operationId: getComments
-      description: Returns a list of comments. Access is blocked if a ban exists.
-      responses:
-        '200':
-          description: A list of comments.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Comment"
-        '403':
-          description: Forbidden - Access blocked by a ban.
-        '404':
-          description: Post not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
 
