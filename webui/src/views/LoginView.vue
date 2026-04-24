@@ -2,6 +2,7 @@
 import ErrorMsg from '../components/ErrorMsg.vue';
 
 export default {
+   name: 'LoginView',
   components: {
     ErrorMsg
   },

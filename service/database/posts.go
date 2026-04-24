@@ -60,59 +60,58 @@ func (db *appdbimpl) DeletePost(postID string, requesterID string) error {
 // LikePost executes the entire validation and insertion logic in a single database round-trip.
 // It returns specific domain errors for bans or missing resources, while remaining idempotent.
 func (db *appdbimpl) LikePost(postID string, actorID string, targetUsername string) error {
-	// We use a CTE (Common Table Expression) to gather all necessary facts in one go.
-	query := `
-		WITH constants AS (
-			SELECT ? AS post_id, ? AS actor_id, ? AS target_username
-		),
-		post_info AS (
-			-- Verify if the post exists and belongs to the target username
-			SELECT p.author_id 
-			FROM posts p 
-			JOIN accounts a ON p.author_id = a.user_id
-			WHERE p.post_id = (SELECT post_id FROM constants) 
-			  AND a.username = (SELECT target_username FROM constants)
-		),
-		ban_check AS (
-			-- Check for bidirectional bans between actor and author
-			SELECT 1 FROM bans 
-			WHERE (banner_id = (SELECT actor_id FROM constants) AND banned_id = (SELECT author_id FROM post_info))
-			   OR (banner_id = (SELECT author_id FROM post_info) AND banned_id = (SELECT actor_id FROM constants))
-		),
-		insertion AS (
-			-- Try to insert if post exists and no ban is found
-			INSERT INTO likes (post_id, user_id)
-			SELECT post_id, actor_id FROM constants
-			WHERE EXISTS (SELECT 1 FROM post_info) 
-			  AND NOT EXISTS (SELECT 1 FROM ban_check)
-			ON CONFLICT DO NOTHING
-			RETURNING 1
-		)
-		-- Final report: tells the Go code exactly what happened
-		SELECT 
-			CASE 
-				WHEN NOT EXISTS (SELECT 1 FROM post_info) THEN 'not_found'
-				WHEN EXISTS (SELECT 1 FROM ban_check) THEN 'forbidden'
-				ELSE 'ok'
-			END AS status`
-
-	var status string
-	err := db.c.QueryRow(query, postID, actorID, targetUsername).Scan(&status)
+	// Start the transaction
+	tx, err := db.c.Begin()
 	if err != nil {
-		return err // Real DB error (e.g. connection lost)
+		return err
 	}
 
-	// Simple switch to map the DB status to your models/errors
-	switch status {
-	case "not_found":
-		return models.ErrResourceNotFound
-	case "forbidden":
-		return models.ErrForbiddenAction
-	case "ok":
-		return nil // Success or already liked (idempotent)
-	default:
-		return nil
+	// Ensure rollback if we return early due to an error
+	defer tx.Rollback()
+
+	// 1. Get the AuthorID of the post and verify existence/ownership
+	var authorID string
+	queryPost := `
+		SELECT p.author_id 
+		FROM posts p 
+		JOIN accounts a ON p.author_id = a.user_id
+		WHERE p.post_id = ? AND a.username = ?`
+
+	err = tx.QueryRow(queryPost, postID, targetUsername).Scan(&authorID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// Post doesn't exist or doesn't belong to targetUsername
+			return models.ErrResourceNotFound
+		}
+		return err
 	}
+
+	// 2. Check for bidirectional bans between actor and author
+	var banExists int
+	queryBan := `
+		SELECT 1 FROM bans 
+		WHERE (banner_id = ? AND banned_id = ?) 
+		   OR (banner_id = ? AND banned_id = ?) 
+		LIMIT 1`
+
+	err = tx.QueryRow(queryBan, actorID, authorID, authorID, actorID).Scan(&banExists)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if banExists == 1 {
+		// A ban relationship exists
+		return models.ErrForbiddenAction
+	}
+
+	// 3. Insert the like (Idempotent: ON CONFLICT DO NOTHING)
+	queryLike := `INSERT INTO likes (post_id, user_id) VALUES (?, ?) ON CONFLICT DO NOTHING`
+	_, err = tx.Exec(queryLike, postID, actorID)
+	if err != nil {
+		return err
+	}
+
+	// 4. Commit the transaction
+	return tx.Commit()
 }
 
 // UnlikePost removes a like record. It is idempotent: if the like

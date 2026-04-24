@@ -5,51 +5,56 @@ import (
 )
 
 // FollowUser creates a follow relationship if no bans exist and it's not a self-follow.
-// It ensures idempotency and enforces ban restrictions in a single atomic database trip.
+// It ensures idempotency and enforces ban restrictions in a single atomic database trip using a transaction.
 func (db *appdbimpl) FollowUser(followerID, targetID string) error {
 	if followerID == targetID {
 		return models.ErrSelfFollow
 	}
 
-	// This single query performs the following:
-	// 1. Checks for an existing ban.
-	// 2. If no ban exists, attempts to insert the follow record.
-	// 3. If the record exists, 'ON CONFLICT' prevents an error (idempotency).
-	// 4. Returns 'banned' if the WHERE clause failed due to a ban, 'inserted' otherwise.
-	query := `
-		WITH check_ban AS (
-			SELECT EXISTS (
-				SELECT 1 FROM bans 
-				WHERE (banner_id = $1 AND banned_id = $2) 
-				   OR (banner_id = $2 AND banned_id = $1)
-			) AS is_banned
-		),
-		insertion AS (
-			INSERT INTO follows (follower_id, followed_id)
-			SELECT $1, $2
-			WHERE NOT (SELECT is_banned FROM check_ban)
-			ON CONFLICT (follower_id, followed_id) DO NOTHING
-			RETURNING 1
-		)
-		SELECT 
-			CASE 
-				WHEN (SELECT is_banned FROM check_ban) THEN 'banned'
-				ELSE 'ok'
-			END AS result`
-
-	var result string
-	err := db.c.QueryRow(query, followerID, targetID).Scan(&result)
+	// We start a transaction to ensure atomicity on SQLite
+	tx, err := db.c.Begin()
 	if err != nil {
-		return err // Real database error
+		return err
+	}
+	// Defer rollback in case of error; it's a no-op if tx.Commit() is called
+	defer tx.Rollback()
+
+	// 1. Check for an existing ban in both directions
+	var isBanned bool
+	checkBanQuery := `
+		SELECT EXISTS (
+			SELECT 1 FROM bans 
+			WHERE (banner_id = ? AND banned_id = ?) 
+			   OR (banner_id = ? AND banned_id = ?)
+		)`
+
+	err = tx.QueryRow(checkBanQuery, followerID, targetID, targetID, followerID).Scan(&isBanned)
+	if err != nil {
+		return err
 	}
 
-	if result == "banned" {
+	if isBanned {
 		// This will be mapped to 403 Forbidden in the handler
 		return models.ErrForbiddenAction
 	}
 
-	// If result is 'ok', it means either a new row was inserted
-	// or it already existed (idempotency).
+	// 2. Attempt to insert the follow record.
+	// ON CONFLICT prevents errors if the relationship already exists (idempotency).
+	insertQuery := `
+		INSERT INTO follows (follower_id, followed_id)
+		VALUES (?, ?)
+		ON CONFLICT (follower_id, followed_id) DO NOTHING`
+
+	_, err = tx.Exec(insertQuery, followerID, targetID)
+	if err != nil {
+		return err
+	}
+
+	// 3. Commit the transaction to finalize changes
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
