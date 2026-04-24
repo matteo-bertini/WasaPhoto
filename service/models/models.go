@@ -40,7 +40,7 @@ type Post struct {
 	IsLikedByMe    bool      `json:"isLikedByMe"`
 }
 type Comment struct {
-	CommentID      int       `json:"commentId"`
+	CommentID      int64     `json:"commentId,string"`
 	PostID         string    `json:"postId"`
 	AuthorID       string    `json:"authorId"`
 	AuthorUsername string    `json:"authorUsername"`

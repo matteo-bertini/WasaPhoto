@@ -35,6 +35,7 @@ type AppDatabase interface {
 	CheckBanStatus(requesterID string, targetUsername string) (bool, error)
 	// posts
 	UploadPost(post models.Post) error
+	DeletePost(postID string, requesterID string) error
 	LikePost(postID string, actorID string, targetUsername string) error
 	UnlikePost(postID string, actorID string) error
 	GetLikes(postID string, requestingUserID string) ([]string, error)
@@ -130,7 +131,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	commentsTable := `
     CREATE TABLE IF NOT EXISTS comments (
         comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        post_id    INTEGER NOT NULL,
+        post_id    TEXT NOT NULL,
         author_id  TEXT NOT NULL,
         content    TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

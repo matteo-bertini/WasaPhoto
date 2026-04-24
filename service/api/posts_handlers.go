@@ -176,6 +176,40 @@ func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps ht
 	http.ServeFile(w, r, filePath)
 }
 
+func (rt *_router) DeletePostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	postID := ps.ByName("postId")
+	loggedUserID := ctx.UserID
+
+	// 1. Database deletion (checks ownership internally)
+	err := rt.db.DeletePost(postID, loggedUserID)
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbiddenAction) {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		ctx.Logger.WithError(err).Error("DeletePostHandler: db error")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Physical File Cleanup
+	// Path: UploadDir / loggedUserID / postID.jpg
+	filePath := filepath.Join(UploadDir, loggedUserID, postID+".jpg")
+
+	if err := os.Remove(filePath); err != nil {
+		// We don't return 500 here because the DB record is already gone.
+		// We just log it as a warning for future manual cleanup.
+		ctx.Logger.WithError(err).WithField("path", filePath).Warn("DeletePostHandler: could not delete file from disk")
+	}
+
+	// 3. Success
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // LikePostHandler: PUT /users/{username}/posts/{postId}/likes
 func (rt *_router) LikePostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
@@ -214,65 +248,110 @@ func (rt *_router) UnlikePostHandler(w http.ResponseWriter, r *http.Request, ps 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GetLikesHandler: GET /users/{username}/posts/{postId}/likes
+// GetLikesHandler retrieves the list of usernames who liked a specific post.
 func (rt *_router) GetLikesHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
 
 	likes, err := rt.db.GetLikes(postID, ctx.UserID)
-	if errors.Is(err, models.ErrForbiddenAction) {
-		ctx.Logger.Warn("GetLikesHandler: access forbidden by ban")
-		w.WriteHeader(http.StatusForbidden)
-	} else if err != nil {
-		ctx.Logger.WithError(err).Error("GetLikesHandler: database error")
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			ctx.Logger.WithField("postID", postID).Warn("GetLikesHandler: resource not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbiddenAction) {
+			ctx.Logger.WithFields(logrus.Fields{
+				"postID": postID,
+				"userID": ctx.UserID,
+			}).Warn("GetLikesHandler: access forbidden by ban")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		ctx.Logger.WithError(err).Error("GetLikesHandler: unexpected database error")
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(likes)
+		return
+	}
+
+	// if likes is nil (no likes), return an empty slice [] instead of null
+	if likes == nil {
+		likes = []string{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(likes)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("GetLikesHandler: failed to encode response")
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
-// AddCommentHandler: POST /users/:username/posts/:postId/comments
+// AddCommentHandler handles POST /users/:username/posts/:postId/comments
 func (rt *_router) AddCommentHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
 
 	var body struct {
 		Content string `json:"content"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Content) == "" {
+
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Basic validation for empty comments
+	if strings.TrimSpace(body.Content) == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	comment, err := rt.db.AddComment(postID, ctx.UserID, body.Content)
-	if errors.Is(err, models.ErrForbiddenAction) {
-		w.WriteHeader(http.StatusForbidden)
-	} else if err != nil {
-		ctx.Logger.WithError(err).Error("AddCommentHandler: db error")
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			ctx.Logger.WithField("postID", postID).Warn("AddCommentHandler: post not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbiddenAction) {
+			ctx.Logger.Warn("AddCommentHandler: forbidden by ban")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+		ctx.Logger.WithError(err).Error("AddCommentHandler: failed to add comment")
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		_ = json.NewEncoder(w).Encode(comment)
+		return
 	}
-}
 
-// GetCommentsHandler: GET /users/:username/posts/:postId/comments
+	// Success: return the full Comment object (201 Created)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(comment)
+}
 func (rt *_router) GetCommentsHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	postID := ps.ByName("postId")
 
 	comments, err := rt.db.GetComments(postID, ctx.UserID)
-	if errors.Is(err, models.ErrForbiddenAction) {
-		w.WriteHeader(http.StatusForbidden)
-	} else if err != nil {
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			ctx.Logger.WithField("postID", postID).Warn("GetCommentsHandler: resource not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbiddenAction) {
+			ctx.Logger.Warn("GetCommentsHandler: forbidden by ban")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 		ctx.Logger.WithError(err).Error("GetCommentsHandler: db error")
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(comments)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(comments)
 }
 
-// DeleteCommentHandler: DELETE /users/:username/posts/:postId/comments/:commentId
+// DeleteCommentHandler handles DELETE /users/:username/posts/:postId/comments/:commentId
 func (rt *_router) DeleteCommentHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	commentID, err := strconv.Atoi(ps.ByName("commentId"))
 	if err != nil {
@@ -281,12 +360,25 @@ func (rt *_router) DeleteCommentHandler(w http.ResponseWriter, r *http.Request, 
 	}
 
 	err = rt.db.DeleteComment(commentID, ctx.UserID)
-	if errors.Is(err, models.ErrResourceNotFound) {
-		w.WriteHeader(http.StatusNotFound)
-	} else if err != nil {
+	if err != nil {
+		if errors.Is(err, models.ErrResourceNotFound) {
+			ctx.Logger.WithField("commentId", commentID).Warn("DeleteCommentHandler: comment not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, models.ErrForbiddenAction) {
+			ctx.Logger.WithFields(logrus.Fields{
+				"commentId": commentID,
+				"userId":    ctx.UserID,
+			}).Warn("DeleteCommentHandler: unauthorized deletion attempt")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
 		ctx.Logger.WithError(err).Error("DeleteCommentHandler: db error")
 		w.WriteHeader(http.StatusInternalServerError)
-	} else {
-		w.WriteHeader(http.StatusNoContent)
+		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
