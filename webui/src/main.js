@@ -18,6 +18,7 @@ app.config.globalProperties.$axios = axios;
 app.component("ErrorMsg", ErrorMsg);
 app.component("LoadingSpinner", LoadingSpinner);
 app.component("PostCard",PostCard);
+app.component("Comment",Comment);
 
 
 app.use(router)

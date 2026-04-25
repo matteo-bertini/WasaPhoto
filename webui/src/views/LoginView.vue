@@ -110,7 +110,8 @@ export default {
         
         <h2 class="card-title">{{ IsSignup ? 'Registrazione' : 'Login' }}</h2>
         
-        <ErrorMsg :msg="errorMessage" />
+            <ErrorMsg v-if="errorMessage" :message="errorMessage" @close="errorMessage = ''" />
+
 
         <form @submit.prevent="handleAuth">
           

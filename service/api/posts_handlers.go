@@ -140,9 +140,9 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	_ = json.NewEncoder(w).Encode(newPost)
 }
 
-// GetPhoto retrieves the photo file if the requester is not banned.
 // GetPhotoHandler retrieves the image from the user-specific directory using the username in the path.
 func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+
 	// 1. Extract parameters from the path
 	pathUsername := ps.ByName("username")
 	postID := ps.ByName("postId")
