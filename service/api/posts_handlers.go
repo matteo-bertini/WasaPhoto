@@ -70,6 +70,12 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 
 	caption := r.FormValue("caption")
 
+	if len(caption) > 2200 {
+		ctx.Logger.Error("UploadPostHandler: caption exceeds 2200 characters")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	// 6. Generate a KSUID for the post ID
 	id, err := ksuid.NewRandom()
 	if err != nil {

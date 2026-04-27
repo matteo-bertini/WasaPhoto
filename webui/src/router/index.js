@@ -10,6 +10,7 @@ const router = createRouter({
 		{path: '/',redirect: '/login'},
 		{path: '/login', component: LoginView},
 		{path: "/users/:username",component: ProfileView},
+		{path: "/settings",component: SettingsPage},
 		{path: "/:catchAll(.*)",component: LoginView}
 
 	]
