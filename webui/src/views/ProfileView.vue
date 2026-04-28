@@ -1,5 +1,5 @@
 <script>
-// 1. Import the PostCard component
+
 import ErrorMsg from '../components/ErrorMsg.vue';
 import PostCard from '../components/PostCard.vue';
 

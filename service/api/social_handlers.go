@@ -3,11 +3,85 @@ package api
 import (
 	"WasaPhoto/service/api/reqcontext"
 	"WasaPhoto/service/models"
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 )
+
+func (rt *_router) GetFollowingListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	targetUsername := ps.ByName("username")
+
+	// 1. Resolve target ID
+	targetID, err := rt.db.GetIDByUsername(targetUsername)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			ctx.Logger.WithError(err).Error("GetFollowingListHandler: target user not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		ctx.Logger.WithError(err).Error("GetFollowingListHandler: failed to resolve target ID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Database Action: Pass both target and requester IDs
+	followingList, isBanned, err := rt.db.GetFollowing(targetID, ctx.UserID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("GetFollowingListHandler: database error")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Check for Ban
+	if isBanned {
+		ctx.Logger.Warn("GetFollowingListHandler: access forbidden due to ban")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// 4. Successful response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(followingList)
+}
+func (rt *_router) GetFollowersListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	targetUsername := ps.ByName("username")
+
+	// 1. Resolve target ID
+	targetID, err := rt.db.GetIDByUsername(targetUsername)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			ctx.Logger.WithError(err).Error("GetFollowersListHandler: target user not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		ctx.Logger.WithError(err).Error("GetFollowersListHandler: failed to resolve target ID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Database Action: Pass both target and requester IDs
+	followersList, isBanned, err := rt.db.GetFollowers(targetID, ctx.UserID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("GetFollowersListHandler: database error")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Check for Ban
+	if isBanned {
+		ctx.Logger.Warn("GetFollowersListHandler: access forbidden due to ban")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// 4. Successful response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(followersList)
+}
 
 // FollowUserHandler handles the PUT request to follow a user
 func (rt *_router) FollowUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
@@ -82,6 +156,42 @@ func (rt *_router) UnfollowUserHandler(w http.ResponseWriter, r *http.Request, p
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (rt *_router) GetBanListHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
+	targetUsername := ps.ByName("username")
+
+	// 1. Resolve target ID
+	targetID, err := rt.db.GetIDByUsername(targetUsername)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			ctx.Logger.WithError(err).Error("GetBanListHandler: failed to resolve target ID")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		ctx.Logger.WithError(err).Error("GetBanListHandler: failed to resolve target ID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if ctx.UserID != targetID {
+		ctx.Logger.Error("GetBanListHandler: forbidden access attempt to ban list")
+		w.WriteHeader(http.StatusForbidden)
+		return
+
+	}
+
+	// 2. Database Action
+	bannedList, err := rt.db.GetBannedUsers(ctx.UserID)
+	if err != nil {
+		ctx.Logger.WithError(err).Error("Failed to retrieve ban list from database")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Successful response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(bannedList)
 }
 
 // BanUserHandler handles the PUT request to ban a user

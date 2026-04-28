@@ -17,8 +17,11 @@ func (rt *_router) Handler() http.Handler {
 	rt.router.PUT("/users/:username", rt.wrap(rt.AuthMiddleware(rt.UpdateUsernameHandler)))
 
 	// Social relationships management
+	rt.router.GET("/users/:username/followers", rt.wrap(rt.AuthMiddleware(rt.GetFollowersListHandler)))
+	rt.router.GET("/users/:username/following", rt.wrap(rt.AuthMiddleware(rt.GetFollowingListHandler)))
 	rt.router.PUT("/users/:username/followers", rt.wrap(rt.AuthMiddleware(rt.FollowUserHandler)))
 	rt.router.DELETE("/users/:username/followers", rt.wrap(rt.AuthMiddleware(rt.UnfollowUserHandler)))
+	rt.router.GET("/users/:username/ban", rt.wrap(rt.AuthMiddleware(rt.GetBanListHandler)))
 	rt.router.PUT("/users/:username/ban", rt.wrap(rt.AuthMiddleware(rt.BanUserHandler)))
 	rt.router.DELETE("/users/:username/ban", rt.wrap(rt.AuthMiddleware(rt.UnbanUserHandler)))
 

@@ -498,9 +498,58 @@ paths:
           description: Unauthorized.
         '500':
           $ref: "#/components/responses/InternalServerError"
+  /users/{username}/following:
+    parameters:
+      - $ref: "#/components/parameters/username"
+    get:
+      tags: 
+        - Social
+      summary: Get the list of following
+      description: eturns an array of usernames that the specified user is currently  following. 
+        Only the resource owner can access this list.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Username'
+        '401':
+          description: Unauthorized - Token missing or invalid
+        '403':
+          description: Forbidden 
+        '404':
+          description: Not Found - The specified user does not exist
+        '500':
+          description: Internal Server Error - Something went wrong on the server
   /users/{username}/followers:
     parameters:
       - $ref: "#/components/parameters/username"
+    get:
+      tags: 
+        - Social
+      summary: Get the list of followers
+      description: Returns an array of usernames following the specified user. 
+        Only the resource owner can access this list.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Username'
+        '401':
+          description: Unauthorized - Token missing or invalid
+        '403':
+          description: Forbidden 
+        '404':
+          description: Not Found - The specified user does not exist
+        '500':
+          description: Internal Server Error - Something went wrong on the server
     put:
       tags:
         - Social
@@ -541,6 +590,28 @@ paths:
   /users/{username}/ban:
     parameters:
       - $ref: "#/components/parameters/username"
+    get:
+      tags: 
+        - Social
+      summary: Get the list of banned users
+      description: Returns an array of usernames that the specified user has banned. Only the resource owner can access this list.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Username'
+        '401':
+          description: Unauthorized - Token missing or invalid
+        '403':
+          description: Forbidden - You cannot view another user's ban list
+        '404':
+          description: Not Found - The specified user does not exist
+        '500':
+          description: Internal Server Error - Something went wrong on the server
     put:
       tags:
         - Social

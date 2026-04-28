@@ -1,7 +1,7 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import ProfileView from "../views/ProfileView.vue"
-import SettingsPage from "../views/SettingsPage.vue"
+import SettingsView from "../views/SettingsView.vue"
 
 
 const router = createRouter({
@@ -10,7 +10,7 @@ const router = createRouter({
 		{path: '/',redirect: '/login'},
 		{path: '/login', component: LoginView},
 		{path: "/users/:username",component: ProfileView},
-		{path: "/settings",component: SettingsPage},
+		{path: "/settings",component: SettingsView},
 		{path: "/:catchAll(.*)",component: LoginView}
 
 	]

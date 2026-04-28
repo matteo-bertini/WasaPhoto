@@ -4,6 +4,113 @@ import (
 	"WasaPhoto/service/models"
 )
 
+// GetFollowing retrieves the list of usernames followed by a specific user ID, checking for mutual bans
+func (db *appdbimpl) GetFollowing(targetId string, requesterId string) ([]string, bool, error) {
+	var following []string
+	query := `
+		SELECT a.username 
+		FROM follows f
+		JOIN accounts a ON f.followed_id = a.user_id
+		WHERE f.follower_id = ? 
+		AND NOT EXISTS (
+			SELECT 1 FROM bans 
+			WHERE (banner_id = ? AND banned_id = ?) 
+			   OR (banner_id = ? AND banned_id = ?)
+		)`
+
+	rows, err := db.c.Query(query, targetId, requesterId, targetId, targetId, requesterId)
+	if err != nil {
+		return nil, false, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, false, err
+		}
+		following = append(following, username)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, false, err
+	}
+
+	// Check if empty list is due to a ban or simply 0 following
+	if len(following) == 0 {
+		var banExists int
+		banCheckQuery := `SELECT COUNT(*) FROM bans WHERE (banner_id = ? AND banned_id = ?) OR (banner_id = ? AND banned_id = ?)`
+		err = db.c.QueryRow(banCheckQuery, requesterId, targetId, targetId, requesterId).Scan(&banExists)
+		if err != nil {
+			return nil, false, err
+		}
+		if banExists > 0 {
+			return nil, true, nil // Access denied
+		}
+	}
+
+	// Always return an empty slice instead of nil for JSON consistency
+	if following == nil {
+		following = []string{}
+	}
+
+	return following, false, nil
+}
+
+// GetFollowers checks if a ban exists between requester and target, then returns the followers list
+func (db *appdbimpl) GetFollowers(targetId string, requesterId string) ([]string, bool, error) {
+	query := `
+		SELECT a.username 
+		FROM follows f
+		JOIN accounts a ON f.follower_id = a.user_id
+		WHERE f.followed_id = ? 
+		AND NOT EXISTS (
+			SELECT 1 FROM bans
+			WHERE (banner_id = ? AND banned_id = ?) 
+			   OR (banner_id = ? AND banned_id = ?)
+		)`
+
+	rows, err := db.c.Query(query, targetId, requesterId, targetId, targetId, requesterId)
+	if err != nil {
+		return nil, false, err
+	}
+	defer rows.Close()
+
+	var followers []string
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, false, err
+		}
+		followers = append(followers, username)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, false, err
+	}
+
+	// Double check for ban: if list is empty, we verify if it's because of a ban
+	// or just a user with 0 followers.
+	if len(followers) == 0 {
+		var banExists int
+		banCheckQuery := `SELECT COUNT(*) FROM bans WHERE (banner_id = ? AND banned_id = ?) OR (banner_id = ? AND banned_id = ?)`
+		err = db.c.QueryRow(banCheckQuery, requesterId, targetId, targetId, requesterId).Scan(&banExists)
+		if err != nil {
+			return nil, false, err
+		}
+		if banExists > 0 {
+			return nil, true, nil // Access denied due to ban
+		}
+	}
+
+	// Ensure we return [] instead of null
+	if followers == nil {
+		followers = []string{}
+	}
+
+	return followers, false, nil
+}
+
 // FollowUser creates a follow relationship if no bans exist and it's not a self-follow.
 // It ensures idempotency and enforces ban restrictions in a single atomic database trip using a transaction.
 func (db *appdbimpl) FollowUser(followerID, targetID string) error {
@@ -63,6 +170,37 @@ func (db *appdbimpl) UnfollowUser(followerID, targetID string) error {
 	query := `DELETE FROM follows WHERE follower_id = ? AND followed_id = ?`
 	_, err := db.c.Exec(query, followerID, targetID)
 	return err
+}
+
+// GetBannedUsers retrieves the list of usernames banned by a specific user ID
+func (db *appdbimpl) GetBannedUsers(bannerId string) ([]string, error) {
+	var bannedUsers []string
+
+	query := `
+		SELECT a.username 
+		FROM bans b
+		JOIN accounts a ON b.banned_id = a.user_id
+		WHERE b.banner_id = ?`
+
+	rows, err := db.c.Query(query, bannerId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var bannedName string
+		if err := rows.Scan(&bannedName); err != nil {
+			return nil, err
+		}
+		bannedUsers = append(bannedUsers, bannedName)
+	}
+
+	if bannedUsers == nil {
+		bannedUsers = []string{}
+	}
+
+	return bannedUsers, nil
 }
 
 // BanUser creates a ban and removes any existing follows between the two users
