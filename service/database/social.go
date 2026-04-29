@@ -5,8 +5,7 @@ import (
 )
 
 // GetFollowing retrieves the list of usernames followed by a specific user ID, checking for mutual bans
-func (db *appdbimpl) GetFollowing(targetId string, requesterId string) ([]string, bool, error) {
-	var following []string
+func (db *appdbimpl) GetFollowing(targetId string, requesterId string) ([]models.UserResponse, bool, error) {
 	query := `
 		SELECT a.username 
 		FROM follows f
@@ -23,13 +22,14 @@ func (db *appdbimpl) GetFollowing(targetId string, requesterId string) ([]string
 		return nil, false, err
 	}
 	defer rows.Close()
+	following := []models.UserResponse{}
 
 	for rows.Next() {
 		var username string
 		if err := rows.Scan(&username); err != nil {
 			return nil, false, err
 		}
-		following = append(following, username)
+		following = append(following, models.UserResponse{Username: username})
 	}
 
 	if err = rows.Err(); err != nil {
@@ -50,15 +50,12 @@ func (db *appdbimpl) GetFollowing(targetId string, requesterId string) ([]string
 	}
 
 	// Always return an empty slice instead of nil for JSON consistency
-	if following == nil {
-		following = []string{}
-	}
 
 	return following, false, nil
 }
 
 // GetFollowers checks if a ban exists between requester and target, then returns the followers list
-func (db *appdbimpl) GetFollowers(targetId string, requesterId string) ([]string, bool, error) {
+func (db *appdbimpl) GetFollowers(targetId string, requesterId string) ([]models.UserResponse, bool, error) {
 	query := `
 		SELECT a.username 
 		FROM follows f
@@ -76,13 +73,16 @@ func (db *appdbimpl) GetFollowers(targetId string, requesterId string) ([]string
 	}
 	defer rows.Close()
 
-	var followers []string
+	followers := []models.UserResponse{}
+	var follower models.UserResponse
+
 	for rows.Next() {
 		var username string
 		if err := rows.Scan(&username); err != nil {
 			return nil, false, err
 		}
-		followers = append(followers, username)
+		follower.Username = username
+		followers = append(followers, follower)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -101,11 +101,6 @@ func (db *appdbimpl) GetFollowers(targetId string, requesterId string) ([]string
 		if banExists > 0 {
 			return nil, true, nil // Access denied due to ban
 		}
-	}
-
-	// Ensure we return [] instead of null
-	if followers == nil {
-		followers = []string{}
 	}
 
 	return followers, false, nil
@@ -173,8 +168,9 @@ func (db *appdbimpl) UnfollowUser(followerID, targetID string) error {
 }
 
 // GetBannedUsers retrieves the list of usernames banned by a specific user ID
-func (db *appdbimpl) GetBannedUsers(bannerId string) ([]string, error) {
-	var bannedUsers []string
+func (db *appdbimpl) GetBannedUsers(bannerId string) ([]models.UserResponse, error) {
+	var bannedUsers []models.UserResponse
+	bannedUsers = []models.UserResponse{}
 
 	query := `
 		SELECT a.username 
@@ -188,16 +184,14 @@ func (db *appdbimpl) GetBannedUsers(bannerId string) ([]string, error) {
 	}
 	defer rows.Close()
 
+	var u models.UserResponse
 	for rows.Next() {
 		var bannedName string
 		if err := rows.Scan(&bannedName); err != nil {
 			return nil, err
 		}
-		bannedUsers = append(bannedUsers, bannedName)
-	}
-
-	if bannedUsers == nil {
-		bannedUsers = []string{}
+		u.Username = bannedName
+		bannedUsers = append(bannedUsers, u)
 	}
 
 	return bannedUsers, nil

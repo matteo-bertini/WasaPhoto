@@ -595,6 +595,7 @@ paths:
         - Social
       summary: Get the list of banned users
       description: Returns an array of usernames that the specified user has banned. Only the resource owner can access this list.
+      operationId: getBannedUsers
       responses:
         '200':
           description: Successful operation

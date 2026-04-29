@@ -28,7 +28,7 @@ func (rt *_router) Handler() http.Handler {
 	// Image uploading and posts management
 	rt.router.POST("/users/:username/posts", rt.wrap(rt.AuthMiddleware(rt.UploadPostHandler)))
 	rt.router.GET("/users/:username/posts/:postId", rt.wrap(rt.GetPhotoHandler))
-	rt.router.DELETE("/users/:username/posts/:postId", rt.wrap(rt.DeletePostHandler))
+	rt.router.DELETE("/users/:username/posts/:postId", rt.wrap(rt.AuthMiddleware(rt.DeletePostHandler)))
 	rt.router.PUT("/users/:username/posts/:postId/likes", rt.wrap(rt.AuthMiddleware(rt.LikePostHandler)))
 	rt.router.DELETE("/users/:username/posts/:postId/likes", rt.wrap(rt.AuthMiddleware(rt.UnlikePostHandler)))
 	rt.router.GET("/users/:username/posts/:postId/likes", rt.wrap(rt.AuthMiddleware(rt.GetLikesHandler)))

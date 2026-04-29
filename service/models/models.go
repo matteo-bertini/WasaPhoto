@@ -16,6 +16,9 @@ type DoLoginRequestBody struct {
 type DoLoginResponseBody struct {
 	SessionToken string `json:"sessionToken"`
 }
+type UserResponse struct {
+	Username string `json:"username"`
+}
 
 // UserProfile represents the full profile data returned to the frontend
 type UserProfile struct {

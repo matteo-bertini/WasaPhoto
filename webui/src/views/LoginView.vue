@@ -131,7 +131,7 @@ export default {
           <div class="input-group">
             <div class="password-wrapper">
               <input 
-              :type="passwordVisible ? 'password' : 'text'"
+              :type="passwordVisible ? 'text' : 'password'"
               v-model="Password" 
               maxlength="72"
               placeholder="Password" 
@@ -139,7 +139,7 @@ export default {
               class="glass-input"
               />
               <span class="password-toggle" @click="passwordVisible = !passwordVisible">
-                <i :class="passwordVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                <i :class="passwordVisible ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
               </span>
             </div>
           </div>

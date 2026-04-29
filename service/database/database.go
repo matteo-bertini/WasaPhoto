@@ -28,13 +28,13 @@ type AppDatabase interface {
 	UpdateUsername(userID string, newUsername string) error
 
 	// social
-	GetFollowing(targetId string, requesterId string) ([]string, bool, error)
-	GetFollowers(targetId string, requesterId string) ([]string, bool, error)
+	GetFollowing(targetId string, requesterId string) ([]models.UserResponse, bool, error)
+	GetFollowers(targetId string, requesterId string) ([]models.UserResponse, bool, error)
 	FollowUser(followerID, targetID string) error
 	UnfollowUser(followerID, targetID string) error
 	BanUser(bannerID string, bannedID string) error
 	UnbanUser(bannerID string, bannedID string) error
-	GetBannedUsers(username string) ([]string, error)
+	GetBannedUsers(username string) ([]models.UserResponse, error)
 	CheckBanStatus(requesterID string, targetUsername string) (bool, error)
 	// posts
 	UploadPost(post models.Post) error

@@ -49,6 +49,68 @@ export default {
                 }
             }
         },
+        async getBannedUsers(){
+            this.loading = true;
+            try {
+                const targetUsername = localStorage.getItem("Username");
+                const token = localStorage.getItem("SessionToken");
+                const response = await this.$axios.get(`/users/${targetUsername}/ban`, {headers: { Authorization: `Bearer ${token}` }});
+                this.bannedUsers=response.data.map(element => element.username);
+                this.loading = false;
+            }
+            catch (e) {
+                this.loading = false;
+                if (e.response) {
+                    switch (e.response.status) {
+                        case 401:
+                            localStorage.clear();
+                            this.$router.push("/login");
+                            break;
+                        case 403:
+                            this.errorMessage = "Azione non consentita.";
+                            break;
+                        case 404:
+                            this.errorMessage = "Risorsa non trovata.";
+                            break;
+                        default:
+                            this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";
+                        }
+                } else {
+                    // Handling network or connectivity issues
+                    this.errorMessage = "Impossibile connettersi al server. Controlla la tua connessione.";
+                }
+            }
+            
+
+        },
+        async unbanUser(bannedUser) {
+            this.loading = true;
+            const token = localStorage.getItem("SessionToken");
+            try {
+                await this.$axios.delete("/users/"+bannedUser+"/ban", {headers: { Authorization: `Bearer ${token}` }});
+                this.bannedUsers = this.bannedUsers.filter(user => user !== bannedUser);
+                this.loading=false;
+            } 
+            catch (e) {
+                this.loading = false;
+                if (e.response) {
+                switch (e.response.status) {
+                    case 401:
+                        localStorage.clear();
+                        this.$router.push("/login");
+                        break;
+                    case 404:
+                        this.errorMessage = "Risorsa non trovata."
+                    default:
+                        this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";
+                
+                    }
+                } else {
+                    // Handling network or connectivity issues
+                    this.errorMessage = "Impossibile connettersi al server. Controlla la tua connessione.";
+                }
+            }
+        },
         async updateUsername(){
             this.loading = true;
             const token = localStorage.getItem("SessionToken");
@@ -190,7 +252,7 @@ export default {
                             <h3>Gestione ban</h3>
                             <p class="helper-text">Visualizza e sblocca gli utenti che hai bannato.</p>
                         </div>
-                        <button class="btn-utility" data-bs-toggle="modal" data-bs-target="#BannedUsersModal">
+                        <button @click ="getBannedUsers()" class="btn-utility" data-bs-toggle="modal" data-bs-target="#BannedUsersModal">
                             Gestisci
                         </button>
                     </div>
@@ -227,10 +289,10 @@ export default {
                             Non ci sono utenti bannati.
                         </div>
 
-                        <div v-for="BannedUser in bannedUsers" :key="BannedUser" class="banned-item">
-                            <span class="user-tag">@{{BannedUser}}</span>
+                        <div v-for="bannedUser in bannedUsers" :key="bannedUser" class="banned-item">
+                            <span class="user-tag">{{bannedUser}}</span>
                             
-                            <button class="unban-btn" title="Sblocca" @click="UnbanButtonPressed(BannedUser)">
+                            <button class="unban-btn" title="Sblocca" @click="unbanUser(bannedUser)">
                                 <i class="fa-regular fa-trash-can"></i>
                             </button>
                         
