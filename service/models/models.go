@@ -42,6 +42,19 @@ type Post struct {
 	DateOfUpload   time.Time `json:"dateOfUpload"`
 	IsLikedByMe    bool      `json:"isLikedByMe"`
 }
+
+// Post represents a single post entry
+type StreamPost struct {
+	PostId         string    `json:"postId"`
+	Username       string    `json:"username"`
+	Caption        string    `json:"caption"`
+	LikesNumber    int       `json:"likesNumber"`
+	CommentsNumber int       `json:"commentsNumber"`
+	DateOfUpload   time.Time `json:"dateOfUpload"`
+	IsLikedByMe    bool      `json:"isLikedByMe"`
+	IsSuggested    bool      `json:"isSuggested"`
+}
+
 type Comment struct {
 	CommentID      int64     `json:"commentId,string"`
 	PostID         string    `json:"postId"`

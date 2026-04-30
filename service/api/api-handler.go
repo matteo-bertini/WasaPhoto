@@ -40,6 +40,9 @@ func (rt *_router) Handler() http.Handler {
 	// Recupera la lista dei commenti: GET /users/:username/posts/:postId/comments
 	rt.router.GET("/users/:username/posts/:postId/comments", rt.wrap(rt.AuthMiddleware(rt.GetCommentsHandler)))
 
+	// stream
+	rt.router.GET("/stream", rt.wrap(rt.AuthMiddleware(rt.GetStreamHandler)))
+
 	// Elimina un commento specifico: DELETE /users/:username/posts/:postId/comments/:commentId
 	rt.router.DELETE("/users/:username/posts/:postId/comments/:commentId", rt.wrap(rt.AuthMiddleware(rt.DeleteCommentHandler)))
 

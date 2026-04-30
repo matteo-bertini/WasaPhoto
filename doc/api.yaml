@@ -140,7 +140,41 @@ components:
         isLikedByMe:
           type: boolean
           description: "True if the authenticated user liked this post"
-    
+    StreamPost:
+      type: object
+      properties:
+        postId:
+          type: string
+          example: "7b259fbu74ncp6cuiiein"
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_]{3,30}$'
+          example: "eyeager"
+          description: "Unique identifier for the user" 
+        caption:
+          type: string
+          maxLength: 2200
+          description: "The text description accompanying the post"
+          example: "A beautiful sunset"
+        likesNumber:
+          type: integer
+          example: 42
+        commentsNumber:
+          type: integer
+          example: 2
+        dateOfUpload:
+          type: string
+          format: date-time
+        isLikedByMe:
+          type: boolean
+          description: "True if the authenticated user liked this post"
+        isSuggested:
+          type: boolean
+          description: True if the post is from a user not followed (Content Discovery).
+          example: true
+        
    
     CommentContent:
       type: object
@@ -275,8 +309,44 @@ paths:
           description: Unauthorized - Invalid or missing token
         '500':
           description: Internal server error
-
-  
+  /stream:
+    get:
+      summary: Get user's hybrid stream
+      description: >
+          Returns a paginated list of posts. The feed prioritizes posts from followed users. 
+          If the following posts are fewer than the limit, it fills the remaining slots 
+          with suggested (popular/recent) posts, excluding banned users.
+      operationId: getStream
+      tags:
+        - Stream
+      parameters:
+        - name: offset
+          in: query
+          required: false
+          description: "The number of items to skip (for pagination)[cite: 1]."
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          description: The number of items to return per page.
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: "A list of posts successfully retrieved."
+          content:
+            application/json:
+              schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/StreamPost'
+        '401':
+          description: "Unauthorized - Session token is missing or invalid[cite: 1]"
+        '500':
+          description: Internal server error.
   /users/{username}:
     parameters: 
       - $ref: "#/components/parameters/username"

@@ -45,6 +45,9 @@ type AppDatabase interface {
 	AddComment(postID string, authorID string, content string) (models.Comment, error)
 	GetComments(postID string, requestingUserID string) ([]models.Comment, error)
 	DeleteComment(commentID int, requesterID string) error
+
+	// stream
+	GetStream(requesterId string, limit int, offset int) ([]models.StreamPost, error)
 	// helpers
 	GetUserIDByToken(token string) (string, error)
 	GetIDByUsername(username string) (string, error)
