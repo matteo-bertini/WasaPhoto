@@ -97,6 +97,7 @@ export default {
               break;
             case 404:
               this.errorMessage = "Risorsa non trovata.";
+              this.$router.push(`/users/${localStorage.getItem("Username")}`);
               break;
             default:
               this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";

@@ -323,7 +323,7 @@ paths:
         - name: offset
           in: query
           required: false
-          description: "The number of items to skip (for pagination)[cite: 1]."
+          description: "The number of items to skip (for pagination)."
           schema:
             type: integer
             default: 0
@@ -344,7 +344,7 @@ paths:
                   items:
                     $ref: '#/components/schemas/StreamPost'
         '401':
-          description: "Unauthorized - Session token is missing or invalid[cite: 1]"
+          description: "Unauthorized - Session token is missing or invalid"
         '500':
           description: Internal server error.
   /users/{username}:
