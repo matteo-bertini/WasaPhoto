@@ -86,7 +86,6 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	postID := id.String()
 
 	// 7. Define and ensure the user-specific upload directory exists
-	// Instead of a flat directory, we use UploadDir/userID/
 	userUploadDir := filepath.Join(UploadDir, ctx.UserID)
 
 	// os.MkdirAll is efficient: it creates the path if it doesn't exist, otherwise does nothing
@@ -114,7 +113,6 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	}
 
 	// 10. Prepare the Post object
-	// Note: We don't need to store the path in DB because it's always UploadDir/authorID/postID.jpg
 	newPost := models.Post{
 		PostId:         postID,
 		Username:       pathUsername,
@@ -154,7 +152,6 @@ func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps ht
 	postID := ps.ByName("postId")
 
 	// 2. Translate username to userID to find the correct folder
-	// We use your existing GetIDByUsername function
 	authorID, err := rt.db.GetIDByUsername(pathUsername)
 	if err != nil {
 		if errors.Is(err, models.ErrUserNotFound) {
@@ -167,7 +164,6 @@ func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	// 3. Build the correct path: UploadDir/authorID/postID.jpg
-	// This matches the structure we used in UploadPost and DeleteUser
 	filePath := filepath.Join(UploadDir, authorID, postID+".jpg")
 
 	// 4. Physical existence check
@@ -207,8 +203,7 @@ func (rt *_router) DeletePostHandler(w http.ResponseWriter, r *http.Request, ps 
 	filePath := filepath.Join(UploadDir, loggedUserID, postID+".jpg")
 
 	if err := os.Remove(filePath); err != nil {
-		// We don't return 500 here because the DB record is already gone.
-		// We just log it as a warning for future manual cleanup.
+
 		ctx.Logger.WithError(err).WithField("path", filePath).Warn("DeletePostHandler: could not delete file from disk")
 	}
 
@@ -328,7 +323,6 @@ func (rt *_router) AddCommentHandler(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	// Success: return the full Comment object (201 Created)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(comment)

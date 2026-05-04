@@ -61,8 +61,6 @@ type appdbimpl struct {
 }
 
 // New creates a new instance of AppDatabase and initializes the database schema.
-// It enforces referential integrity through foreign keys and sets up the
-// unified table structure for accounts, profiles, posts, and follows.
 func New(db *sql.DB) (AppDatabase, error) {
 	if db == nil {
 		return nil, errors.New("database is required when building a AppDatabase")
@@ -74,8 +72,6 @@ func New(db *sql.DB) (AppDatabase, error) {
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
 		return nil, fmt.Errorf("failed to enable foreign key support: %w", err)
 	}
-
-	// Define the unified database schema.
 
 	// Table: accounts - Security and authentication.
 	accountsTable := `

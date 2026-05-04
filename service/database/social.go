@@ -218,7 +218,6 @@ func (db *appdbimpl) BanUser(bannerID string, bannedID string) error {
 	}
 
 	// 2. Remove any follow relationship in BOTH directions
-	// If User A bans User B, they shouldn't follow each other anymore
 	_, err = tx.Exec(`
 		DELETE FROM follows 
 		WHERE (follower_id = ? AND followed_id = ?) 

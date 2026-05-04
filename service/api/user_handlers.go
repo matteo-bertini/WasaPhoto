@@ -22,7 +22,6 @@ func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request,
 	targetUsername := ps.ByName("username")
 
 	// 2. Retrieve the Requester's ID from the context (populated by the Auth Middleware)
-	// We assume the middleware stores the ID as a string under the key "userID"
 	requestingUserID := ctx.UserID
 
 	// 3. Database Layer Call
@@ -55,9 +54,6 @@ func (rt *_router) GetUserProfileHandler(w http.ResponseWriter, r *http.Request,
 }
 
 // UpdateUsernameHandler changes the username of the authenticated user.
-// It validates that the requester owns the profile and that the new username is available.
-// UpdateUsernameHandler changes the username of the authenticated user.
-// Adheres to YAML: requestBody expects a JSON object with a "username" property.
 func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// 1. Extract the current username from the URI path
 	pathUsername := ps.ByName("username")
@@ -82,7 +78,6 @@ func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request,
 	}
 
 	// 4. Parse the request body
-	// Struct matches YAML schema 'username': { "username": "string" }
 	var body struct {
 		Username string `json:"username"`
 	}
@@ -93,7 +88,7 @@ func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// Basic validation based on YAML constraints (minLength: 3, maxLength: 30)
+	// Basic validation based on constraints (minLength: 3, maxLength: 30)
 	newUsername := strings.TrimSpace(body.Username)
 	if len(newUsername) < 3 || len(newUsername) > 30 {
 		ctx.Logger.Warn("UpdateUsername: username length validation failed")
@@ -120,7 +115,6 @@ func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request,
 }
 
 // DeleteUserHandler handles the permanent deletion of a user account and all related data.
-// DeleteUserHandler handles the permanent deletion of a user account and all associated data.
 // It removes the database record (triggering CASCADE) and deletes the user's media folder.
 func (rt *_router) DeleteUserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// 1. Extract the username from the URL path

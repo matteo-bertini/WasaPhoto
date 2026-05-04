@@ -18,7 +18,6 @@ func (rt *_router) AuthMiddleware(fn httpRouterHandler) httpRouterHandler {
 		authHeader := r.Header.Get("Authorization")
 
 		// 2. Formal check: the header must exist and start with the "Bearer " prefix
-		// This aligns the backend with the OpenAPI specification
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			ctx.Logger.WithFields(logrus.Fields{
 				"header": authHeader,

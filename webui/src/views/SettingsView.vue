@@ -539,4 +539,4 @@ export default {
     padding: 20px;
     opacity: 0.5;
 }
-</style> non so perche da pagina bianca e non fa niente. Modifica questa correggendo l'errore e rendendo le funzioni dello script perfette e funzionanti, anche aderenti al camel case e tutto. non modificare estetica
+</style>

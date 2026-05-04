@@ -190,8 +190,8 @@ func (db *appdbimpl) GetLikes(postID string, requestingUserID string) ([]string,
 // AddComment inserts a new comment and returns the full Comment object.
 // It strictly follows the ban and existence rules in a single atomic-like flow.
 func (db *appdbimpl) AddComment(postID string, authorID string, content string) (models.Comment, error) {
-	// First, we check if the post exists and if there is a ban relationship.
-	// Then we insert. We use a transaction to ensure we get the full object back safely.
+	// First, check if the post exists and if there is a ban relationship.
+	// Then  insert. We use a transaction to ensure to get the full object back safely.
 	tx, err := db.c.Begin()
 	if err != nil {
 		return models.Comment{}, err
