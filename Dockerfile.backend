@@ -10,7 +10,7 @@
 # 4) Esecuzione del comando "go build .. " per creare il file da eseguire
 #--------------------------------------------------------------------------------------------------------#
 
-FROM golang:1.20 as backend_compiler
+FROM golang:1.25 as backend_compiler
 WORKDIR /src/
 COPY . /src/
 RUN go build ./cmd/webapi

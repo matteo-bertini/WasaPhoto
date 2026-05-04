@@ -26,7 +26,7 @@ type WebAPIConfiguration struct {
 	}
 	Debug bool
 	DB    struct {
-		Filename string `conf:"default:/tmp/wasaphoto.db"`
+		Filename string `conf:"default:/home/matteo/Scrivania/WasaPhoto/WasaPhoto.db"`
 	}
 }
 

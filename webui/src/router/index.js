@@ -1,21 +1,19 @@
 import {createRouter, createWebHashHistory} from 'vue-router'
-import LoginPage from '../views/LoginPage.vue'
-import ProfilePage from "../views/ProfilePage.vue"
-import NotFoundPage from "../views/NotFoundPage.vue"
-import ProfileNotFoundPage from "../views/ProfileNotFoundPage.vue"
-import SettingsPage from "../views/SettingsPage.vue"
-import StreamPage from "../views/StreamPage.vue"
+import LoginView from '../views/LoginView.vue'
+import ProfileView from "../views/ProfileView.vue"
+import SettingsView from "../views/SettingsView.vue"
+import HomeView from '../views/HomeView.vue'
+
 
 const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
 	routes: [
 		{path: '/',redirect: '/login'},
-		{path: '/login', component: LoginPage},
-		{path: "/users/:Username/",component: ProfilePage},
-		{path: "/users/:Username/settings",component: SettingsPage},
-		{path: "/users/:Username/stream" ,component: StreamPage},
-		{path: "/profilenotfound" ,component: ProfileNotFoundPage},
-		{path: "/:catchAll(.*)",component: NotFoundPage}
+		{path: '/login', component: LoginView},
+		{path: "/users/:username",component: ProfileView},
+		{path: "/settings",component: SettingsView},
+		{path: "/home",component: HomeView},
+		{path: "/:catchAll(.*)",component: LoginView}
 
 	]
 })
