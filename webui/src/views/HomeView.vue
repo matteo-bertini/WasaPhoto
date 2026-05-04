@@ -244,7 +244,11 @@ export default {
     
     <nav class="glass-nav">
       <div class="nav-content">
-        <h2 class="brand" @click="$router.push('/home')">WASAPHOTO</h2>
+        <div  @click="$router.push('/home')" class="logo-container">
+          <i class="fas fa-camera camera-icon"></i>
+          <h2 class="brand-name">WASAPHOTO</h2>
+          <button  class="icon-btn home" title="Home"><i class="fa-solid fa-house"></i></button>
+        </div>
         
         <div class="search-container">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -324,6 +328,31 @@ export default {
   background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
   color: white; padding-top: 100px; padding-bottom: 50px; font-family: 'Inter', sans-serif;
 }
+.main-header {
+  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.camera-icon {
+  font-size: 1.5rem;
+  color: white; 
+}
+
+.brand-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0;
+  color: white;
+}
 
 .glass-nav {
   position: fixed; top: 0; left: 0; width: 100%; height: 75px;
@@ -347,7 +376,7 @@ export default {
 .logout:hover { color: #66001a; }
 
 .posts-feed { max-width: 600px; margin: 0 auto; }
-.section-title { margin-bottom: 25px; font-weight: 300; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+.section-title { font-size: 1.2rem; margin-bottom: 25px; font-weight: 700; opacity: 0.7; text-align: center; text-transform: uppercase; letter-spacing: 2px; }
 
 .suggested-badge {
   font-size: 0.7rem; color: #003366; background: rgba(0, 51, 102, 0.1);

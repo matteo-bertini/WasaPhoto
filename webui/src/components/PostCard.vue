@@ -226,6 +226,7 @@ export default {
     </div>
 
     <div class="post-media" @dblclick="toggleLike">
+      <span class="hover-hint">Doppio click per like </span>
       <img v-if="imageUrl" :src="imageUrl" alt="Post photo" />
       <div v-else class="image-loader"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
     </div>
@@ -318,8 +319,30 @@ export default {
   padding: 4px 10px; border-radius: 20px; font-weight: bold; text-transform: uppercase;
 }
 
-.post-media { width: 100%; aspect-ratio: 1/1; background: #000; display: flex; align-items: center; justify-content: center; }
+.post-media { cursor: pointer; width: 100%; aspect-ratio: 1/1; background: #000; display: flex; align-items: center; justify-content: center; }
 .post-media img { width: 100%; height: 100%; object-fit: cover; }
+.hover-hint {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7); 
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  pointer-events: none; 
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(4px); 
+}
+
+/* Mostra il suggerimento con un leggero movimento verso l'alto */
+.post-media:hover .hover-hint {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-5px);
+}
 
 .post-footer { padding: 12px 15px; }
 .actions-row { display: flex; gap: 15px; margin-bottom: 10px; }

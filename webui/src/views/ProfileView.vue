@@ -336,7 +336,11 @@ export default {
     
     <nav class="glass-nav">
       <div class="nav-content">
-        <h2 class="brand" @click="$router.push('/home')">WASAPHOTO</h2>
+        <div @click="$router.push('/home')" class="logo-container">
+           <i class="fas fa-camera camera-icon"></i>
+          <h2 class="brand-name">WASAPHOTO</h2>
+          <button  class="icon-btn home" title="Home"><i class="fa-solid fa-house"></i></button>
+        </div>
         
         <div class="search-container">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -373,11 +377,11 @@ export default {
                 <span class="stat-value">{{ profileData.postsCount }}</span>
                 <span class="stat-label">Post</span>
               </div>
-              <div @click="getFollowers" data-bs-toggle="modal" data-bs-target="#followersModal" class="stat-item">
+              <div @click="getFollowers" data-bs-toggle="modal" data-bs-target="#followersModal" class="stat-item clickable">
                 <span class="stat-value">{{ profileData.followersCount }}</span>
                 <span class="stat-label">Followers</span>
               </div>
-              <div @click="getFollowing" data-bs-toggle="modal" data-bs-target="#followingModal" class="stat-item">
+              <div @click="getFollowing" data-bs-toggle="modal" data-bs-target="#followingModal" class="stat-item clickable">
                 <span class="stat-value">{{ profileData.followingCount }}</span>
                 <span class="stat-label">Following</span>
               </div>
@@ -492,6 +496,26 @@ export default {
   color: white; padding-top: 100px; padding-bottom: 50px; font-family: 'Inter', sans-serif;
 }
 
+.logo-container {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.camera-icon {
+  font-size: 1.5rem;
+  color: white; 
+}
+
+.brand-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0;
+  color: white;
+}
+
 /* Glassmorphism navigation bar styling */
 .glass-nav {
   position: fixed; top: 0; left: 0; width: 100%; height: 75px;
@@ -516,6 +540,7 @@ export default {
 .icon-btn:hover { color: #003366; transform: scale(1.1); }
 .logout:hover { color: #66001a; }
 
+
 /* Profile card main glassmorphism effect */
 .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 25px; }
 .profile-card { max-width: 650px; margin: 0 auto 40px; padding: 40px; text-align: center; }
@@ -531,6 +556,10 @@ export default {
 /* Grid layout for user statistics (Followers/Following/Posts) */
 .stats-row { display: flex; justify-content: center; gap: 50px; margin: 25px 0; }
 .stat-item { display: flex; flex-direction: column; align-items: center; }
+.stat-item.clickable {
+  cursor: pointer; 
+  transition: opacity 0.2s ease;
+}
 .stat-value { font-size: 1.4rem; font-weight: 800; }
 .stat-label { font-size: 0.85rem; opacity: 0.6; text-transform: uppercase; }
 
