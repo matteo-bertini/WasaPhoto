@@ -78,6 +78,7 @@ components:
               example: eyeager
     UserProfile:
       type: object
+      description: "Detailed information about a user profile, including social counters and posts."
       properties:
         username:
           type: string
@@ -108,10 +109,13 @@ components:
           description: "True if the authenticated user has blocked this profile"
         userPosts: 
           type: array
+          minItems: 0
+          maxItems: 10000
           items:
             $ref: "#/components/schemas/Post"
     Post:
       type: object
+      description: "Represents a single post with metadata regarding date, caption, and interaction statistics."
       properties:
         postId:
           type: string
@@ -142,6 +146,7 @@ components:
           description: "True if the authenticated user liked this post"
     StreamPost:
       type: object
+      description: "A post model optimized for the feed, including an indicator for system-suggested content."
       properties:
         postId:
           type: string
@@ -178,6 +183,7 @@ components:
    
     CommentContent:
       type: object
+      description: "Object containing the text content for a new comment request."
       required:
         - content
       properties:
@@ -186,6 +192,7 @@ components:
           example: "This is a great post!"
     Comment:
       type: object
+      description: "Represents a complete comment including commentId, postId, authorUsername, content and creation timestamp."
       properties:
         commentId:
           type: string
@@ -341,6 +348,9 @@ paths:
             application/json:
               schema:
                   type: array
+                  minItems: 0
+                  maxItems: 10000
+                  description: "List of posts that make up the personalized content stream for the user."
                   items:
                     $ref: '#/components/schemas/StreamPost'
         '401':
@@ -377,10 +387,8 @@ paths:
       tags:
         - User
       summary: Update username
-      operationId: updateUsername
+      operationId: setMyUserName
       description: Changes the username for the authenticated user.
-      parameters:
-        - $ref: "#/components/parameters/username"
       requestBody:
         required: true
         content:
@@ -433,6 +441,7 @@ paths:
       operationId: uploadPost
       requestBody:
         required: true
+        description: "Form data for uploading a new post, containing the binary image file and an optional caption."
         content:
           multipart/form-data:
             schema:
@@ -482,6 +491,7 @@ paths:
             image/jpeg:
               schema:
                 type: string
+                description: "The binary image content of the requested photo."
                 format: binary
         '404':
           description: Photo not found.
@@ -525,6 +535,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 10000
+                description: "List of usernames of users who liked this specific post."
                 items:
                   $ref: "#/components/schemas/Username"
         '401':
@@ -584,6 +597,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 10000
+                description: "List of users followed by the specified profile."
                 items:
                   $ref: '#/components/schemas/Username'
         '401':
@@ -610,6 +626,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 10000
+                description: "List of users following the specified profile."
                 items:
                   $ref: '#/components/schemas/Username'
         '401':
@@ -673,6 +692,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 10000
+                description: "List of users currently banned by the authenticated user."
                 items:
                   $ref: '#/components/schemas/Username'
         '401':
@@ -735,6 +757,9 @@ paths:
             application/json:
               schema:
                 type: array
+                minItems: 0
+                maxItems: 10000
+                description: "Chronological list of all comments published under the specified post."
                 items:
                   $ref: "#/components/schemas/Comment"
         '401':
