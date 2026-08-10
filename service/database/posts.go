@@ -67,7 +67,9 @@ func (db *appdbimpl) LikePost(postID string, actorID string, targetUsername stri
 	}
 
 	// Ensure rollback if we return early due to an error
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	// 1. Get the AuthorID of the post and verify existence/ownership
 	var authorID string
@@ -196,7 +198,9 @@ func (db *appdbimpl) AddComment(postID string, authorID string, content string) 
 	if err != nil {
 		return models.Comment{}, err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	var status string
 	var postAuthor string

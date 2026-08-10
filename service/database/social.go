@@ -119,7 +119,9 @@ func (db *appdbimpl) FollowUser(followerID, targetID string) error {
 		return err
 	}
 	// Defer rollback in case of error; it's a no-op if tx.Commit() is called
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	// 1. Check for an existing ban in both directions
 	var isBanned bool

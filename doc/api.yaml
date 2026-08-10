@@ -46,7 +46,7 @@ components:
               format: password
               minLength: 8
               maxLength: 72
-              pattern: '^[a-zA-Z0-9!@#$%^&*()_+=-]{8,30}$'
+              pattern: '^[a-zA-Z0-9!@#$%^&*()_+=-]{8,72}$'
               description: The user's secret password
               example: "Secret123!"
             isSignUp:
@@ -92,6 +92,7 @@ components:
           description: "Unique identifier for the user" 
         bio:
           type: string
+          minLength: 0
           maxLength: 160
           description: "A brief biography or status of the user"
           example: "Hi I'm eyeager and I'm the Founding Titan :) "
@@ -140,6 +141,7 @@ components:
           description: "Unique identifier for the user" 
         caption:
           type: string
+          minLength: 0
           maxLength: 2200
           description: "The text description accompanying the post"
           example: "A beautiful sunset"
@@ -178,6 +180,7 @@ components:
           description: "Unique identifier for the user" 
         caption:
           type: string
+          minLength: 0
           maxLength: 2200
           description: "The text description accompanying the post"
           example: "A beautiful sunset"
@@ -228,12 +231,15 @@ components:
         postId:
           type: string
           description: "The unique identifier of the post this comment belongs to."
+          pattern: '^[a-zA-Z0-9]+$'
+          minLength: 1
           maxLength: 64
         authorUsername:
           description: "The username of the comment's author."
+          type: string
           minLength: 3
           maxLength: 30
-          type: string
+          pattern: '^[a-zA-Z0-9_]{3,30}$'
         content:
           type: string
           minLength: 1
@@ -263,12 +269,18 @@ components:
       description: The unique identifier of the post
       schema:
         type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9]+$'
     commentId:
       name: commentId
       in: path
       required: true
       schema:
-        type: string 
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: '^[a-zA-Z0-9]+$'
       description: The unique identifier of the comment.
   responses:
     BadRequest:
@@ -339,7 +351,7 @@ paths:
         '401':
           description: Unauthorized - Invalid or missing token
         '500':
-          description: Internal server error
+          $ref: "#/components/responses/InternalServerError"
   /stream:
     get:
       summary: Get user's hybrid stream
@@ -380,7 +392,7 @@ paths:
         '401':
           description: "Unauthorized - Session token is missing or invalid"
         '500':
-          description: Internal server error.
+          $ref: "#/components/responses/InternalServerError"
   /users/{username}:
     parameters: 
       - $ref: "#/components/parameters/username"
@@ -479,6 +491,7 @@ paths:
                 caption:
                   type: string
                   description: An optional description for the post.
+                  minLength: 0
                   maxLength: 2200
               required:
                 - file
@@ -498,7 +511,7 @@ paths:
         '404':
           description: User not found.
         '500':
-          description: Internal Server Error.
+          $ref: "#/components/responses/InternalServerError"
   /users/{username}/posts/{postId}:
     parameters:
       - $ref: "#/components/parameters/username"
@@ -616,8 +629,8 @@ paths:
         - Social
       summary: Get the list of following
       operationId: getFollowing
-      description: eturns an array of usernames that the specified user is currently  following. 
-        Only the resource owner can access this list.
+      description: Returns an array of usernames that the specified user is currently  following. 
+        Visible to any authenticated user, unless a ban exists between the two parties.
       responses:
         '200':
           description: Successful operation
@@ -633,11 +646,11 @@ paths:
         '401':
           description: Unauthorized - Token missing or invalid
         '403':
-          description: Forbidden 
+          description: Forbidden - Access denied due to a ban between the two users
         '404':
           description: Not Found - The specified user does not exist
         '500':
-          description: Internal Server Error - Something went wrong on the server
+          $ref: "#/components/responses/InternalServerError"
   /users/{username}/followers:
     parameters:
       - $ref: "#/components/parameters/username"
@@ -647,7 +660,7 @@ paths:
       summary: Get the list of followers
       operationId: getFollowers
       description: Returns an array of usernames following the specified user. 
-        Only the resource owner can access this list.
+        Visible to any authenticated user, unless a ban exists between the two parties.
       responses:
         '200':
           description: Successful operation
@@ -663,11 +676,11 @@ paths:
         '401':
           description: Unauthorized - Token missing or invalid
         '403':
-          description: Forbidden 
+          description: Forbidden - Access denied due to a ban between the two users
         '404':
           description: Not Found - The specified user does not exist
         '500':
-          description: Internal Server Error - Something went wrong on the server
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Social
@@ -733,7 +746,7 @@ paths:
         '404':
           description: Not Found - The specified user does not exist
         '500':
-          description: Internal Server Error - Something went wrong on the server
+          $ref: "#/components/responses/InternalServerError"
     put:
       tags:
         - Social
@@ -873,8 +886,6 @@ paths:
     
       
       
-
-
 
 
 

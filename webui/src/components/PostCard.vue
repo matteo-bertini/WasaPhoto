@@ -26,7 +26,13 @@ export default {
       errorMessage: '',
       loading: false,
       // State for the custom deletion modal
-      showDeleteConfirm: false 
+      showDeleteConfirm: false,
+      // Local reactive copies of the mutable post fields.
+      // We never write to `this.post` directly (it's a prop) — we track
+      // likes/comments state here and keep it in sync with the API calls.
+      localLikesNumber: this.post.likesNumber,
+      localCommentsNumber: this.post.commentsNumber,
+      localIsLikedByMe: this.post.isLikedByMe
     };
   },
   computed: {
@@ -54,20 +60,20 @@ export default {
       const token = localStorage.getItem("SessionToken");
       const currentUser = localStorage.getItem("Username");
       try {
-        if (this.post.isLikedByMe) {
+        if (this.localIsLikedByMe) {
           await this.$axios.delete(`/users/${this.post.username}/posts/${this.post.postId}/likes`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          this.post.likesNumber--;
+          this.localLikesNumber--;
           this.likesList = this.likesList.filter(name => name !== currentUser);
         } else {
           await this.$axios.put(`/users/${this.post.username}/posts/${this.post.postId}/likes`, {}, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          this.post.likesNumber++;
+          this.localLikesNumber++;
           if (!this.likesList.includes(currentUser)) this.likesList.push(currentUser);
         }
-        this.post.isLikedByMe = !this.post.isLikedByMe;
+        this.localIsLikedByMe = !this.localIsLikedByMe;
       } catch (e) {
         this.handleApiError(e);
       } finally {
@@ -136,7 +142,7 @@ export default {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         this.commentsList.push(response.data);
-        this.post.commentsNumber++;
+        this.localCommentsNumber++;
         this.newCommentText = "";
       } catch (e) {
         this.handleApiError(e);
@@ -154,7 +160,7 @@ export default {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         this.commentsList = this.commentsList.filter(c => c.commentId !== commentId);
-        this.post.commentsNumber--;
+        this.localCommentsNumber--;
       } catch (e) {
         this.handleApiError(e);
       }
@@ -234,15 +240,15 @@ export default {
     <div class="post-footer">
       <div class="actions-row">
         <div class="action-group">
-          <button @click="toggleLike" class="btn-icon heart-icon" :class="{ 'liked': post.isLikedByMe }">
-            <i :class="post.isLikedByMe ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
+          <button @click="toggleLike" class="btn-icon heart-icon" :class="{ 'liked': localIsLikedByMe }">
+            <i :class="localIsLikedByMe ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
           </button>
-          <span class="stat-text" @click="getLikes">{{ post.likesNumber }}</span>
+          <span class="stat-text" @click="getLikes">{{ localLikesNumber }}</span>
         </div>
 
         <div class="action-group">
           <button @click="getComments" class="btn-icon comment-icon"><i class="fa-regular fa-comment"></i></button>
-          <span class="stat-text" @click="getComments">{{ post.commentsNumber }}</span>
+          <span class="stat-text" @click="getComments">{{ localCommentsNumber }}</span>
         </div>
       </div>
 
