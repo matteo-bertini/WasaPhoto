@@ -122,9 +122,17 @@ func (rt *_router) DeleteUserHandler(w http.ResponseWriter, r *http.Request, ps 
 
 	// 2. Security Check: Retrieve the target user's ID by their username
 	targetUserID, err := rt.db.GetIDByUsername(username)
-	if errors.Is(err, models.ErrUserNotFound) {
-		ctx.Logger.WithField("username", username).Warn("DeleteUserHandler: user not found")
-		w.WriteHeader(http.StatusNotFound)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			ctx.Logger.WithField("username", username).Warn("DeleteUserHandler: user not found")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		// Generic database error (e.g. connection issue): must not fall through
+		// to the authorization check below, otherwise a DB failure would be
+		// misreported as a 403 Forbidden instead of a 500 Internal Server Error.
+		ctx.Logger.WithError(err).Error("DeleteUserHandler: database error during identity check")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
