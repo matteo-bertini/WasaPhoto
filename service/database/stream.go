@@ -80,5 +80,12 @@ func (db *appdbimpl) GetStream(requesterId string, limit int, offset int) ([]mod
 		return nil, err
 	}
 
+	// Ensure we return an empty slice instead of nil for consistent JSON
+	// encoding: the OpenAPI spec declares the response as `type: array,
+	// minItems: 0`, so an empty stream must be encoded as [] and not null.
+	if stream == nil {
+		stream = []models.StreamPost{}
+	}
+
 	return stream, nil
 }

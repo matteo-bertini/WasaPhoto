@@ -4,6 +4,7 @@ import router from './router'
 import axios from './services/axios.js';
 import ErrorMsg from './components/ErrorMsg.vue'
 import PostCard from './components/PostCard.vue';
+import Comment from './components/Comment.vue';
 
 
 

@@ -100,7 +100,8 @@ export default {
                         this.$router.push("/login");
                         break;
                     case 404:
-                        this.errorMessage = "Risorsa non trovata."
+                        this.errorMessage = "Risorsa non trovata.";
+                        break;
                     default:
                         this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";
                 
@@ -167,9 +168,11 @@ export default {
                             this.$router.push("/login");
                             break;
                         case 403:
-                            this.errorMessage = "Operazione non permessa, puoi eliminare solo il tuo account."
+                            this.errorMessage = "Operazione non permessa, puoi eliminare solo il tuo account.";
+                            break;
                         case 404:
-                            this.errorMessage = "Utente non trovato."
+                            this.errorMessage = "Utente non trovato.";
+                            break;
                         default:
                             this.errorMessage = "Si è verificato un errore sul server. Riprova più tardi.";
                         }
