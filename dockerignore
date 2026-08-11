@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.md
+doc/
+*.db
+*.sqlite
+
+# Sicuro da escludere ora che Dockerfile.frontend fa "npm ci" da sé:
+webui/node_modules
+webui/dist

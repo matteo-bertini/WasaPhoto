@@ -4,32 +4,34 @@
 
 #--------------------------------------------------------------------------------------------------------#
 # [GOLANG]
-# 1) Setting di golang 1.20 come immagine di base da cui partire
+# 1) Setting di golang 1.25 (versione fissata alla release Debian bookworm, non "1.25" generico) come immagine di base da cui partire
 # 2) Creazione della cartella src in cui lavorare
-# 3) Copia dei files dell'intera directory WasaProject2022 all'interno della directory di lavoro (src)
-# 4) Esecuzione del comando "go build .. " per creare il file da eseguire
+# 3) Copia dei files dell'intera directory del progetto all'interno della directory di lavoro (src)
+# 4) Esecuzione del comando "go build .. " per creare il file webapi da eseguire, e anche il binario
+#    healthcheck (usato più sotto per il probe HEALTHCHECK, senza dover installare curl)
 #--------------------------------------------------------------------------------------------------------#
 
-FROM golang:1.25 as backend_compiler
+FROM golang:1.25-bookworm AS backend_compiler
 WORKDIR /src/
 COPY . /src/
 RUN go build ./cmd/webapi
+RUN go build -o healthcheck ./cmd/healthcheck
 
 #--------------------------------------------------------------------------------------------------------#
 # [DEBIAN]
-# 1) Setting di debian (versione stable) come immagine di base da cui partire
+# 1) Setting di debian bookworm-slim (versione stabile fissata, non "stable" che è un alias mobile) come immagine di base da cui partire
 # 2) Creazione della cartella backend_binary in cui lavorare
-# 3) Copia del file webapi dall'immagine "backend_compiler" nella directory di lavoro (backend_binary)
+# 3) Copia dei binari webapi e healthcheck dall'immagine "backend_compiler" nella directory di lavoro (backend_binary)
 # 4) Esposizione della porta 3000 (il container sarà in ascolto sulla porta a runtime)
-# 5) Setting istruzione di default quando viene eseguito il container da questa immagine
+# 5) HEALTHCHECK: ogni 30s chiama il binario healthcheck (che a sua volta interroga /liveness),
+#    così "docker ps" mostra subito se il backend è davvero in grado di rispondere
+# 6) Setting istruzione di default quando viene eseguito il container da questa immagine
 #--------------------------------------------------------------------------------------------------------#
 
-FROM debian:stable
+FROM debian:bookworm-slim
 WORKDIR /backend_binary/
 COPY --from=backend_compiler /src/webapi .
+COPY --from=backend_compiler /src/healthcheck .
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD ["./healthcheck"]
 CMD ["./webapi"]
-
-
-
-

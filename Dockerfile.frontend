@@ -4,33 +4,28 @@
 
 #--------------------------------------------------------------------------------------------------------#
 # [NODE]
-# 1) Setting di node:latest come immagine di base da cui partire
+# 1) Setting di node 24 (versione LTS, fissata alla release Debian bookworm-slim invece di "lts" mobile)
+#    come immagine di base da cui partire
 # 2) Creazione della cartella src in cui lavorare
-# 3) Copia di tutti i files della directory webui all'interno della cartella webui (all'interno della directory di lavoro /src/)
-# 4) Cambio della directory di lavoro in "webui"
+# 3) Copia di package.json e package-lock.json e installazione delle dipendenze con "npm ci": così la
+#    build non dipende più da un node_modules già presente in locale, è riproducibile da un checkout pulito,
+#    e la cache Docker delle dipendenze resta valida finché non cambiano i pacchetti
+# 4) Copia del resto dei files della directory webui
 # 5) Esecuzione del comando per costruire l'app
 #--------------------------------------------------------------------------------------------------------#
 
-FROM node:lts as frontend_compiler
-WORKDIR /src/
-COPY ./webui ./webui
+FROM node:24-bookworm-slim AS frontend_compiler
 WORKDIR /src/webui/
+COPY ./webui/package.json ./webui/package-lock.json ./
+RUN npm ci
+COPY ./webui ./
 RUN npm run build-prod
 
 #--------------------------------------------------------------------------------------------------------#
 # [NGINX]
-# 1) Setting di nginx (versione stable) come immagine di base da cui partire
+# 1) Setting di nginx 1.27 (versione fissata) come immagine di base
 # 2) Copia della cartella "dist" dal frontend compiler nel percorso per fare hosting dell'app
 #--------------------------------------------------------------------------------------------------------#
 
-FROM nginx:stable
+FROM nginx:1.27-alpine
 COPY --from=frontend_compiler /src/webui/dist /usr/share/nginx/html
-
-
-
-
-
-
-
-
-
