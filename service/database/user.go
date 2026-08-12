@@ -63,6 +63,10 @@ func (db *appdbimpl) GetUserProfile(targetUsername string, requestingUserID stri
 	// 3. Get User's Posts including the Caption
 	// We join with the accounts table to retrieve the username for each post
 	// and use subqueries to count likes and comments per post.
+	// Initialize as an empty (non-nil) slice so that a user with zero posts
+	// serializes to "userPosts": [] as required by doc/api.yaml (minItems: 0),
+	// instead of "userPosts": null.
+	userProfile.UserPosts = []models.Post{}
 	postQuery := `
         SELECT 
             p.post_id, 

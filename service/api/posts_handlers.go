@@ -327,10 +327,11 @@ func (rt *_router) GetLikesHandler(w http.ResponseWriter, r *http.Request, ps ht
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(likes)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(likes); err != nil {
+		// The 200 status and part of the body may have already been flushed by
+		// Encode, so calling w.WriteHeader here would just be a superfluous/
+		// ineffective call. We only log the failure.
 		ctx.Logger.WithError(err).Error("GetLikesHandler: failed to encode response")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
@@ -349,6 +350,13 @@ func (rt *_router) AddCommentHandler(w http.ResponseWriter, r *http.Request, ps 
 
 	// Basic validation for empty comments
 	if strings.TrimSpace(body.Content) == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Enforce the maxLength: 500 constraint declared on CommentContent.content in doc/api.yaml
+	if len(body.Content) > 500 {
+		ctx.Logger.Warn("AddCommentHandler: content exceeds 500 characters")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

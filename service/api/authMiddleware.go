@@ -3,6 +3,7 @@ package api
 import (
 	"WasaPhoto/service/api/reqcontext"
 	"WasaPhoto/service/models"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -42,8 +43,17 @@ func (rt *_router) AuthMiddleware(fn httpRouterHandler) httpRouterHandler {
 		// GetUserIDByToken verifies if the token is valid and returns the associated UserID
 		userID, err := rt.db.GetUserIDByToken(token)
 		if err != nil {
-			ctx.Logger.WithError(err).Error("AuthMiddleware: database could not validate token")
-			w.WriteHeader(http.StatusUnauthorized)
+			if errors.Is(err, models.ErrInvalidToken) {
+				// The token is genuinely missing/invalid: this is a client-side 401.
+				ctx.Logger.WithError(err).Error("AuthMiddleware: invalid or expired token")
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			// Any other error (e.g. a DB/connection failure) is an infrastructure
+			// problem, not an authorization decision: report it as a 500 so it
+			// isn't masked as "unauthorized".
+			ctx.Logger.WithError(err).Error("AuthMiddleware: database error while validating token")
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 

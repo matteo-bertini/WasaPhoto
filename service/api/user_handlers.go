@@ -96,6 +96,15 @@ func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	// If the requested username is identical to the current one, skip the
+	// database write entirely: there is nothing to change, and this also
+	// avoids a spurious UNIQUE-constraint round trip against one's own row.
+	if newUsername == pathUsername {
+		ctx.Logger.Infof("User %s requested no-op username update", pathUsername)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	// 5. Update in Database
 	err = rt.db.UpdateUsername(ctx.UserID, newUsername)
 	if err != nil {
