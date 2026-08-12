@@ -223,11 +223,11 @@ components:
       properties:
         commentId:
           type: string
-          pattern: '^[a-zA-Z0-9]+$'
+          pattern: '^[0-9]+$'
           minLength: 1
           maxLength: 64
-          description: "The unique identifier of the comment."
-          example: "5drbgc8fbu74ncp6crihf4nvv"
+          description: "The unique identifier of the comment (numeric, auto-incrementing)."
+          example: "42"
         postId:
           type: string
           description: "The unique identifier of the post this comment belongs to."
@@ -280,8 +280,9 @@ components:
         type: string
         minLength: 1
         maxLength: 64
-        pattern: '^[a-zA-Z0-9]+$'
-      description: The unique identifier of the comment.
+        pattern: '^[0-9]+$'
+        example: "42"
+      description: The unique identifier of the comment (numeric, auto-incrementing).
   responses:
     BadRequest:
       description: |
@@ -377,6 +378,7 @@ paths:
           schema:
             type: integer
             default: 20
+            maximum: 100
       responses:
         '200':
           description: "A list of posts successfully retrieved."
@@ -869,27 +871,6 @@ paths:
           description: Comment or post not found.
         '500':
           $ref: "#/components/responses/InternalServerError"
-    
-  
-
-
-
-    
-
-
-
-
-  
-    
-
-      
-    
-      
-      
-
-
-
-
 
 
 

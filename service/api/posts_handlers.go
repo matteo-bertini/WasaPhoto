@@ -21,6 +21,28 @@ import (
 // UploadDir defines the physical path where images will be stored
 const UploadDir = "./uploads/posts"
 
+// supportedImageExts maps each accepted file extension to its HTTP Content-Type,
+// kept in sync with the formats validated in UploadPostHandler (JPEG, PNG).
+var supportedImageExts = []struct {
+	ext         string
+	contentType string
+}{
+	{".jpg", "image/jpeg"},
+	{".png", "image/png"},
+}
+
+// locatePostImage finds the on-disk file for a post, trying every supported
+// extension, since the original upload format (JPEG/PNG) is not tracked elsewhere.
+func locatePostImage(authorID, postID string) (filePath string, contentType string, found bool) {
+	for _, f := range supportedImageExts {
+		candidate := filepath.Join(UploadDir, authorID, postID+f.ext)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, f.contentType, true
+		}
+	}
+	return "", "", false
+}
+
 func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params, ctx reqcontext.RequestContext) {
 	// 1. Extract the target username from the path and the authenticated UserID from context
 	pathUsername := ps.ByName("username")
@@ -68,6 +90,33 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	}
 	defer file.Close()
 
+	// 5-bis. Detect the real content type from the file bytes (never trust the
+	// client-supplied filename/extension) and only accept JPEG/PNG, as declared
+	// in the spec. Rewind the reader afterwards so io.Copy below gets the full file.
+	sniff := make([]byte, 512)
+	n, err := file.Read(sniff)
+	if err != nil && err != io.EOF {
+		ctx.Logger.WithError(err).Error("UploadPostHandler: failed to read file for content-type detection")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var fileExt string
+	switch http.DetectContentType(sniff[:n]) {
+	case "image/jpeg":
+		fileExt = ".jpg"
+	case "image/png":
+		fileExt = ".png"
+	default:
+		ctx.Logger.Warn("UploadPostHandler: unsupported file format, only JPEG/PNG are allowed")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		ctx.Logger.WithError(err).Error("UploadPostHandler: failed to rewind uploaded file")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	caption := r.FormValue("caption")
 
 	if len(caption) > 2200 {
@@ -95,8 +144,9 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	// 8. Create physical file on disk inside the user's folder
-	filePath := filepath.Join(userUploadDir, postID+".jpg")
+	// 8. Create physical file on disk inside the user's folder, using the
+	// extension that matches the detected content type (.jpg or .png)
+	filePath := filepath.Join(userUploadDir, postID+fileExt)
 	dst, err := os.Create(filePath)
 	if err != nil {
 		ctx.Logger.WithError(err).WithField("filePath", filePath).Error("UploadPostHandler: failed to create file on disk")
@@ -163,18 +213,17 @@ func (rt *_router) GetPhotoHandler(w http.ResponseWriter, r *http.Request, ps ht
 		return
 	}
 
-	// 3. Build the correct path: UploadDir/authorID/postID.jpg
-	filePath := filepath.Join(UploadDir, authorID, postID+".jpg")
-
-	// 4. Physical existence check
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		ctx.Logger.WithField("filePath", filePath).Warn("GetPhoto: image file not found on disk")
+	// 3. Locate the file: it was stored as either postID.jpg or postID.png
+	// depending on the format detected at upload time.
+	filePath, contentType, found := locatePostImage(authorID, postID)
+	if !found {
+		ctx.Logger.WithField("postID", postID).Warn("GetPhoto: image file not found on disk")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	// 5. Success: Serve the binary data
-	w.Header().Set("Content-Type", "image/jpeg")
+	// 4. Success: Serve the binary data with the matching Content-Type
+	w.Header().Set("Content-Type", contentType)
 	http.ServeFile(w, r, filePath)
 }
 
@@ -198,13 +247,11 @@ func (rt *_router) DeletePostHandler(w http.ResponseWriter, r *http.Request, ps 
 		return
 	}
 
-	// 2. Physical File Cleanup
-	// Path: UploadDir / loggedUserID / postID.jpg
-	filePath := filepath.Join(UploadDir, loggedUserID, postID+".jpg")
-
-	if err := os.Remove(filePath); err != nil {
-
-		ctx.Logger.WithError(err).WithField("path", filePath).Warn("DeletePostHandler: could not delete file from disk")
+	// 2. Physical File Cleanup: the file may be postID.jpg or postID.png
+	if filePath, _, found := locatePostImage(loggedUserID, postID); found {
+		if err := os.Remove(filePath); err != nil {
+			ctx.Logger.WithError(err).WithField("path", filePath).Warn("DeletePostHandler: could not delete file from disk")
+		}
 	}
 
 	// 3. Success

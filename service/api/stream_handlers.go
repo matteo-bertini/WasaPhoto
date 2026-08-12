@@ -14,9 +14,14 @@ func (rt *_router) GetStreamHandler(w http.ResponseWriter, r *http.Request, ps h
 	rawLimit := r.URL.Query().Get("limit")
 	rawOffset := r.URL.Query().Get("offset")
 
+	const maxLimit = 100
+
 	limit, err := strconv.Atoi(rawLimit)
 	if err != nil || limit <= 0 {
 		limit = 20 // Default limit if not specified or invalid
+	}
+	if limit > maxLimit {
+		limit = maxLimit // Cap to avoid unbounded result sets
 	}
 
 	offset, err := strconv.Atoi(rawOffset)

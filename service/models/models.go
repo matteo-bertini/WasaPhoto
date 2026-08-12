@@ -1,8 +1,15 @@
 package models
 
 import (
-	"strings"
+	"regexp"
 	"time"
+)
+
+// usernamePattern and passwordPattern mirror exactly the `pattern` constraints
+// declared in doc/api.yaml for the Username and LoginRequest.password schemas.
+var (
+	usernamePattern = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
+	passwordPattern = regexp.MustCompile(`^[a-zA-Z0-9!@#$%^&*()_+=\-]{8,72}$`)
 )
 
 // DoLoginRequestBody represents the 'LoginRequest' schema defined in the OpenAPI specification.
@@ -58,38 +65,20 @@ type StreamPost struct {
 type Comment struct {
 	CommentID      int64     `json:"commentId,string"`
 	PostID         string    `json:"postId"`
-	AuthorID       string    `json:"authorId"`
+	AuthorID       string    `json:"-"` // internal only, not part of the documented Comment schema
 	AuthorUsername string    `json:"authorUsername"`
 	Content        string    `json:"content"`
 	CreatedAt      time.Time `json:"createdAt"`
 }
 
+// CheckUsername validates the username against the exact pattern declared in
+// doc/api.yaml (`^[a-zA-Z0-9_]{3,30}$`), enforcing both length and charset.
 func CheckUsername(username string) bool {
-
-	// L'Username passato è composto solo da spazi bianchi quindi non è valido
-	if strings.TrimSpace(username) == "" {
-		return false
-	} else {
-		len := len(username)
-		if len > 30 || len < 3 {
-			return false
-		} else {
-			return true
-		}
-	}
+	return usernamePattern.MatchString(username)
 }
 
+// CheckPassword validates the password against the exact pattern declared in
+// doc/api.yaml (`^[a-zA-Z0-9!@#$%^&*()_+=-]{8,72}$`), enforcing both length and charset.
 func CheckPassword(password string) bool {
-	// La password passata è composta solo da spazi bianchi quindi non è valida
-	if strings.TrimSpace(password) == "" {
-		return false
-	} else {
-		len := len(password)
-		if len < 8 || len > 72 {
-			return false
-		} else {
-			return true
-		}
-	}
-
+	return passwordPattern.MatchString(password)
 }

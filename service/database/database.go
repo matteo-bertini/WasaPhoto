@@ -35,7 +35,6 @@ type AppDatabase interface {
 	BanUser(bannerID string, bannedID string) error
 	UnbanUser(bannerID string, bannedID string) error
 	GetBannedUsers(username string) ([]models.UserResponse, error)
-	CheckBanStatus(requesterID string, targetUsername string) (bool, error)
 	// posts
 	UploadPost(post models.Post) error
 	DeletePost(postID string, requesterID string) error
@@ -121,7 +120,7 @@ func New(db *sql.DB) (AppDatabase, error) {
 	);`
 	likesTable := `
     CREATE TABLE IF NOT EXISTS likes (
-        post_id    INTEGER NOT NULL,
+        post_id    TEXT NOT NULL,
         user_id    TEXT NOT NULL,
         PRIMARY KEY (post_id, user_id),
         CONSTRAINT fk_post_liked 

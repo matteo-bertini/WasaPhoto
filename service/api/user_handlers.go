@@ -88,10 +88,10 @@ func (rt *_router) UpdateUsernameHandler(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// Basic validation based on constraints (minLength: 3, maxLength: 30)
+	// Validate against the same pattern used at signup (minLength, maxLength, charset)
 	newUsername := strings.TrimSpace(body.Username)
-	if len(newUsername) < 3 || len(newUsername) > 30 {
-		ctx.Logger.Warn("UpdateUsername: username length validation failed")
+	if !models.CheckUsername(newUsername) {
+		ctx.Logger.Warn("UpdateUsername: username format validation failed")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
