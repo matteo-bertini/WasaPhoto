@@ -64,7 +64,7 @@ export default {
      */
     async fetchProfile() {
       this.loading = true;
-      this.errorMsg = "";
+      this.errorMessage = "";
       try {
         const targetUsername = this.$route.params.username;
         const token = localStorage.getItem("SessionToken");
@@ -470,11 +470,11 @@ export default {
         <div class="upload-zone" @click="$refs.fileInput.click()">
           <template v-if="!uploadPreview">
             <i class="fa-solid fa-cloud-arrow-up"></i>
-            <p>Clicca per selezionare una foto (JPG)</p>
+            <p>Clicca per selezionare una foto (JPG o PNG)</p>
           </template>
           <img v-else :src="uploadPreview" class="preview-img">
         </div>
-        <input type="file" ref="fileInput" @change="handleFileSelect" accept="image/jpeg" hidden>
+        <input type="file" ref="fileInput" @change="handleFileSelect" accept="image/jpeg,image/png" hidden>
         <textarea v-model="uploadCaption" placeholder="Scrivi una didascalia..." rows="3" maxlength="2200"></textarea>
         <div class="char-counter">{{ uploadCaption.length }}/2200</div>
         <div class="modal-actions">

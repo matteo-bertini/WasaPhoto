@@ -282,6 +282,7 @@ export default {
           <input 
             type="text" v-model="newCommentText" 
             placeholder="Aggiungi un commento..." 
+            maxlength="500"
             @keyup.enter="addComment" class="comment-input"
           />
           <button class="btn-post-comment" :disabled="!newCommentText.trim()" @click="addComment">Invia</button>

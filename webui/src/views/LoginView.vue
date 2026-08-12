@@ -25,10 +25,10 @@ export default {
       return !(this.Username.length >= 3 && this.Username.length <= 30);
     },
     passwordError() {
-      return !(this.Password.length >= 8 && this.Password.length <= 30);
+      return !(this.Password.length >= 8 && this.Password.length <= 72);
     },
     isFormInvalid() {
-      return this.Username.length < 3 || this.Username.length > 30 || this.Password.length < 8 || this.Password.length >30;
+      return this.Username.length < 3 || this.Username.length > 30 || this.Password.length < 8 || this.Password.length > 72;
     }
   },
   methods: {
@@ -143,7 +143,7 @@ export default {
               </span>
             </div>
           </div>
-          <p v-if="passwordError" class="input-hint">Minimo 8 caratteri</p>
+          <p v-if="passwordError" class="input-hint">8-72 caratteri</p>
 
           <div class="switch-container">
             <span :class="{ 'active-label': !IsSignup }">Accedi</span>
