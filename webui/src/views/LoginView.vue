@@ -22,13 +22,17 @@ export default {
   },
   computed: {
     usernameError() {
-      return !(this.Username.length >= 3 && this.Username.length <= 30);
+      // Mirrors the exact `pattern` constraint declared for Username in doc/api.yaml
+      const regex = /^[a-zA-Z0-9_]{3,30}$/;
+      return !regex.test(this.Username);
     },
     passwordError() {
-      return !(this.Password.length >= 8 && this.Password.length <= 72);
+      // Mirrors the exact `pattern` constraint declared for LoginRequest.password in doc/api.yaml
+      const regex = /^[a-zA-Z0-9!@#$%^&*()_+=-]{8,72}$/;
+      return !regex.test(this.Password);
     },
     isFormInvalid() {
-      return this.Username.length < 3 || this.Username.length > 30 || this.Password.length < 8 || this.Password.length > 72;
+      return this.usernameError || this.passwordError;
     }
   },
   methods: {
@@ -119,21 +123,25 @@ export default {
             <input 
               type="text" 
               v-model="Username" 
+              minlength="3"
               maxlength="30"
+              pattern="^[a-zA-Z0-9_]{3,30}$"
               placeholder="Username" 
               required
               class="glass-input"
             />
             
           </div>
-          <p v-if="usernameError" class="input-hint">Username 3-30 caratteri</p>
+          <p v-if="usernameError && Username.length > 0" class="input-hint">Username: 3-30 caratteri (lettere, numeri, _)</p>
 
           <div class="input-group">
             <div class="password-wrapper">
               <input 
               :type="passwordVisible ? 'text' : 'password'"
               v-model="Password" 
+              minlength="8"
               maxlength="72"
+              pattern="^[a-zA-Z0-9!@#$%^&amp;*()_+=-]{8,72}$"
               placeholder="Password" 
               required
               class="glass-input"
@@ -143,7 +151,7 @@ export default {
               </span>
             </div>
           </div>
-          <p v-if="passwordError" class="input-hint">8-72 caratteri</p>
+          <p v-if="passwordError && Password.length > 0" class="input-hint">Password: 8-72 caratteri (lettere, numeri, !@#$%^&amp;*()_+=-)</p>
 
           <div class="switch-container">
             <span :class="{ 'active-label': !IsSignup }">Accedi</span>
