@@ -94,6 +94,7 @@ components:
           type: string
           minLength: 0
           maxLength: 160
+          pattern: '^[^\x00-\x1F\x7F]*$'
           description: "A brief biography or status of the user"
           example: "Hi I'm eyeager and I'm the Founding Titan :) "
         followersCount:
@@ -143,6 +144,7 @@ components:
           type: string
           minLength: 0
           maxLength: 2200
+          pattern: '^[^\x00-\x1F\x7F]*$'
           description: "The text description accompanying the post"
           example: "A beautiful sunset"
         likesNumber:
@@ -157,6 +159,9 @@ components:
           type: string
           description: "The timestamp indicating when the post was uploaded."
           format: date-time
+          minLength: 1
+          maxLength: 10000
+          pattern: '^[a-zA-Z0-9-T:.\+Z]+$'
         isLikedByMe:
           type: boolean
           description: "True if the authenticated user liked this post"
@@ -182,6 +187,7 @@ components:
           type: string
           minLength: 0
           maxLength: 2200
+          pattern: '^[^\x00-\x1F\x7F]*$'
           description: "The text description accompanying the post"
           example: "A beautiful sunset"
         likesNumber:
@@ -196,6 +202,9 @@ components:
           type: string
           description: "The timestamp indicating when the post was uploaded."
           format: date-time
+          minLength: 1
+          maxLength: 10000
+          pattern: '^[a-zA-Z0-9-T:.\+Z]+$'
         isLikedByMe:
           type: boolean
           description: "True if the authenticated user liked this post"
@@ -215,6 +224,7 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+          pattern: '^[\s\S]*$'
           description: "The text content of the new comment."
           example: "This is a great post!"
     Comment:
@@ -244,10 +254,14 @@ components:
           type: string
           minLength: 1
           maxLength: 500
+          pattern: '^[\s\S]*$'
           description: "The text content of the comment."
         createdAt:
           type: string
           format: date-time
+          minLength: 1
+          maxLength: 10000
+          pattern: '^[a-zA-Z0-9-T:.\+Z]+$'
           description: "The timestamp indicating when the comment was created."
   
   parameters: 
@@ -490,11 +504,17 @@ paths:
                   type: string
                   format: binary
                   description: "The image file to upload (supported formats: JPEG, PNG.)"
+                  minLength: 1
+                  maxLength: 10000
+                  pattern: '^[\s\S]+$'
                 caption:
                   type: string
                   description: An optional description for the post.
                   minLength: 0
                   maxLength: 2200
+                  pattern: '^[^\x00-\x1F\x7F]*$'
+
+                  
               required:
                 - file
       responses:
@@ -534,6 +554,9 @@ paths:
                 type: string
                 description: "The binary image content of the requested photo."
                 format: binary
+                minLength: 1
+                maxLength: 10000
+                pattern: '^[\s\S]+$'
         '404':
           description: Photo not found.
         '500':

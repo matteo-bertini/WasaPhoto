@@ -95,7 +95,7 @@ func (rt *_router) UploadPostHandler(w http.ResponseWriter, r *http.Request, ps 
 	// in the spec. Rewind the reader afterwards so io.Copy below gets the full file.
 	sniff := make([]byte, 512)
 	n, err := file.Read(sniff)
-	if err != nil && err != io.EOF {
+	if err != nil && !errors.Is(err, io.EOF) {
 		ctx.Logger.WithError(err).Error("UploadPostHandler: failed to read file for content-type detection")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
