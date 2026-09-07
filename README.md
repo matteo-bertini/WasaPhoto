@@ -34,7 +34,7 @@ Il progetto è composto da un backend REST scritto in Go, un frontend Vue.js 3 e
 
 |                        Login / Registrazione                        |                          Home feed                          |
 | :-------------------------------------------------------------------: | :-------------------------------------------------------------: |
-| <img src="doc/screenshots/login.png" width="380"> | <img src="doc/screenshots/feed.png" width="380"> |
+| <img src="doc/screenshots/login.png" width="380"> | <img src="doc/screenshots/home.png" width="380"> |
 
 |                             Profilo utente                             |                          Impostazioni                          |
 | :----------------------------------------------------------------------: | :---------------------------------------------------------------: |
