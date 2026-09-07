@@ -1,8 +1,8 @@
 # WasaPhoto
 
-WasaPhoto è un social network per la condivisione di foto, sviluppato come progetto per il corso di **Web and Software Architectures** e successivamente ampliato come **tesi di laurea triennale in Ingegneria Informatica** presso Sapienza Università di Roma.
+WasaPhoto è un social network per la condivisione di foto, in stile Instagram. Nasce come progetto per il corso di Web and Software Architectures e viene poi ripreso ed esteso come tesi di laurea triennale in Ingegneria Informatica presso la Sapienza Università di Roma.
 
-Il progetto implementa un'architettura client-server completa: un backend REST in **Go**, un frontend **Vue.js 3**, e uno storage persistente su **SQLite**. Le specifiche dell'API sono definite tramite **OpenAPI 3.0** (`doc/api.yaml`).
+Il progetto è composto da un backend REST scritto in Go, un frontend Vue.js 3 e uno storage persistente su SQLite. Le API sono specificate tramite OpenAPI 3.0 (`doc/api.yaml`).
 
 ## Indice
 
@@ -21,86 +21,92 @@ Il progetto implementa un'architettura client-server completa: un backend REST i
 
 ## Funzionalità
 
-- **Autenticazione**: login/registrazione tramite un unico endpoint (`isSignUp`), sessione gestita con token Bearer.
-- **Gestione profilo**: visualizzazione profilo con statistiche (follower, following, numero post), modifica username, eliminazione account.
-- **Post**: upload foto con didascalia, cancellazione, recupero dell'immagine binaria.
-- **Interazioni social**: like/unlike, commenti (creazione, lettura, cancellazione).
+- **Autenticazione**: login e registrazione condivisi su un unico endpoint (`isSignUp`), sessione gestita con token Bearer.
+- **Profilo**: visualizzazione con contatori (follower, following, post), modifica dello username, cancellazione dell'account.
+- **Post**: upload di una foto con didascalia opzionale, cancellazione, recupero dell'immagine binaria.
+- **Interazioni**: like/unlike sui post, commenti (creazione, lettura, cancellazione).
 - **Relazioni sociali**: follow/unfollow, liste di follower e following.
-- **Ban**: possibilità di bloccare altri utenti; un ban impedisce la visibilità reciproca di profilo, post, stream e liste social.
-- **Stream**: feed paginato che privilegia i post degli utenti seguiti e completa gli slot rimanenti con post suggeriti, escludendo sempre gli utenti bannati.
+- **Ban**: un utente può bloccarne un altro; il ban nasconde reciprocamente profilo, post, stream, like e liste social, ed elimina automaticamente un eventuale follow esistente.
+- **Stream**: feed paginato che dà priorità ai post degli utenti seguiti e completa gli slot rimanenti con post suggeriti, escludendo sempre gli utenti bannati.
 
 ## Stack tecnologico
 
 **Backend**
 - [Go](https://go.dev/) 1.25
-- [httprouter](https://github.com/julienschmidt/httprouter) — routing HTTP
-- [go-sqlite3](https://github.com/mattn/go-sqlite3) — driver SQLite
-- [logrus](https://github.com/sirupsen/logrus) — logging strutturato
-- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) — hashing delle password
-- [ksuid](https://github.com/segmentio/ksuid) — identificatori univoci ordinabili per utenti/post/sessioni
-- [ardanlabs/conf](https://github.com/ardanlabs/conf) — configurazione da flag/env/YAML
-- [gorilla/handlers](https://github.com/gorilla/handlers) — middleware CORS
+- [httprouter](https://github.com/julienschmidt/httprouter) per il routing
+- [go-sqlite3](https://github.com/mattn/go-sqlite3) come driver SQLite
+- [logrus](https://github.com/sirupsen/logrus) per il logging strutturato
+- [bcrypt](https://pkg.go.dev/golang.org/x/crypto/bcrypt) per l'hashing delle password
+- [ksuid](https://github.com/segmentio/ksuid) per identificatori univoci e ordinabili (utenti, post, sessioni)
+- [ardanlabs/conf](https://github.com/ardanlabs/conf) per la configurazione da flag, env e YAML
+- [gorilla/handlers](https://github.com/gorilla/handlers) per il middleware CORS
 
 **Frontend**
 - [Vue.js 3](https://vuejs.org/)
 - [Vue Router 4](https://router.vuejs.org/)
 - [Axios](https://axios-http.com/)
-- [Vite](https://vitejs.dev/) — build tool e dev server
+- [Vite](https://vitejs.dev/) come build tool e dev server
 
 **Storage**
-- SQLite, con schema auto-inizializzato all'avvio e vincoli `FOREIGN KEY ... ON DELETE CASCADE` per la pulizia automatica dei dati correlati alla cancellazione di un account.
+- SQLite, con schema creato automaticamente all'avvio e vincoli `FOREIGN KEY ... ON DELETE CASCADE`: cancellare un account rimuove a cascata profilo, post, like, commenti, follow e ban collegati.
 
 ## Struttura del progetto
 
 ```
 WasaPhoto/
 ├── cmd/
-│   ├── webapi/            # entry point del server (main, config, CORS, web UI embedding)
-│   └── healthcheck/       # binario di utilità per l'health check del container Docker
+│   ├── webapi/            # entry point del server: main, configurazione, CORS, embedding della web UI
+│   └── healthcheck/       # binario usato dal probe HEALTHCHECK del container Docker
 ├── service/
 │   ├── api/               # handler HTTP, routing, middleware di autenticazione
-│   ├── database/          # layer di accesso ai dati (schema + query)
+│   ├── database/          # accesso ai dati: schema e query
 │   └── models/            # strutture dati condivise ed errori di dominio
 ├── webui/                 # applicazione frontend Vue.js
 ├── doc/
 │   └── api.yaml           # specifica OpenAPI 3.0 delle API REST
 ├── demo/
-│   └── config.yml          # esempio di file di configurazione
-├── Dockerfile.backend      # build multi-stage del backend
-└── open-npm.sh             # helper per lavorare sul frontend dentro un container Node
+│   └── config.yml         # esempio di file di configurazione
+├── Dockerfile.backend     # build multi-stage del backend Go
+├── Dockerfile.frontend    # build multi-stage del frontend (Node + Nginx)
+└── open-npm.sh            # apre una shell in un container Node per lavorare sul frontend senza installare nulla in locale
 ```
 
 ## Architettura
 
-Il backend segue un'architettura a livelli con separazione netta delle responsabilità:
+Il backend è organizzato su tre livelli con responsabilità separate:
 
-- **`service/api`**: espone gli endpoint REST, valida gli input, traduce gli errori di dominio in codici di stato HTTP. L'autenticazione è centralizzata in un middleware (`AuthMiddleware`) che valida il token Bearer e inietta l'`UserID` nel contesto della richiesta.
-- **`service/database`**: incapsula tutta la logica SQL dietro l'interfaccia `AppDatabase`, così l'implementazione concreta (SQLite) resta disaccoppiata dagli handler.
-- **`service/models`**: definisce le strutture condivise (Post, Comment, UserProfile, ecc.) e gli errori di dominio (es. `ErrUserNotFound`, `ErrForbiddenAction`) usati per mappare le risposte HTTP.
+- **`service/api`**: espone gli endpoint REST, valida gli input e traduce gli errori di dominio in codici di stato HTTP. L'autenticazione è centralizzata in un middleware (`AuthMiddleware`) che verifica il token Bearer e inietta lo `UserID` nel contesto della richiesta.
+- **`service/database`**: nasconde tutta la logica SQL dietro l'interfaccia `AppDatabase`, così l'implementazione concreta (SQLite) resta disaccoppiata dagli handler.
+- **`service/models`**: definisce le strutture condivise (Post, Comment, UserProfile, ecc.) e gli errori di dominio (`ErrUserNotFound`, `ErrForbiddenAction`, ...) usati per mappare le risposte HTTP.
 
-Le operazioni multi-step che devono restare atomiche (registrazione utente, like con controllo ban, follow, aggiunta commento) sono eseguite all'interno di transazioni SQL.
+Le operazioni che toccano più tabelle e devono restare atomiche — registrazione, like con verifica del ban, follow, aggiunta di un commento — vengono eseguite dentro transazioni SQL.
 
-Il frontend è una Single Page Application Vue.js che comunica con il backend via REST, mantenendo la sessione (token e username) in `localStorage`.
+Il frontend è una SPA Vue.js che parla con il backend via REST e mantiene la sessione (token e username) in `localStorage`.
+
+Per il deployment sono previste due modalità, entrambe supportate dal codice:
+
+- **due container separati**, backend Go e frontend Nginx, che è il caso d'uso pensato per `Dockerfile.backend` e `Dockerfile.frontend`;
+- **binario singolo**, compilando con il build tag `webui` (`go build -tags webui ./cmd/webapi`): in questo caso i file statici del frontend vengono incorporati nell'eseguibile Go tramite `go:embed` e serviti sotto `/dashboard/`, mentre le API restano sulla root. Senza il tag, `registerWebUI` è uno stub e il binario serve solo le API.
 
 ## Modello dati
 
-Lo schema SQLite viene creato automaticamente all'avvio (`service/database/database.go`) con le seguenti tabelle principali:
+Lo schema SQLite viene creato automaticamente all'avvio (`service/database/database.go`):
 
-| Tabella     | Descrizione                                                       |
-|-------------|---------------------------------------------------------------------|
-| `accounts`  | Credenziali e token di sessione                                    |
-| `profiles`  | Bio e avatar dell'utente                                           |
-| `posts`     | Post pubblicati (didascalia, autore, data)                         |
-| `follows`   | Relazioni di follow (follower → followed)                          |
-| `likes`     | Like sui post                                                      |
-| `comments`  | Commenti sui post                                                  |
-| `bans`      | Relazioni di ban (banner → banned)                                 |
+| Tabella     | Descrizione                                      |
+|-------------|---------------------------------------------------|
+| `accounts`  | Credenziali e token di sessione                   |
+| `profiles`  | Bio e avatar dell'utente                          |
+| `posts`     | Post pubblicati (didascalia, autore, data)        |
+| `follows`   | Relazioni di follow (follower → followed)         |
+| `likes`     | Like sui post                                     |
+| `comments`  | Commenti sui post                                 |
+| `bans`      | Relazioni di ban (banner → banned)                |
 
-Tutte le tabelle collegate a `accounts` usano `ON DELETE CASCADE`, così la cancellazione di un account rimuove automaticamente profilo, post, like, commenti, follow e ban associati.
+Tutte le tabelle sono legate ad `accounts` con `ON DELETE CASCADE`: cancellare un account rimuove automaticamente profilo, post, like, commenti, follow e ban associati.
 
 ## API REST
 
-Le API sono documentate integralmente in `doc/api.yaml` (OpenAPI 3.0). Endpoint principali:
+Le API sono documentate per intero in `doc/api.yaml` (OpenAPI 3.0). Endpoint principali:
 
 | Metodo | Path | Descrizione |
 |--------|------|-------------|
@@ -109,19 +115,19 @@ Le API sono documentate integralmente in `doc/api.yaml` (OpenAPI 3.0). Endpoint 
 | `GET` | `/users/{username}` | Profilo utente, statistiche e post |
 | `PUT` | `/users/{username}` | Modifica username |
 | `DELETE` | `/users/{username}` | Cancellazione account |
-| `GET` | `/users/{username}/followers` / `/following` | Liste social |
-| `PUT`/`DELETE` | `/users/{username}/followers` | Follow / Unfollow |
-| `GET`/`PUT`/`DELETE` | `/users/{username}/ban` | Lista ban / Ban / Unban |
+| `GET` | `/users/{username}/followers` \| `/following` | Liste social |
+| `PUT` / `DELETE` | `/users/{username}/followers` | Follow / Unfollow |
+| `GET` / `PUT` / `DELETE` | `/users/{username}/ban` | Lista ban / Ban / Unban |
 | `POST` | `/users/{username}/posts` | Upload di un nuovo post |
-| `GET` | `/users/{username}/posts/{postId}` | Recupero immagine binaria del post (pubblico) |
+| `GET` | `/users/{username}/posts/{postId}` | Immagine binaria del post (endpoint pubblico) |
 | `DELETE` | `/users/{username}/posts/{postId}` | Cancellazione post |
-| `PUT`/`DELETE`/`GET` | `/users/{username}/posts/{postId}/likes` | Like / Unlike / Lista like |
-| `POST`/`GET` | `/users/{username}/posts/{postId}/comments` | Aggiunta / Lista commenti |
+| `PUT` / `DELETE` / `GET` | `/users/{username}/posts/{postId}/likes` | Like / Unlike / Lista like |
+| `POST` / `GET` | `/users/{username}/posts/{postId}/comments` | Aggiunta / Lista commenti |
 | `DELETE` | `/users/{username}/posts/{postId}/comments/{commentId}` | Cancellazione commento |
 | `GET` | `/stream` | Feed paginato (following + suggeriti) |
-| `GET` | `/liveness` | Health check |
+| `GET` | `/liveness` | Health check, usato dal probe Docker |
 
-Salvo il login, la registrazione e il recupero dell'immagine binaria di un post, tutti gli endpoint richiedono l'header:
+Ad eccezione di login, registrazione e recupero dell'immagine di un post, tutti gli endpoint richiedono l'header:
 
 ```
 Authorization: Bearer <sessionToken>
@@ -131,21 +137,18 @@ Authorization: Bearer <sessionToken>
 
 ### Backend
 
-Requisiti: Go 1.25+
+Richiede Go 1.25+.
 
 ```sh
-# Scarica le dipendenze
 go get ./...
-
-# Avvia il server (porta 3000 di default)
 go run ./cmd/webapi
 ```
 
-Il server crea automaticamente il database SQLite e lo schema al primo avvio.
+Al primo avvio il server crea da sé il database SQLite e lo schema (percorso di default: `/tmp/WasaPhoto.db`).
 
 ### Frontend
 
-Requisiti: Node.js e npm (oppure Docker, vedi sotto)
+Richiede Node.js e npm (in alternativa vedi Docker, sotto).
 
 ```sh
 cd webui
@@ -153,9 +156,9 @@ npm install
 npm run dev
 ```
 
-Il frontend in modalità sviluppo si aspetta il backend disponibile su `http://localhost:3000` (configurato in `webui/vite.config.js`).
+In modalità sviluppo il frontend si aspetta il backend su `http://localhost:3000` (impostato in `webui/vite.config.js`).
 
-In alternativa, senza installare Node.js localmente, è possibile usare lo script di comodo che apre una shell in un container Node con la cartella del progetto montata:
+Se non si vuole installare Node.js in locale, è disponibile uno script che apre una shell in un container Node con la cartella del progetto montata:
 
 ```sh
 ./open-npm.sh
@@ -163,22 +166,29 @@ In alternativa, senza installare Node.js localmente, è possibile usare lo scrip
 
 ### Docker
 
-Il backend può essere costruito ed eseguito come immagine Docker multi-stage (build su `golang:1.25-bookworm`, runtime su `debian:bookworm-slim`), con health check integrato:
+Backend e frontend sono pensati come due immagini separate.
+
+Backend (Go, build multi-stage su `golang:1.25-bookworm` e runtime su `debian:bookworm-slim`, con health check integrato che interroga `/liveness`):
 
 ```sh
 docker build -t wasaphoto-backend:latest -f Dockerfile.backend .
 docker run -it --rm -p 3000:3000 wasaphoto-backend:latest
 ```
 
+Frontend (build con `node:24-bookworm-slim`, servito poi da `nginx:1.27-alpine`):
+
+```sh
+docker build -t wasaphoto-frontend:latest -f Dockerfile.frontend .
+docker run -it --rm -p 8081:80 wasaphoto-frontend:latest
+```
+
 ## Configurazione
 
-Il backend legge la configurazione, in ordine di precedenza crescente, da: variabili d'ambiente (prefisso `CFG`), flag da riga di comando, e infine da un file YAML (che sovrascrive tutto il resto). Un esempio è disponibile in `demo/config.yml`.
-
-Parametri principali:
+Il backend legge la configurazione da tre fonti, in ordine di precedenza crescente: variabili d'ambiente (prefisso `CFG`), flag da riga di comando, e infine un file YAML, che sovrascrive tutto il resto. Un esempio è in `demo/config.yml`.
 
 | Parametro | Default | Descrizione |
 |-----------|---------|--------------|
-| `Web.APIHost` | `0.0.0.0:3000` | Indirizzo di ascolto del server API |
+| `Web.APIHost` | `0.0.0.0:3000` | Indirizzo di ascolto dell'API |
 | `Web.DebugHost` | `0.0.0.0:4000` | Indirizzo del server di debug/profiling |
 | `Web.ReadTimeout` / `WriteTimeout` | `5s` | Timeout HTTP |
 | `Web.ShutdownTimeout` | `5s` | Timeout per lo shutdown graceful |
