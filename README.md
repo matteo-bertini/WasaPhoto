@@ -7,6 +7,7 @@ Il progetto è composto da un backend REST scritto in Go, un frontend Vue.js 3 e
 ## Indice
 
 - [Funzionalità](#funzionalità)
+- [Screenshot](#screenshot)
 - [Stack tecnologico](#stack-tecnologico)
 - [Struttura del progetto](#struttura-del-progetto)
 - [Architettura](#architettura)
@@ -28,6 +29,16 @@ Il progetto è composto da un backend REST scritto in Go, un frontend Vue.js 3 e
 - **Relazioni sociali**: follow/unfollow, liste di follower e following.
 - **Ban**: un utente può bloccarne un altro; il ban nasconde reciprocamente profilo, post, stream, like e liste social, ed elimina automaticamente un eventuale follow esistente.
 - **Stream**: feed paginato che dà priorità ai post degli utenti seguiti e completa gli slot rimanenti con post suggeriti, escludendo sempre gli utenti bannati.
+
+## Screenshot
+
+|                        Login / Registrazione                        |                          Home feed                          |
+| :-------------------------------------------------------------------: | :-------------------------------------------------------------: |
+| <img src="docs/screenshots/login.png" width="380"> | <img src="docs/screenshots/feed.png" width="380"> |
+
+|                             Profilo utente                             |                          Impostazioni                          |
+| :----------------------------------------------------------------------: | :---------------------------------------------------------------: |
+| <img src="docs/screenshots/profile.png" width="380"> | <img src="docs/screenshots/settings.png" width="380"> |
 
 ## Stack tecnologico
 
