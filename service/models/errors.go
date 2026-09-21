@@ -4,8 +4,7 @@ import "errors"
 
 var (
 	ErrMissingFields             = errors.New("all fields are required: username, password, and isSignUp")
-	ErrInvalidUsernameOrPassword = errors.New("username must be 3-16 characters and alphanumeric and  password must be at least 8 characters long")
-	ErrUnauthorized              = errors.New("unauthorized: invalid or missing session token")
+	ErrInvalidUsernameOrPassword = errors.New("username must be 3-30 characters (letters, numbers, and underscore) and password must be 8-72 characters using letters, numbers, or the symbols !@#$%^&*()_+=-")	ErrUnauthorized              = errors.New("unauthorized: invalid or missing session token")
 	ErrUserNotFound              = errors.New("user not found")
 	ErrProfileAccessForbidden    = errors.New("access to this profile is restricted")
 	ErrForbiddenAction           = errors.New("forbidden action")

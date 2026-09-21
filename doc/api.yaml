@@ -454,6 +454,8 @@ paths:
           description: Invalid username format.
         '403':
           description: Forbidden - You can only change your own username.
+        '404':
+          description: Not Found - The specified user does not exist.
         '409':
           description: Conflict - Username already taken.
         '500':
@@ -886,6 +888,8 @@ paths:
       responses:
         '204':
           description: Comment deleted successfully.
+        '400':
+          description: Bad Request - Invalid comment identifier format.
         '401':
           description: Unauthorized
         '403':
