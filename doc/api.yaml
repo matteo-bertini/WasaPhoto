@@ -450,6 +450,8 @@ paths:
       responses:
         '204':
           description: Username updated successfully.
+        '401':
+          description: Unauthorized - Token missing or invalid.
         '400':
           description: Invalid username format.
         '403':
@@ -507,7 +509,7 @@ paths:
                   format: binary
                   description: "The image file to upload (supported formats: JPEG, PNG.)"
                   minLength: 1
-                  maxLength: 10000
+                  maxLength: 10485760
                   pattern: '^[\s\S]+$'
                 caption:
                   type: string
